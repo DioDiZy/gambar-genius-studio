@@ -1,0 +1,112 @@
+
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CustomButton } from "@/components/ui/custom-button";
+import { Clock, Image, Medal, Wallet } from "lucide-react";
+
+const Profile = () => {
+  // Mock user data
+  const user = {
+    name: "John Doe",
+    email: "john@example.com",
+    joinDate: "April 15, 2025",
+    credits: 126,
+    generatedImages: 87
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Profile</h1>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Profile Summary */}
+          <Card className="md:col-span-1">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src="" alt={user.name} />
+                  <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                    {user.name
+                      .split(" ")
+                      .map(n => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <CardTitle>{user.name}</CardTitle>
+              <CardDescription className="break-all">{user.email}</CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <CustomButton variant="outline" size="sm">
+                Edit Profile
+              </CustomButton>
+            </CardContent>
+          </Card>
+
+          {/* User Stats */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Account Information</CardTitle>
+              <CardDescription>
+                Your account details and statistics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 p-4 border rounded-lg">
+                    <div className="h-10 w-10 bg-primary/10 text-primary flex items-center justify-center rounded-full">
+                      <Clock className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Member Since</p>
+                      <p className="font-medium">{user.joinDate}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-4 border rounded-lg">
+                    <div className="h-10 w-10 bg-primary/10 text-primary flex items-center justify-center rounded-full">
+                      <Wallet className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Credits Left</p>
+                      <p className="font-medium">{user.credits}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 p-4 border rounded-lg">
+                    <div className="h-10 w-10 bg-primary/10 text-primary flex items-center justify-center rounded-full">
+                      <Image className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Images Created</p>
+                      <p className="font-medium">{user.generatedImages}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-4 border rounded-lg">
+                    <div className="h-10 w-10 bg-primary/10 text-primary flex items-center justify-center rounded-full">
+                      <Medal className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Subscription</p>
+                      <p className="font-medium">Pro Plan</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Additional sections like payment history, etc. can be added here */}
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default Profile;
