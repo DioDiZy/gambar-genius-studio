@@ -3,7 +3,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ComponentPropsWithoutRef } from "react";
 
-interface CustomButtonProps extends ComponentPropsWithoutRef<typeof Button> {
+// Create a type that omits the variant prop from ButtonProps
+type ButtonPropsWithoutVariant = Omit<ComponentPropsWithoutRef<typeof Button>, "variant">;
+
+// Define our custom variant type that includes "gradient"
+interface CustomButtonProps extends ButtonPropsWithoutVariant {
   gradientBorder?: boolean;
   variant?: "default" | "secondary" | "outline" | "ghost" | "link" | "gradient";
 }
@@ -32,12 +36,12 @@ export function CustomButton({
       <div className="relative p-[1px] overflow-hidden rounded-md bg-gradient-to-r from-brand-purple to-brand-pink">
         <Button
           className={cn("relative z-10", className)}
-          variant={variant}
+          variant={variant as any}
           {...props}
         />
       </div>
     );
   }
 
-  return <Button className={className} variant={variant} {...props} />;
+  return <Button className={className} variant={variant as any} {...props} />;
 }
