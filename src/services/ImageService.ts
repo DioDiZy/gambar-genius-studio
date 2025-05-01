@@ -23,6 +23,11 @@ export async function generateImage(params: GenerateImageParams): Promise<string
       throw initialError;
     }
 
+    // Check if there's a billing error
+    if (initialData?.error?.includes("Billing required")) {
+      throw new Error("Billing required for Replicate API. Please set up billing on your Replicate account.");
+    }
+
     // Get the image URL from the Replicate response
     const imageUrl = initialData?.output?.[0];
     

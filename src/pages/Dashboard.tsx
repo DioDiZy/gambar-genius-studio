@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,23 +49,37 @@ const Dashboard = () => {
         description: "This may take a few moments"
       });
       
-      const imageUrl = await generateImage({ 
-        prompt, 
-        style, 
-        aspectRatio 
-      });
-      
-      if (imageUrl) {
-        setGeneratedImageUrl(imageUrl);
-        toast.success("Image generated successfully!");
-      } else {
-        toast.error("Failed to generate image");
+      try {
+        const imageUrl = await generateImage({ 
+          prompt, 
+          style, 
+          aspectRatio 
+        });
+        
+        if (imageUrl) {
+          setGeneratedImageUrl(imageUrl);
+          toast.success("Image generated successfully!");
+        } else {
+          toast.error("Failed to generate image");
+        }
+      } catch (error) {
+        console.error("Error generating image:", error);
+        
+        // Check for billing error
+        if (error instanceof Error && error.message.includes("Billing required")) {
+          toast.error("Replicate API requires billing", {
+            description: "Please visit replicate.com/account/billing to set up billing for your account.",
+            action: {
+              label: "Visit Billing",
+              onClick: () => window.open("https://replicate.com/account/billing", "_blank")
+            }
+          });
+        } else {
+          toast.error("Error generating image", {
+            description: error instanceof Error ? error.message : "Please try again"
+          });
+        }
       }
-    } catch (error) {
-      console.error("Error generating image:", error);
-      toast.error("Error generating image", {
-        description: error instanceof Error ? error.message : "Please try again"
-      });
     } finally {
       setIsGenerating(false);
     }

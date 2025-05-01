@@ -49,27 +49,43 @@ serve(async (req) => {
     }
 
     console.log("Generating image with prompt:", body.prompt)
-    const output = await replicate.run(
-      "black-forest-labs/flux-schnell",
-      {
-        input: {
-          prompt: body.prompt,
-          go_fast: true,
-          megapixels: "1",
-          num_outputs: 1,
-          aspect_ratio: body.aspectRatio || "1:1",
-          output_format: "webp",
-          output_quality: 80,
-          num_inference_steps: 4
+    
+    try {
+      const output = await replicate.run(
+        "black-forest-labs/flux-schnell",
+        {
+          input: {
+            prompt: body.prompt,
+            go_fast: true,
+            megapixels: "1",
+            num_outputs: 1,
+            aspect_ratio: body.aspectRatio || "1:1",
+            output_format: "webp",
+            output_quality: 80,
+            num_inference_steps: 4
+          }
         }
-      }
-    )
+      )
 
-    console.log("Generation response:", output)
-    return new Response(JSON.stringify({ output }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    })
+      console.log("Generation response:", output)
+      return new Response(JSON.stringify({ output }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    } catch (apiError) {
+      // Check if it's a payment required error
+      if (apiError.message && apiError.message.includes("402 Payment Required")) {
+        return new Response(JSON.stringify({ 
+          error: "Billing required for Replicate API", 
+          details: "You need to set up billing on your Replicate account to use this feature. Please visit https://replicate.com/account/billing to set up billing."
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 402,
+        })
+      }
+      
+      throw apiError;
+    }
   } catch (error) {
     console.error("Error in replicate function:", error)
     return new Response(JSON.stringify({ error: error.message }), {
