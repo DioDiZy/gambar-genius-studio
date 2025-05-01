@@ -13,9 +13,9 @@ const Dashboard = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState("");
 
-  // Query to fetch user's generated images
+  // Query to fetch user's generated images with optimized settings
   const { data: userImages, refetch: refetchImages } = useQuery({
-    queryKey: ["userImages"],
+    queryKey: ["userImages", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("images")
@@ -24,11 +24,14 @@ const Dashboard = () => {
         .order("created_at", { ascending: false });
         
       if (error) {
+        console.error("Error fetching images:", error);
         throw error;
       }
       return data || [];
     },
     enabled: !!user?.id,
+    refetchOnWindowFocus: false,
+    staleTime: 60000, // Data considered fresh for 1 minute
   });
 
   const handleImageGenerated = (url: string) => {
