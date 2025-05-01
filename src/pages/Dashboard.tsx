@@ -1,26 +1,107 @@
 
+import { useState } from "react";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { CustomButton } from "@/components/ui/custom-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { generateImage, saveGeneratedImage } from "@/services/ImageService";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Download, Heart } from "lucide-react";
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState("");
+  const [generatedImageUrl, setGeneratedImageUrl] = useState("");
+  const [style, setStyle] = useState("photorealistic");
+  const [aspectRatio, setAspectRatio] = useState("1:1");
+  const [saving, setSaving] = useState(false);
 
-  const handleGenerate = () => {
+  // Query to fetch user's generated images
+  const { data: userImages, refetch: refetchImages } = useQuery({
+    queryKey: ["userImages"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("images")
+        .select("*")
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false });
+        
+      if (error) {
+        throw error;
+      }
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
-    setIsGenerating(true);
-
-    // Simulate image generation
-    setTimeout(() => {
+    try {
+      setIsGenerating(true);
+      setGeneratedImageUrl("");
+      
+      toast.info("Generating your image...", {
+        description: "This may take a few moments"
+      });
+      
+      const imageUrl = await generateImage({ 
+        prompt, 
+        style, 
+        aspectRatio 
+      });
+      
+      if (imageUrl) {
+        setGeneratedImageUrl(imageUrl);
+        toast.success("Image generated successfully!");
+      } else {
+        toast.error("Failed to generate image");
+      }
+    } catch (error) {
+      console.error("Error generating image:", error);
+      toast.error("Error generating image", {
+        description: error instanceof Error ? error.message : "Please try again"
+      });
+    } finally {
       setIsGenerating(false);
-      setGeneratedImage("placeholder");
-    }, 3000);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!generatedImageUrl) return;
+    
+    try {
+      setSaving(true);
+      toast.info("Saving your image...");
+      
+      await saveGeneratedImage(generatedImageUrl, prompt);
+      
+      // Refetch the user's images to update the gallery
+      refetchImages();
+      
+      toast.success("Image saved to your gallery!");
+    } catch (error) {
+      console.error("Error saving image:", error);
+      toast.error("Error saving image", {
+        description: error instanceof Error ? error.message : "Please try again"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDownload = (imageUrl: string) => {
+    const link = document.createElement("a");
+    link.href = imageUrl;
+    link.download = "generated-image.webp";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -42,11 +123,17 @@ const Dashboard = () => {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               className="min-h-32 mb-4"
+              disabled={isGenerating}
             />
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Style</label>
-                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select 
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value)}
+                  disabled={isGenerating}
+                >
                   <option value="photorealistic">Photorealistic</option>
                   <option value="digital-art">Digital Art</option>
                   <option value="anime">Anime</option>
@@ -56,7 +143,12 @@ const Dashboard = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Aspect Ratio</label>
-                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select 
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={aspectRatio}
+                  onChange={(e) => setAspectRatio(e.target.value)}
+                  disabled={isGenerating}
+                >
                   <option value="1:1">Square (1:1)</option>
                   <option value="16:9">Landscape (16:9)</option>
                   <option value="9:16">Portrait (9:16)</option>
@@ -85,28 +177,44 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg overflow-hidden bg-muted/30 aspect-square flex items-center justify-center">
-              {generatedImage ? (
-                <div className="animate-pulse-slow bg-accent/30 w-full h-full flex items-center justify-center text-muted-foreground">
-                  Image Generated (placeholder)
+              {isGenerating ? (
+                <div className="text-center p-6">
+                  <div className="flex flex-col items-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    <p className="mt-4 text-muted-foreground">Creating your masterpiece...</p>
+                  </div>
                 </div>
+              ) : generatedImageUrl ? (
+                <img 
+                  src={generatedImageUrl} 
+                  alt="Generated" 
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <div className="text-center p-6">
                   <div className="text-4xl mb-2">🖼️</div>
                   <p className="text-muted-foreground text-sm">
-                    {isGenerating
-                      ? "Creating your masterpiece..."
-                      : "Your generated image will appear here"}
+                    Your generated image will appear here
                   </p>
                 </div>
               )}
             </div>
-            {generatedImage && (
+            {generatedImageUrl && (
               <div className="flex justify-between mt-4">
-                <CustomButton variant="outline" size="sm">
+                <CustomButton 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleDownload(generatedImageUrl)}
+                >
                   Download
                 </CustomButton>
-                <CustomButton variant="outline" size="sm">
-                  Regenerate
+                <CustomButton 
+                  variant="gradient" 
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save to Gallery"}
                 </CustomButton>
               </div>
             )}
@@ -124,10 +232,14 @@ const Dashboard = () => {
           </TabsList>
 
           <TabsContent value="recent">
-            {mockGallery.length > 0 ? (
+            {userImages && userImages.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {mockGallery.map((item, index) => (
-                  <GalleryItem key={index} />
+                {userImages.map((item, index) => (
+                  <GalleryItem 
+                    key={index} 
+                    imageUrl={item.image_url} 
+                    prompt={item.prompt} 
+                  />
                 ))}
               </div>
             ) : (
@@ -145,19 +257,30 @@ const Dashboard = () => {
 };
 
 // Gallery Components
-const GalleryItem = () => {
+interface GalleryItemProps {
+  imageUrl: string;
+  prompt: string;
+}
+
+const GalleryItem = ({ imageUrl, prompt }: GalleryItemProps) => {
   return (
     <div className="relative group overflow-hidden rounded-lg">
-      <div className="aspect-square bg-accent/30 animate-pulse-slow"></div>
+      <img 
+        src={imageUrl} 
+        alt={prompt} 
+        className="aspect-square w-full h-full object-cover"
+      />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
         <div className="text-white text-xs truncate mb-1">
-          A futuristic city with neon lights...
+          {prompt}
         </div>
         <div className="flex justify-between">
-          <button className="text-white text-xs hover:underline">
+          <button className="text-white text-xs hover:underline flex items-center gap-1">
+            <Download className="h-3 w-3" />
             Download
           </button>
-          <button className="text-white text-xs hover:underline">
+          <button className="text-white text-xs hover:underline flex items-center gap-1">
+            <Heart className="h-3 w-3" />
             Favorite
           </button>
         </div>
@@ -177,10 +300,5 @@ const EmptyGalleryState = ({ message = "No images yet" }) => {
     </div>
   );
 };
-
-// Mock data
-const mockGallery = [
-  {}, {}, {}, {}
-];
 
 export default Dashboard;
