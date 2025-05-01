@@ -90,10 +90,20 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string): Prom
       throw insertError;
     }
 
-    // Update user's images_generated count
+    // Update user's images_generated count - Fixed TypeScript error by retrieving profile data first
+    // Instead of accessing user.images_generated directly, get the profile data from the database
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("images_generated")
+      .eq("id", user.id)
+      .single();
+    
+    // Update the profile with incremented count
     await supabase
       .from("profiles")
-      .update({ images_generated: user.images_generated ? user.images_generated + 1 : 1 })
+      .update({ 
+        images_generated: profileData?.images_generated ? profileData.images_generated + 1 : 1 
+      })
       .eq("id", user.id);
 
     return imageData;
