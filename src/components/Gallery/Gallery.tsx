@@ -11,6 +11,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 interface GalleryProps {
   userImages: Array<{
@@ -24,21 +26,49 @@ interface GalleryProps {
 
 export const Gallery = ({ userImages }: GalleryProps) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
   const imagesPerPage = 8;
   
-  const paginatedImages = userImages ? 
-    userImages.slice((currentPage - 1) * imagesPerPage, currentPage * imagesPerPage) : 
+  // Filter images based on search query
+  const filteredImages = userImages ? 
+    userImages.filter(img => 
+      img.prompt.toLowerCase().includes(searchQuery.toLowerCase())
+    ) : 
     [];
   
-  const totalPages = userImages ? Math.ceil(userImages.length / imagesPerPage) : 0;
+  const paginatedImages = filteredImages.slice(
+    (currentPage - 1) * imagesPerPage, 
+    currentPage * imagesPerPage
+  );
+  
+  const totalPages = Math.ceil(filteredImages.length / imagesPerPage);
   
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
+  };
+
   return (
     <section className="mt-12">
-      <h2 className="text-2xl font-bold mb-6">Your Gallery</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Your Gallery</h2>
+        
+        <div className="relative w-full max-w-xs">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search by prompt..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="pl-9 w-full"
+          />
+        </div>
+      </div>
+      
       <Tabs defaultValue="recent">
         <TabsList className="mb-6">
           <TabsTrigger value="recent">Recent Images</TabsTrigger>
@@ -46,7 +76,7 @@ export const Gallery = ({ userImages }: GalleryProps) => {
         </TabsList>
 
         <TabsContent value="recent">
-          {userImages && userImages.length > 0 ? (
+          {filteredImages.length > 0 ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {paginatedImages.map((item, index) => (
@@ -54,6 +84,7 @@ export const Gallery = ({ userImages }: GalleryProps) => {
                     key={item.id || index} 
                     imageUrl={item.image_url} 
                     prompt={item.prompt} 
+                    createdAt={item.created_at}
                   />
                 ))}
               </div>
@@ -91,7 +122,9 @@ export const Gallery = ({ userImages }: GalleryProps) => {
               )}
             </>
           ) : (
-            <EmptyGalleryState />
+            <EmptyGalleryState 
+              message={searchQuery ? "No matching images found" : "No images yet"} 
+            />
           )}
         </TabsContent>
 
