@@ -52,8 +52,8 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string): Prom
     console.log("User ID:", user.id);
     
     // Check if the storage bucket exists, if not create it
-    const { data: buckets } = await supabase.storage.listBuckets();
     const bucketName = "generated_images";
+    const { data: buckets } = await supabase.storage.listBuckets();
     const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
     
     if (!bucketExists) {
@@ -108,6 +108,20 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string): Prom
     const publicUrl = publicUrlData.publicUrl;
     console.log("Public URL generated:", publicUrl);
 
+    // First, decrease the user's credits
+    const { error: creditError } = await supabase
+      .from("profiles")
+      .update({ 
+        credits: supabase.rpc('decrement_credits', { amount: 1 }),
+        images_generated: supabase.rpc('increment_count', { amount: 1 })
+      })
+      .eq("id", user.id);
+
+    if (creditError) {
+      console.error("Error decreasing credits:", creditError);
+      throw creditError;
+    }
+    
     // Save record to the database
     console.log("Saving to database with prompt:", prompt);
     const { data: imageData, error: insertError } = await supabase
@@ -128,27 +142,6 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string): Prom
     }
 
     console.log("Database record created:", imageData);
-
-    // Update user's images_generated count
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("images_generated")
-      .eq("id", user.id)
-      .single();
-    
-    if (profileError) {
-      console.error("Error fetching profile data:", profileError);
-      // Continue execution even if this fails
-    } else {
-      const currentCount = profileData?.images_generated || 0;
-      
-      await supabase
-        .from("profiles")
-        .update({ images_generated: currentCount + 1 })
-        .eq("id", user.id);
-      
-      console.log("Updated user's image count to:", currentCount + 1);
-    }
 
     return imageData;
   } catch (error) {

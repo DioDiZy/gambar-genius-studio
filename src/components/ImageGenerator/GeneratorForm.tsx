@@ -1,9 +1,12 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomButton } from "@/components/ui/custom-button";
 import { Textarea } from "@/components/ui/textarea";
 import { generateImage } from "@/services/ImageService";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface GeneratorFormProps {
   onImageGenerated: (url: string, prompt: string) => void;
@@ -19,11 +22,30 @@ export const GeneratorForm = ({
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState("photorealistic");
   const [aspectRatio, setAspectRatio] = useState("1:1");
+  const { user } = useAuth();
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
     try {
+      // First check if user has enough credits
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("credits")
+        .eq("id", user?.id)
+        .single();
+
+      if (profileError) {
+        throw new Error("Could not check available credits");
+      }
+
+      if (!profile || profile.credits <= 0) {
+        toast.error("Not enough credits", {
+          description: "You need credits to generate images"
+        });
+        return;
+      }
+
       setIsGenerating(true);
       
       toast.info("Generating your image...", {
@@ -31,9 +53,10 @@ export const GeneratorForm = ({
       });
       
       try {
+        // Include the style in the prompt for better results
+        const enhancedPrompt = `${prompt} in ${style} style`;
         const imageUrl = await generateImage({ 
-          prompt, 
-          style, 
+          prompt: enhancedPrompt, 
           aspectRatio 
         });
         

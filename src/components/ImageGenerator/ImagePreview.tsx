@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 interface ImagePreviewProps {
   imageUrl: string;
-  prompt: string; // Add prompt to props
+  prompt: string;
   isGenerating: boolean;
   onSaved: () => void;
 }
@@ -16,7 +16,12 @@ export const ImagePreview = ({ imageUrl, prompt, isGenerating, onSaved }: ImageP
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!imageUrl) return;
+    if (!imageUrl || !prompt) {
+      toast.error("Missing data", { 
+        description: "Both image and prompt are required to save" 
+      });
+      return;
+    }
     
     try {
       setSaving(true);
