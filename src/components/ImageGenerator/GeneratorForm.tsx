@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { generateImage } from "@/services/ImageService";
 
 interface GeneratorFormProps {
-  onImageGenerated: (url: string) => void;
+  onImageGenerated: (url: string, prompt: string) => void;
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
 }
@@ -39,7 +38,7 @@ export const GeneratorForm = ({
         });
         
         if (imageUrl) {
-          onImageGenerated(imageUrl);
+          onImageGenerated(imageUrl, prompt);
           toast.success("Image generated successfully!");
         } else {
           toast.error("Failed to generate image");

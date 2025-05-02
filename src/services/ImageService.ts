@@ -48,21 +48,49 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string): Prom
     const { user } = useAuth();
     if (!user) throw new Error("User not authenticated");
 
+    console.log("Starting image save process for:", imageUrl);
+    console.log("User ID:", user.id);
+    
+    // Check if the storage bucket exists, if not create it
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketName = "generated_images";
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      console.log("Bucket doesn't exist, creating...");
+      const { error: bucketError } = await supabase.storage.createBucket(bucketName, {
+        public: true
+      });
+      
+      if (bucketError) {
+        console.error("Error creating bucket:", bucketError);
+        throw bucketError;
+      }
+    }
+
     // Download the image from the URL
     const response = await fetch(imageUrl);
-    if (!response.ok) throw new Error("Failed to fetch image");
+    if (!response.ok) {
+      console.error("Failed to fetch image, status:", response.status);
+      throw new Error("Failed to fetch image");
+    }
+    
     const imageBlob = await response.blob();
+    console.log("Image downloaded, size:", imageBlob.size);
 
     // Generate a unique filename
     const timestamp = Date.now();
     const filename = `generated_${timestamp}.webp`;
     const filePath = `${user.id}/${filename}`;
 
+    console.log("Uploading to storage path:", filePath);
+    
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("generated_images")
+      .from(bucketName)
       .upload(filePath, imageBlob, {
-        contentType: "image/webp"
+        contentType: "image/webp",
+        cacheControl: "3600"
       });
 
     if (uploadError) {
@@ -70,20 +98,24 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string): Prom
       throw uploadError;
     }
 
+    console.log("Upload successful, data:", uploadData);
+
     // Get the public URL
     const { data: publicUrlData } = supabase.storage
-      .from("generated_images")
+      .from(bucketName)
       .getPublicUrl(filePath);
 
     const publicUrl = publicUrlData.publicUrl;
+    console.log("Public URL generated:", publicUrl);
 
     // Save record to the database
+    console.log("Saving to database with prompt:", prompt);
     const { data: imageData, error: insertError } = await supabase
       .from("images")
       .insert([
         {
           user_id: user.id,
-          prompt: prompt,
+          prompt: prompt || "AI generated image",
           image_url: publicUrl
         }
       ])
@@ -95,21 +127,28 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string): Prom
       throw insertError;
     }
 
-    // Update user's images_generated count - Fixed TypeScript error by retrieving profile data first
-    // Instead of accessing user.images_generated directly, get the profile data from the database
-    const { data: profileData } = await supabase
+    console.log("Database record created:", imageData);
+
+    // Update user's images_generated count
+    const { data: profileData, error: profileError } = await supabase
       .from("profiles")
       .select("images_generated")
       .eq("id", user.id)
       .single();
     
-    // Update the profile with incremented count
-    await supabase
-      .from("profiles")
-      .update({ 
-        images_generated: profileData?.images_generated ? profileData.images_generated + 1 : 1 
-      })
-      .eq("id", user.id);
+    if (profileError) {
+      console.error("Error fetching profile data:", profileError);
+      // Continue execution even if this fails
+    } else {
+      const currentCount = profileData?.images_generated || 0;
+      
+      await supabase
+        .from("profiles")
+        .update({ images_generated: currentCount + 1 })
+        .eq("id", user.id);
+      
+      console.log("Updated user's image count to:", currentCount + 1);
+    }
 
     return imageData;
   } catch (error) {

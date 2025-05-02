@@ -12,6 +12,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState("");
+  const [currentPrompt, setCurrentPrompt] = useState("");
 
   // Query to fetch user's generated images with optimized settings
   const { data: userImages, refetch: refetchImages } = useQuery({
@@ -34,8 +35,9 @@ const Dashboard = () => {
     staleTime: 60000, // Data considered fresh for 1 minute
   });
 
-  const handleImageGenerated = (url: string) => {
+  const handleImageGenerated = (url: string, prompt: string) => {
     setGeneratedImageUrl(url);
+    setCurrentPrompt(prompt);
   };
 
   const handleImageSaved = () => {
@@ -58,6 +60,7 @@ const Dashboard = () => {
         {/* Right Column - Output */}
         <ImagePreview 
           imageUrl={generatedImageUrl}
+          prompt={currentPrompt}
           isGenerating={isGenerating}
           onSaved={handleImageSaved}
         />

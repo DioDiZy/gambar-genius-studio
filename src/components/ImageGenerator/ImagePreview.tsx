@@ -7,11 +7,12 @@ import { toast } from "sonner";
 
 interface ImagePreviewProps {
   imageUrl: string;
+  prompt: string; // Add prompt to props
   isGenerating: boolean;
   onSaved: () => void;
 }
 
-export const ImagePreview = ({ imageUrl, isGenerating, onSaved }: ImagePreviewProps) => {
+export const ImagePreview = ({ imageUrl, prompt, isGenerating, onSaved }: ImagePreviewProps) => {
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -21,7 +22,7 @@ export const ImagePreview = ({ imageUrl, isGenerating, onSaved }: ImagePreviewPr
       setSaving(true);
       toast.info("Saving your image...");
       
-      await saveGeneratedImage(imageUrl, "");
+      await saveGeneratedImage(imageUrl, prompt);
       
       // Notify parent component to refetch images
       onSaved();
