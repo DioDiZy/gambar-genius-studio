@@ -108,18 +108,17 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string): Prom
     const publicUrl = publicUrlData.publicUrl;
     console.log("Public URL generated:", publicUrl);
 
-    // First, decrease the user's credits
-    const { error: creditError } = await supabase
-      .from("profiles")
-      .update({ 
-        credits: supabase.rpc('decrement_credits', { amount: 1 }),
-        images_generated: supabase.rpc('increment_count', { amount: 1 })
-      })
-      .eq("id", user.id);
-
+    // Use the RPC functions to decrease credits and increment image count
+    const { error: creditError } = await supabase.rpc('decrement_credits', { amount: 1 });
     if (creditError) {
       console.error("Error decreasing credits:", creditError);
       throw creditError;
+    }
+    
+    const { error: countError } = await supabase.rpc('increment_count', { amount: 1 });
+    if (countError) {
+      console.error("Error incrementing image count:", countError);
+      // Continue execution even if this fails
     }
     
     // Save record to the database
