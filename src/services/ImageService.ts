@@ -109,16 +109,23 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string): Prom
     console.log("Public URL generated:", publicUrl);
 
     // Use the RPC functions to decrease credits and increment image count
+    // Fix: Properly handle the RPC function calls and their responses
     const { data: creditData, error: creditError } = await supabase.rpc('decrement_credits', { amount: 1 });
+    
     if (creditError) {
       console.error("Error decreasing credits:", creditError);
       throw creditError;
     }
     
+    console.log("Credits decremented successfully:", creditData);
+    
     const { data: countData, error: countError } = await supabase.rpc('increment_count', { amount: 1 });
+    
     if (countError) {
       console.error("Error incrementing image count:", countError);
       // Continue execution even if this fails
+    } else {
+      console.log("Image count incremented successfully:", countData);
     }
     
     // Save record to the database
