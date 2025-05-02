@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 
 export interface GenerateImageParams {
   prompt: string;
@@ -43,13 +42,13 @@ export async function generateImage(params: GenerateImageParams): Promise<string
   }
 }
 
-export async function saveGeneratedImage(imageUrl: string, prompt: string): Promise<{ id: string, image_url: string } | null> {
+export async function saveGeneratedImage(imageUrl: string, prompt: string, userId: string): Promise<{ id: string, image_url: string } | null> {
   try {
-    const { user } = useAuth();
-    if (!user) throw new Error("User not authenticated");
+    // Removed useAuth hook from here - now accepting userId as a parameter instead
+    if (!userId) throw new Error("User not authenticated");
 
     console.log("Starting image save process for:", imageUrl);
-    console.log("User ID:", user.id);
+    console.log("User ID:", userId);
     
     // Check if the storage bucket exists, if not create it
     const bucketName = "generated_images";
@@ -81,7 +80,7 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string): Prom
     // Generate a unique filename
     const timestamp = Date.now();
     const filename = `generated_${timestamp}.webp`;
-    const filePath = `${user.id}/${filename}`;
+    const filePath = `${userId}/${filename}`;
 
     console.log("Uploading to storage path:", filePath);
     
@@ -134,7 +133,7 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string): Prom
       .from("images")
       .insert([
         {
-          user_id: user.id,
+          user_id: userId,
           prompt: prompt || "AI generated image",
           image_url: publicUrl
         }

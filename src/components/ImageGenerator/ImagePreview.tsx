@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CustomButton } from "@/components/ui/custom-button";
 import { saveGeneratedImage } from "@/services/ImageService";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ImagePreviewProps {
   imageUrl: string;
@@ -14,6 +15,7 @@ interface ImagePreviewProps {
 
 export const ImagePreview = ({ imageUrl, prompt, isGenerating, onSaved }: ImagePreviewProps) => {
   const [saving, setSaving] = useState(false);
+  const { user } = useAuth(); // We get the user here in the React component
 
   const handleSave = async () => {
     if (!imageUrl || !prompt) {
@@ -22,12 +24,20 @@ export const ImagePreview = ({ imageUrl, prompt, isGenerating, onSaved }: ImageP
       });
       return;
     }
+
+    if (!user) {
+      toast.error("Authentication required", {
+        description: "You must be logged in to save images"
+      });
+      return;
+    }
     
     try {
       setSaving(true);
       toast.info("Saving your image...");
       
-      await saveGeneratedImage(imageUrl, prompt);
+      // Pass the user ID to the saveGeneratedImage function
+      await saveGeneratedImage(imageUrl, prompt, user.id);
       
       // Notify parent component to refetch images
       onSaved();
