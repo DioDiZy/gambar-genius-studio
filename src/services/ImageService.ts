@@ -1,9 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface GenerateImageParams {
   prompt: string;
-  style?: string;
   aspectRatio?: string;
 }
 
@@ -50,107 +48,60 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string, userI
     console.log("Starting image save process for:", imageUrl);
     console.log("User ID:", userId);
     
-    // Check if the storage bucket exists, if not create it
-    const bucketName = "generated_images";
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    // We'll use a direct URL approach instead of storage to simplify
+    // This will work with the existing RLS policies
+    console.log("Saving image in database with prompt:", prompt);
     
-    if (!bucketExists) {
-      console.log("Bucket doesn't exist, creating...");
-      const { error: bucketError } = await supabase.storage.createBucket(bucketName, {
-        public: true
-      });
-      
-      if (bucketError) {
-        console.error("Error creating bucket:", bucketError);
-        throw bucketError;
-      }
-    }
-
-    // Download the image from the URL
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      console.error("Failed to fetch image, status:", response.status);
-      throw new Error("Failed to fetch image");
-    }
-    
-    const imageBlob = await response.blob();
-    console.log("Image downloaded, size:", imageBlob.size);
-
-    // Generate a unique filename
-    const timestamp = Date.now();
-    const filename = `generated_${timestamp}.webp`;
-    const filePath = `${userId}/${filename}`;
-
-    console.log("Uploading to storage path:", filePath);
-    
-    // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from(bucketName)
-      .upload(filePath, imageBlob, {
-        contentType: "image/webp",
-        cacheControl: "3600"
-      });
-
-    if (uploadError) {
-      console.error("Error uploading image:", uploadError);
-      throw uploadError;
-    }
-
-    console.log("Upload successful, data:", uploadData);
-
-    // Get the public URL
-    const { data: publicUrlData } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(filePath);
-
-    const publicUrl = publicUrlData.publicUrl;
-    console.log("Public URL generated:", publicUrl);
-
-    // Use the RPC functions to decrease credits and increment image count
-    // Fix: Properly handle the RPC function calls and their responses
-    const { data: creditData, error: creditError } = await supabase.rpc('decrement_credits', { amount: 1 });
-    
-    if (creditError) {
-      console.error("Error decreasing credits:", creditError);
-      throw creditError;
-    }
-    
-    console.log("Credits decremented successfully:", creditData);
-    
-    const { data: countData, error: countError } = await supabase.rpc('increment_count', { amount: 1 });
-    
-    if (countError) {
-      console.error("Error incrementing image count:", countError);
-      // Continue execution even if this fails
-    } else {
-      console.log("Image count incremented successfully:", countData);
-    }
-    
-    // Save record to the database
-    console.log("Saving to database with prompt:", prompt);
-    const { data: imageData, error: insertError } = await supabase
+    const { data, error } = await supabase
       .from("images")
       .insert([
         {
           user_id: userId,
           prompt: prompt || "AI generated image",
-          image_url: publicUrl
+          image_url: imageUrl // Store the direct URL
         }
       ])
       .select()
       .single();
-
-    if (insertError) {
-      console.error("Error saving image record:", insertError);
-      throw insertError;
+      
+    if (error) {
+      console.error("Error saving image to database:", error);
+      throw error;
+    }
+    
+    console.log("Image saved successfully:", data);
+    
+    // Decrement user credits
+    try {
+      const { data: creditsData, error: creditsError } = await supabase.rpc('decrement_credits', {
+        amount: 1
+      });
+      
+      if (creditsError) {
+        console.error("Error decremented credits:", creditsError);
+        // Don't throw here, we still saved the image
+      } else {
+        console.log("Credits decremented. Remaining:", creditsData);
+      }
+      
+      // Increment images generated count
+      const { data: countData, error: countError } = await supabase.rpc('increment_count', {
+        amount: 1
+      });
+      
+      if (countError) {
+        console.error("Error incrementing image count:", countError);
+      } else {
+        console.log("Images count incremented. New count:", countData);
+      }
+    } catch (statsError) {
+      console.error("Error updating user stats:", statsError);
+      // Don't throw, the image was still saved
     }
 
-    console.log("Database record created:", imageData);
-
-    return imageData;
+    return data;
   } catch (error) {
-    console.error("Error saving generated image:", error);
+    console.error("Error in saveGeneratedImage function:", error);
     throw error;
   }
 }
