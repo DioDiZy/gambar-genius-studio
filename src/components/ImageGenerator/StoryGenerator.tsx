@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Book } from "lucide-react";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -25,6 +26,7 @@ export const StoryGenerator = ({
   const [story, setStory] = useState("");
   const [paragraphSeparator, setParagraphSeparator] = useState("\n\n");
   const [style, setStyle] = useState("photorealistic");
+  const [characterDescriptions, setCharacterDescriptions] = useState("");
   const { user } = useAuth();
 
   const handleParagraphSplit = (text: string): string[] => {
@@ -81,8 +83,18 @@ export const StoryGenerator = ({
       });
       
       try {
-        // Generate images for each paragraph
-        const enhancedPrompts = paragraphs.map(p => `${p} in ${style} style`);
+        // Generate images for each paragraph with consistent character descriptions
+        const enhancedPrompts = paragraphs.map(p => {
+          let enhancedPrompt = `${p} in ${style} style`;
+          
+          // Add character descriptions if provided
+          if (characterDescriptions.trim()) {
+            enhancedPrompt = `${enhancedPrompt}. Characters: ${characterDescriptions}`;
+          }
+          
+          return enhancedPrompt;
+        });
+        
         const imageUrls = await generateMultipleImages(enhancedPrompts);
         
         if (imageUrls.length > 0) {
@@ -117,7 +129,10 @@ export const StoryGenerator = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Story to Images</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Book className="h-5 w-5" />
+          Story to Images
+        </CardTitle>
         <CardDescription>
           Write a story and generate an image for each paragraph
         </CardDescription>
@@ -131,6 +146,7 @@ export const StoryGenerator = ({
               value={paragraphSeparator}
               onChange={(e) => setParagraphSeparator(e.target.value)}
               className="mb-2"
+              disabled={isGenerating}
             />
             <p className="text-xs text-muted-foreground">
               Default is double line break. Enter custom separators like "***" or "###" if needed.
@@ -152,16 +168,33 @@ export const StoryGenerator = ({
               <option value="oil-painting">Oil Painting</option>
             </select>
           </div>
+          
+          <div className="space-y-2">
+            <Label>Character Descriptions</Label>
+            <Textarea
+              placeholder="Describe characters or consistent elements that should appear across all images. E.g.: 'Main character is a young woman with red hair named Alice. Her companion is an old bearded wizard named Merlin.'"
+              value={characterDescriptions}
+              onChange={(e) => setCharacterDescriptions(e.target.value)}
+              className="min-h-24"
+              disabled={isGenerating}
+            />
+            <p className="text-xs text-muted-foreground">
+              These descriptions will be applied to all generated images for consistency.
+            </p>
+          </div>
 
           <Separator className="my-4" />
 
-          <Textarea
-            placeholder="Once upon a time in a distant land...\n\nAs the hero ventured deeper into the forest..."
-            value={story}
-            onChange={(e) => setStory(e.target.value)}
-            className="min-h-64 mb-4"
-            disabled={isGenerating}
-          />
+          <div className="space-y-2">
+            <Label>Your Story</Label>
+            <Textarea
+              placeholder="Once upon a time in a distant land...\n\nAs the hero ventured deeper into the forest..."
+              value={story}
+              onChange={(e) => setStory(e.target.value)}
+              className="min-h-64 mb-4"
+              disabled={isGenerating}
+            />
+          </div>
 
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">

@@ -5,7 +5,7 @@ import { CustomButton } from "@/components/ui/custom-button";
 import { saveGeneratedImage } from "@/services/ImageService";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChevronLeft, ChevronRight, Download, Save } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Save, BookText } from "lucide-react";
 
 interface StoryImagesPreviewProps {
   imageUrls: string[];
@@ -82,7 +82,10 @@ export const StoryImagesPreview = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Story Images {imageUrls.length > 0 ? `(${currentIndex + 1}/${imageUrls.length})` : ""}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <BookText className="h-5 w-5" />
+          Story Images {imageUrls.length > 0 ? `(${currentIndex + 1}/${imageUrls.length})` : ""}
+        </CardTitle>
         <CardDescription>
           Images generated from your story paragraphs
         </CardDescription>
