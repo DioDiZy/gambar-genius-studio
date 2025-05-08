@@ -1,7 +1,6 @@
 
 import { Download, Heart } from "lucide-react";
 import { useState } from "react";
-import { format } from "date-fns";
 import { toast } from "sonner";
 
 interface GalleryItemProps {
@@ -14,13 +13,22 @@ export const GalleryItem = ({ imageUrl, prompt, createdAt }: GalleryItemProps) =
   const [isHovering, setIsHovering] = useState(false);
 
   const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = `ai-image-${Date.now()}.webp`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success("Image downloaded successfully");
+    try {
+      // Extract filename from URL
+      const urlParts = imageUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1] || `ai-image-${Date.now()}.webp`;
+      
+      const link = document.createElement("a");
+      link.href = imageUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Image downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download image");
+    }
   };
 
   const handleAddToFavorites = () => {

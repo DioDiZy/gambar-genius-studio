@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface GenerateImageParams {
@@ -42,23 +43,42 @@ export async function generateImage(params: GenerateImageParams): Promise<string
 
 export async function saveGeneratedImage(imageUrl: string, prompt: string, userId: string): Promise<{ id: string, image_url: string } | null> {
   try {
-    // Removed useAuth hook from here - now accepting userId as a parameter instead
+    // Don't use useAuth hook here as it's not a React component
     if (!userId) throw new Error("User not authenticated");
 
     console.log("Starting image save process for:", imageUrl);
     console.log("User ID:", userId);
     
-    // We'll use a direct URL approach instead of storage to simplify
-    // This will work with the existing RLS policies
-    console.log("Saving image in database with prompt:", prompt);
+    // First save the image to Supabase Storage using our edge function
+    console.log("Saving image to storage with prompt:", prompt);
+    const { data: storageData, error: storageError } = await supabase.functions.invoke("save-image-to-storage", {
+      body: {
+        imageUrl,
+        fileName: `image-${Date.now()}`
+      },
+    });
     
+    if (storageError) {
+      console.error("Error saving image to storage:", storageError);
+      throw storageError;
+    }
+    
+    if (!storageData?.imageUrl) {
+      console.error("No storage URL returned");
+      throw new Error("Failed to save image to storage");
+    }
+    
+    const permanentImageUrl = storageData.imageUrl;
+    console.log("Image saved to storage:", permanentImageUrl);
+    
+    // Then save the reference in the database
     const { data, error } = await supabase
       .from("images")
       .insert([
         {
           user_id: userId,
           prompt: prompt || "AI generated image",
-          image_url: imageUrl // Store the direct URL
+          image_url: permanentImageUrl // Store the permanent URL from Storage
         }
       ])
       .select()
