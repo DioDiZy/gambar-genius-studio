@@ -7,12 +7,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { GeneratorForm } from "@/components/ImageGenerator/GeneratorForm";
 import { ImagePreview } from "@/components/ImageGenerator/ImagePreview";
 import { Gallery } from "@/components/Gallery/Gallery";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StoryGenerator } from "@/components/ImageGenerator/StoryGenerator";
+import { StoryImagesPreview } from "@/components/ImageGenerator/StoryImagesPreview";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState("");
   const [currentPrompt, setCurrentPrompt] = useState("");
+  
+  // For story-based image generation
+  const [storyImageUrls, setStoryImageUrls] = useState<string[]>([]);
+  const [storyPrompts, setStoryPrompts] = useState<string[]>([]);
 
   // Query to fetch user's generated images with optimized settings
   const { data: userImages, refetch: refetchImages } = useQuery({
@@ -40,6 +47,11 @@ const Dashboard = () => {
     setCurrentPrompt(prompt);
   };
 
+  const handleStoryImagesGenerated = (urls: string[], prompts: string[]) => {
+    setStoryImageUrls(urls);
+    setStoryPrompts(prompts);
+  };
+
   const handleImageSaved = () => {
     // Refetch the user's images to update the gallery
     refetchImages();
@@ -49,22 +61,46 @@ const Dashboard = () => {
     <DashboardLayout>
       <h1 className="text-3xl font-bold mb-8">Create AI Images</h1>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Left Column - Input */}
-        <GeneratorForm 
-          onImageGenerated={handleImageGenerated}
-          isGenerating={isGenerating}
-          setIsGenerating={setIsGenerating}
-        />
+      <Tabs defaultValue="single" className="mb-8">
+        <TabsList className="mb-6">
+          <TabsTrigger value="single">Single Image</TabsTrigger>
+          <TabsTrigger value="story">Story to Images</TabsTrigger>
+        </TabsList>
 
-        {/* Right Column - Output */}
-        <ImagePreview 
-          imageUrl={generatedImageUrl}
-          prompt={currentPrompt}
-          isGenerating={isGenerating}
-          onSaved={handleImageSaved}
-        />
-      </div>
+        <TabsContent value="single">
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Single Image Generation */}
+            <GeneratorForm 
+              onImageGenerated={handleImageGenerated}
+              isGenerating={isGenerating}
+              setIsGenerating={setIsGenerating}
+            />
+            <ImagePreview 
+              imageUrl={generatedImageUrl}
+              prompt={currentPrompt}
+              isGenerating={isGenerating}
+              onSaved={handleImageSaved}
+            />
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="story">
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Story-based Image Generation */}
+            <StoryGenerator
+              onImagesGenerated={handleStoryImagesGenerated}
+              isGenerating={isGenerating}
+              setIsGenerating={setIsGenerating}
+            />
+            <StoryImagesPreview
+              imageUrls={storyImageUrls}
+              prompts={storyPrompts}
+              isGenerating={isGenerating}
+              onSaved={handleImageSaved}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Gallery Section */}
       <Gallery userImages={userImages} />

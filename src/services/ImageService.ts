@@ -41,6 +41,28 @@ export async function generateImage(params: GenerateImageParams): Promise<string
   }
 }
 
+// New function to generate multiple images
+export async function generateMultipleImages(prompts: string[]): Promise<string[]> {
+  if (!prompts.length) return [];
+
+  try {
+    const imageUrls: string[] = [];
+    
+    // Generate images sequentially to avoid overwhelming the API
+    for (const prompt of prompts) {
+      const imageUrl = await generateImage({ prompt });
+      if (imageUrl) {
+        imageUrls.push(imageUrl);
+      }
+    }
+    
+    return imageUrls;
+  } catch (error) {
+    console.error("Error generating multiple images:", error);
+    throw error;
+  }
+}
+
 export async function saveGeneratedImage(imageUrl: string, prompt: string, userId: string): Promise<{ id: string, image_url: string } | null> {
   try {
     // Don't use useAuth hook here as it's not a React component
