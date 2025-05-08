@@ -34,30 +34,43 @@ serve(async (req) => {
     const imageBlob = await imageResponse.blob()
     const uniqueFileName = `${fileName || 'image'}-${Date.now()}.webp`
     
-    // Create a Supabase client
+    // Create a Supabase client with service role key to bypass RLS
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
     
-    // Create the images bucket if it doesn't exist
-    const { data: bucketData, error: bucketError } = await supabase
-      .storage
-      .createBucket('images', {
-        public: true,
-        fileSizeLimit: 5242880, // 5MB
-      })
-      .catch(e => ({ data: null, error: e }))
-      
-    if (bucketError && !bucketError.message.includes('already exists')) {
-      console.error("Error creating bucket:", bucketError)
-      throw bucketError
+    if (!supabaseServiceKey) {
+      throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY")
+    }
+    
+    // Create client with service role key to bypass RLS
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    // Check if the images bucket exists, if not create it
+    const { data: buckets } = await supabase.storage.listBuckets()
+    
+    const bucketName = 'images'
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName)
+    
+    if (!bucketExists) {
+      console.log("Creating images bucket...")
+      const { data: bucketData, error: bucketError } = await supabase
+        .storage
+        .createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB
+        })
+        
+      if (bucketError) {
+        console.error("Error creating bucket:", bucketError)
+        throw bucketError
+      }
     }
     
     // Upload the blob to Supabase Storage
     console.log("Uploading to Supabase Storage with filename:", uniqueFileName)
     const { data, error } = await supabase
       .storage
-      .from('images')
+      .from(bucketName)
       .upload(uniqueFileName, imageBlob, {
         contentType: 'image/webp',
         upsert: true,
@@ -71,7 +84,7 @@ serve(async (req) => {
     // Get the public URL for the uploaded image
     const { data: { publicUrl } } = supabase
       .storage
-      .from('images')
+      .from(bucketName)
       .getPublicUrl(data.path)
       
     console.log("Image successfully stored at:", publicUrl)

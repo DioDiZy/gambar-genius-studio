@@ -2,4 +2,4 @@
 project_id = "kipclwwcfcpzinnuwhlj"
 
 [functions.save-image-to-storage]
-verify_jwt = true
+verify_jwt = false
