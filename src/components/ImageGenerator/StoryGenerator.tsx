@@ -1,16 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CustomButton } from "@/components/ui/custom-button";
-import { Textarea } from "@/components/ui/textarea";
-import { generateMultipleImages } from "@/services/ImageService";
+import { Separator } from "@/components/ui/separator";
+import { Book } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Book } from "lucide-react";
+import { generateMultipleImages } from "@/services/ImageService";
+import { handleParagraphSplit } from "@/utils/storyUtils";
+import { StoryInputOptions } from "./StoryInputOptions";
+import { StoryTextArea } from "./StoryTextArea";
+import { StoryGenerationButton } from "./StoryGenerationButton";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -28,19 +28,13 @@ export const StoryGenerator = ({
   const [style, setStyle] = useState("photorealistic");
   const [characterDescriptions, setCharacterDescriptions] = useState("");
   const { user } = useAuth();
+  const [paragraphCount, setParagraphCount] = useState(0);
 
-  const handleParagraphSplit = (text: string): string[] => {
-    // Handle both types of line breaks and split by empty lines
-    if (!text.trim()) return [];
-    
-    // Use the custom separator if it exists, otherwise default to double newline
-    const separator = paragraphSeparator || "\n\n";
-    const paragraphs = text.split(separator)
-      .map(p => p.trim())
-      .filter(p => p.length > 0);
-      
-    return paragraphs;
-  };
+  // Update paragraph count whenever story or separator changes
+  useEffect(() => {
+    const paragraphs = handleParagraphSplit(story, paragraphSeparator);
+    setParagraphCount(paragraphs.length);
+  }, [story, paragraphSeparator]);
 
   const handleGenerate = async () => {
     if (!story.trim()) {
@@ -61,7 +55,7 @@ export const StoryGenerator = ({
       }
 
       // Get paragraphs
-      const paragraphs = handleParagraphSplit(story);
+      const paragraphs = handleParagraphSplit(story, paragraphSeparator);
       const totalImages = paragraphs.length;
 
       if (totalImages === 0) {
@@ -139,74 +133,31 @@ export const StoryGenerator = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Paragraph Separator</Label>
-            <Input 
-              placeholder="Enter the separator between paragraphs"
-              value={paragraphSeparator}
-              onChange={(e) => setParagraphSeparator(e.target.value)}
-              className="mb-2"
-              disabled={isGenerating}
-            />
-            <p className="text-xs text-muted-foreground">
-              Default is double line break. Enter custom separators like "***" or "###" if needed.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Style</Label>
-            <select 
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={style}
-              onChange={(e) => setStyle(e.target.value)}
-              disabled={isGenerating}
-            >
-              <option value="photorealistic">Photorealistic</option>
-              <option value="digital-art">Digital Art</option>
-              <option value="anime">Anime</option>
-              <option value="3d-render">3D Render</option>
-              <option value="oil-painting">Oil Painting</option>
-            </select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Character Descriptions</Label>
-            <Textarea
-              placeholder="Describe characters or consistent elements that should appear across all images. E.g.: 'Main character is a young woman with red hair named Alice. Her companion is an old bearded wizard named Merlin.'"
-              value={characterDescriptions}
-              onChange={(e) => setCharacterDescriptions(e.target.value)}
-              className="min-h-24"
-              disabled={isGenerating}
-            />
-            <p className="text-xs text-muted-foreground">
-              These descriptions will be applied to all generated images for consistency.
-            </p>
-          </div>
+          <StoryInputOptions
+            paragraphSeparator={paragraphSeparator}
+            onSeparatorChange={setParagraphSeparator}
+            style={style}
+            onStyleChange={setStyle}
+            characterDescriptions={characterDescriptions}
+            onCharacterDescriptionsChange={setCharacterDescriptions}
+            isGenerating={isGenerating}
+          />
 
           <Separator className="my-4" />
 
-          <div className="space-y-2">
-            <Label>Your Story</Label>
-            <Textarea
-              placeholder="Once upon a time in a distant land...\n\nAs the hero ventured deeper into the forest..."
-              value={story}
-              onChange={(e) => setStory(e.target.value)}
-              className="min-h-64 mb-4"
-              disabled={isGenerating}
-            />
-          </div>
+          <StoryTextArea
+            story={story}
+            onStoryChange={setStory}
+            paragraphCount={paragraphCount}
+            isGenerating={isGenerating}
+          />
 
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              {handleParagraphSplit(story).length} paragraphs detected
-            </p>
-            <CustomButton
-              variant="gradient"
-              onClick={handleGenerate}
-              disabled={!story.trim() || isGenerating}
-            >
-              {isGenerating ? "Generating..." : "Generate Images"}
-            </CustomButton>
+          <div className="flex items-center justify-end">
+            <StoryGenerationButton
+              onGenerate={handleGenerate}
+              disabled={!story.trim()}
+              isGenerating={isGenerating}
+            />
           </div>
         </div>
       </CardContent>
