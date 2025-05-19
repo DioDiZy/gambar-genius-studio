@@ -16,6 +16,7 @@ interface UseStoryGenerationProps {
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
+  language?: string;
 }
 
 export const useStoryGeneration = ({
@@ -26,7 +27,8 @@ export const useStoryGeneration = ({
   characters,
   isGenerating,
   setIsGenerating,
-  onImagesGenerated
+  onImagesGenerated,
+  language = "english"
 }: UseStoryGenerationProps) => {
   const { user } = useAuth();
   const [paragraphs, setParagraphs] = useState<string[]>([]);
@@ -80,6 +82,11 @@ export const useStoryGeneration = ({
         const enhancedPrompts = paragraphs.map(p => {
           // Start with the paragraph text and style
           let enhancedPrompt = `${p} in ${style} style`;
+          
+          // Add language information for non-English content
+          if (language && language !== "english") {
+            enhancedPrompt = `${enhancedPrompt}. Text is in ${language} language`;
+          }
           
           // Add character descriptions if available
           if (characters.length > 0) {
