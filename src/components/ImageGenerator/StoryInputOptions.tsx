@@ -17,7 +17,6 @@ interface StoryInputOptionsProps {
   isGenerating: boolean;
   characters: CharacterDescription[];
   onCharactersChange: (characters: CharacterDescription[]) => void;
-  language?: string;
 }
 
 export const StoryInputOptions = ({
@@ -29,8 +28,7 @@ export const StoryInputOptions = ({
   onCharacterDescriptionsChange,
   isGenerating,
   characters,
-  onCharactersChange,
-  language = "english"
+  onCharactersChange
 }: StoryInputOptionsProps) => {
   const [newCharacter, setNewCharacter] = useState<CharacterDescription>({ name: "", appearance: "" });
 
@@ -46,152 +44,24 @@ export const StoryInputOptions = ({
     onCharactersChange(updatedCharacters);
   };
 
-  const getPlaceholdersByLanguage = () => {
-    switch(language) {
-      case "indonesian":
-        return {
-          separatorLabel: "Pemisah Paragraf",
-          separatorPlaceholder: "Masukkan pemisah antar paragraf",
-          separatorHint: "Default adalah jeda baris ganda. Masukkan pemisah kustom seperti \"***\" atau \"###\" jika diperlukan.",
-          styleLabel: "Gaya",
-          charactersLabel: "Karakter",
-          charactersHint: "Belum ada karakter yang ditambahkan. Tambahkan karakter untuk konsistensi antar gambar.",
-          characterName: "Nama karakter",
-          characterAppearance: "Penampilan karakter",
-          characterTip: "Tambahkan karakter utama dengan penampilan spesifik mereka untuk konsistensi antar gambar.",
-          additionalLabel: "Instruksi Gambar Tambahan",
-          additionalPlaceholder: "Tambahkan instruksi tambahan untuk pembuatan gambar (latar belakang, setting, suasana, pencahayaan, dll.)",
-          additionalHint: "Instruksi ini akan diterapkan pada semua gambar yang dihasilkan untuk konsistensi."
-        };
-      case "spanish":
-        return {
-          separatorLabel: "Separador de Párrafos",
-          separatorPlaceholder: "Ingrese el separador entre párrafos",
-          separatorHint: "El valor predeterminado es doble salto de línea. Ingrese separadores personalizados como \"***\" o \"###\" si es necesario.",
-          styleLabel: "Estilo",
-          charactersLabel: "Personajes",
-          charactersHint: "Aún no se han añadido personajes. Añada personajes para mantener la consistencia entre imágenes.",
-          characterName: "Nombre del personaje",
-          characterAppearance: "Apariencia del personaje",
-          characterTip: "Añada personajes clave con sus apariencias específicas para mantener la consistencia entre imágenes.",
-          additionalLabel: "Instrucciones Adicionales para Imágenes",
-          additionalPlaceholder: "Añada instrucciones adicionales para la generación de imágenes (fondo, escenario, atmósfera, iluminación, etc.)",
-          additionalHint: "Estas instrucciones se aplicarán a todas las imágenes generadas para mantener la consistencia."
-        };
-      case "french":
-        return {
-          separatorLabel: "Séparateur de Paragraphes",
-          separatorPlaceholder: "Entrez le séparateur entre les paragraphes",
-          separatorHint: "Par défaut, c'est un double saut de ligne. Entrez des séparateurs personnalisés comme \"***\" ou \"###\" si nécessaire.",
-          styleLabel: "Style",
-          charactersLabel: "Personnages",
-          charactersHint: "Aucun personnage n'a encore été ajouté. Ajoutez des personnages pour la cohérence entre les images.",
-          characterName: "Nom du personnage",
-          characterAppearance: "Apparence du personnage",
-          characterTip: "Ajoutez des personnages clés avec leurs apparences spécifiques pour la cohérence entre les images.",
-          additionalLabel: "Instructions d'Image Supplémentaires",
-          additionalPlaceholder: "Ajoutez des instructions supplémentaires pour la génération d'images (arrière-plan, décor, ambiance, éclairage, etc.)",
-          additionalHint: "Ces instructions seront appliquées à toutes les images générées pour la cohérence."
-        };
-      case "german":
-        return {
-          separatorLabel: "Absatztrenner",
-          separatorPlaceholder: "Geben Sie den Trenner zwischen Absätzen ein",
-          separatorHint: "Standard ist ein doppelter Zeilenumbruch. Geben Sie bei Bedarf benutzerdefinierte Trenner wie \"***\" oder \"###\" ein.",
-          styleLabel: "Stil",
-          charactersLabel: "Charaktere",
-          charactersHint: "Es wurden noch keine Charaktere hinzugefügt. Fügen Sie Charaktere für Konsistenz zwischen Bildern hinzu.",
-          characterName: "Name des Charakters",
-          characterAppearance: "Erscheinungsbild des Charakters",
-          characterTip: "Fügen Sie Hauptcharaktere mit ihrem spezifischen Erscheinungsbild für Konsistenz zwischen Bildern hinzu.",
-          additionalLabel: "Zusätzliche Bildanweisungen",
-          additionalPlaceholder: "Fügen Sie zusätzliche Anweisungen für die Bilderstellung hinzu (Hintergrund, Umgebung, Atmosphäre, Beleuchtung usw.)",
-          additionalHint: "Diese Anweisungen werden auf alle generierten Bilder für Konsistenz angewendet."
-        };
-      case "chinese":
-        return {
-          separatorLabel: "段落分隔符",
-          separatorPlaceholder: "输入段落之间的分隔符",
-          separatorHint: "默认为双换行符。如有需要，请输入自定义分隔符，如"***"或"###"。",
-          styleLabel: "风格",
-          charactersLabel: "角色",
-          charactersHint: "尚未添加任何角色。添加角色以保持图像之间的一致性。",
-          characterName: "角色名称",
-          characterAppearance: "角色外观",
-          characterTip: "添加关键角色及其特定外观，以保持图像之间的一致性。",
-          additionalLabel: "额外图像说明",
-          additionalPlaceholder: "为图像生成添加任何额外说明（背景、场景、氛围、光线等）",
-          additionalHint: "这些说明将应用于所有生成的图像以保持一致性。"
-        };
-      case "japanese":
-        return {
-          separatorLabel: "段落区切り",
-          separatorPlaceholder: "段落間の区切りを入力してください",
-          separatorHint: "デフォルトは二重改行です。必要に応じて「***」や「###」などのカスタム区切りを入力してください。",
-          styleLabel: "スタイル",
-          charactersLabel: "キャラクター",
-          charactersHint: "まだキャラクターが追加されていません。画像間の一貫性のためにキャラクターを追加してください。",
-          characterName: "キャラクター名",
-          characterAppearance: "キャラクターの外見",
-          characterTip: "画像間の一貫性のために、主要キャラクターとその特定の外見を追加してください。",
-          additionalLabel: "追加画像指示",
-          additionalPlaceholder: "画像生成のための追加指示を入力してください（背景、設定、雰囲気、照明など）",
-          additionalHint: "これらの指示は、一貫性のためにすべての生成画像に適用されます。"
-        };
-      case "arabic":
-        return {
-          separatorLabel: "فاصل الفقرات",
-          separatorPlaceholder: "أدخل الفاصل بين الفقرات",
-          separatorHint: "الافتراضي هو سطر فارغ مزدوج. أدخل فواصل مخصصة مثل \"***\" أو \"###\" إذا لزم الأمر.",
-          styleLabel: "النمط",
-          charactersLabel: "الشخصيات",
-          charactersHint: "لم تتم إضافة أي شخصيات حتى الآن. أضف شخصيات للحصول على اتساق بين الصور.",
-          characterName: "اسم الشخصية",
-          characterAppearance: "مظهر الشخصية",
-          characterTip: "أضف الشخصيات الرئيسية بمظهرها المحدد للحصول على اتساق بين الصور.",
-          additionalLabel: "تعليمات إضافية للصورة",
-          additionalPlaceholder: "أضف أي تعليمات إضافية لإنشاء الصورة (الخلفية، الإعداد، الأجواء، الإضاءة، إلخ.)",
-          additionalHint: "سيتم تطبيق هذه التعليمات على جميع الصور المُنشأة للحفاظ على الاتساق."
-        };
-      case "english":
-      default:
-        return {
-          separatorLabel: "Paragraph Separator",
-          separatorPlaceholder: "Enter the separator between paragraphs",
-          separatorHint: "Default is double line break. Enter custom separators like \"***\" or \"###\" if needed.",
-          styleLabel: "Style",
-          charactersLabel: "Characters",
-          charactersHint: "No characters added yet. Add characters for consistency across images.",
-          characterName: "Character name",
-          characterAppearance: "Character appearance",
-          characterTip: "Add key characters with their specific appearances for consistency across images.",
-          additionalLabel: "Additional Image Instructions",
-          additionalPlaceholder: "Add any additional instructions for image generation (background, setting, atmosphere, lighting, etc.)",
-          additionalHint: "These instructions will be applied to all generated images for consistency."
-        };
-    }
-  };
-
-  const placeholders = getPlaceholdersByLanguage();
-
   return (
     <>
       <div className="space-y-2">
-        <Label>{placeholders.separatorLabel}</Label>
+        <Label>Paragraph Separator</Label>
         <Input 
-          placeholder={placeholders.separatorPlaceholder}
+          placeholder="Enter the separator between paragraphs"
           value={paragraphSeparator}
           onChange={(e) => onSeparatorChange(e.target.value)}
           className="mb-2"
           disabled={isGenerating}
         />
         <p className="text-xs text-muted-foreground">
-          {placeholders.separatorHint}
+          Default is double line break. Enter custom separators like "***" or "###" if needed.
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label>{placeholders.styleLabel}</Label>
+        <Label>Style</Label>
         <select 
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           value={style}
@@ -210,7 +80,7 @@ export const StoryInputOptions = ({
       </div>
       
       <div className="space-y-4">
-        <Label>{placeholders.charactersLabel}</Label>
+        <Label>Characters</Label>
         <div className="space-y-4 rounded-md border border-input p-3 bg-muted/20">
           {characters.length > 0 ? (
             <div className="space-y-3">
@@ -234,7 +104,7 @@ export const StoryInputOptions = ({
             </div>
           ) : (
             <p className="text-xs text-muted-foreground italic text-center py-2">
-              {placeholders.charactersHint}
+              No characters added yet. Add characters for consistency across images.
             </p>
           )}
           
@@ -242,7 +112,7 @@ export const StoryInputOptions = ({
             <div className="grid grid-cols-3 gap-2">
               <div className="col-span-1">
                 <Input
-                  placeholder={placeholders.characterName}
+                  placeholder="Character name"
                   value={newCharacter.name}
                   onChange={(e) => setNewCharacter({...newCharacter, name: e.target.value})}
                   disabled={isGenerating}
@@ -251,7 +121,7 @@ export const StoryInputOptions = ({
               <div className="col-span-2">
                 <div className="flex space-x-2">
                   <Input
-                    placeholder={placeholders.characterAppearance}
+                    placeholder="Character appearance"
                     value={newCharacter.appearance}
                     onChange={(e) => setNewCharacter({...newCharacter, appearance: e.target.value})}
                     disabled={isGenerating}
@@ -268,22 +138,22 @@ export const StoryInputOptions = ({
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              {placeholders.characterTip}
+              Add key characters with their specific appearances for consistency across images.
             </p>
           </div>
         </div>
         
         <div className="space-y-2">
-          <Label>{placeholders.additionalLabel}</Label>
+          <Label>Additional Image Instructions</Label>
           <Textarea
-            placeholder={placeholders.additionalPlaceholder}
+            placeholder="Add any additional instructions for image generation (background, setting, atmosphere, lighting, etc.)"
             value={characterDescriptions}
             onChange={(e) => onCharacterDescriptionsChange(e.target.value)}
             className="min-h-20"
             disabled={isGenerating}
           />
           <p className="text-xs text-muted-foreground">
-            {placeholders.additionalHint}
+            These instructions will be applied to all generated images for consistency.
           </p>
         </div>
       </div>

@@ -103,7 +103,6 @@ export const StoryGenerator = ({
             isGenerating={isGenerating}
             characters={characters}
             onCharactersChange={setCharacters}
-            language={language}
           />
 
           <Separator className="my-4" />
