@@ -8,6 +8,7 @@ import { useStoryGeneration } from "@/hooks/useStoryGeneration";
 import { StoryInputOptions } from "./StoryInputOptions";
 import { StoryTextArea } from "./StoryTextArea";
 import { StoryGenerationButton } from "./StoryGenerationButton";
+import { CharacterDescription } from "@/types/story";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -24,6 +25,7 @@ export const StoryGenerator = ({
   const [paragraphSeparator, setParagraphSeparator] = useState("\n\n");
   const [style, setStyle] = useState("photorealistic");
   const [characterDescriptions, setCharacterDescriptions] = useState("");
+  const [characters, setCharacters] = useState<CharacterDescription[]>([]);
   const [paragraphCount, setParagraphCount] = useState(0);
   
   const { handleGenerateImages, paragraphs } = useStoryGeneration({
@@ -31,6 +33,7 @@ export const StoryGenerator = ({
     paragraphSeparator,
     style,
     characterDescriptions,
+    characters,
     isGenerating,
     setIsGenerating,
     onImagesGenerated
@@ -49,7 +52,7 @@ export const StoryGenerator = ({
           Story to Images
         </CardTitle>
         <CardDescription>
-          Write a story and generate an image for each paragraph
+          Write a story and generate consistent storyboard images for each paragraph
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -62,6 +65,8 @@ export const StoryGenerator = ({
             characterDescriptions={characterDescriptions}
             onCharacterDescriptionsChange={setCharacterDescriptions}
             isGenerating={isGenerating}
+            characters={characters}
+            onCharactersChange={setCharacters}
           />
 
           <Separator className="my-4" />

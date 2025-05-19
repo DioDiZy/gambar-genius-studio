@@ -12,7 +12,8 @@ import {
   Save, 
   BookText, 
   Bookmark,
-  BookOpen 
+  BookOpen,
+  Images
 } from "lucide-react";
 
 interface StoryImagesPreviewProps {
@@ -30,7 +31,7 @@ export const StoryImagesPreview = ({
 }: StoryImagesPreviewProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [viewMode, setViewMode] = useState<'single' | 'storyboard'>('single');
+  const [viewMode, setViewMode] = useState<'single' | 'storyboard'>('storyboard');
   const { user } = useAuth();
 
   const handleSave = async (imageUrl: string, prompt: string) => {
@@ -164,8 +165,8 @@ export const StoryImagesPreview = ({
             {imageUrls.map((url, idx) => (
               <div 
                 key={idx} 
-                className={`relative aspect-square border-2 rounded overflow-hidden cursor-pointer ${
-                  idx === currentIndex ? 'border-primary' : 'border-transparent'
+                className={`relative aspect-square border-2 rounded overflow-hidden cursor-pointer transition-all ${
+                  idx === currentIndex ? 'border-primary ring-2 ring-primary/20 scale-[1.02]' : 'border-transparent'
                 }`}
                 onClick={() => setCurrentIndex(idx)}
               >
@@ -174,19 +175,20 @@ export const StoryImagesPreview = ({
                   alt={`Scene ${idx + 1}`} 
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute bottom-1 right-1 bg-background/80 px-2 py-0.5 rounded text-xs">
-                  {idx + 1}
+                <div className="absolute bottom-1 right-1 bg-background/80 px-2 py-0.5 rounded text-xs font-medium">
+                  Scene {idx + 1}
                 </div>
               </div>
             ))}
           </div>
-          <div className="p-2 bg-muted/50 rounded text-sm overflow-y-auto max-h-24">
-            <strong>Scene {currentIndex + 1}:</strong> {currentPrompt}
+          <div className="p-3 bg-muted/20 rounded-md border text-sm overflow-y-auto max-h-28">
+            <h4 className="font-medium text-xs uppercase text-muted-foreground mb-1">Scene {currentIndex + 1}</h4>
+            <p className="text-sm leading-relaxed">{currentPrompt}</p>
           </div>
         </div>
       ) : (
         <div className="text-center p-6">
-          <div className="text-4xl mb-2">📚</div>
+          <Images className="mx-auto h-12 w-12 text-muted-foreground/50 mb-2" />
           <p className="text-muted-foreground text-sm">
             Your storyboard will appear here
           </p>
@@ -223,7 +225,7 @@ export const StoryImagesPreview = ({
           )}
         </div>
         <CardDescription>
-          Images generated from your story paragraphs
+          Storyboard images generated from your story paragraphs
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -246,7 +248,7 @@ export const StoryImagesPreview = ({
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </CustomButton>
-                {imageUrls.length > 1 && viewMode === 'storyboard' && (
+                {imageUrls.length > 1 && (
                   <CustomButton
                     variant="outline"
                     size="sm"

@@ -5,12 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
+import { CharacterDescription } from "@/types/story";
 
 interface UseStoryGenerationProps {
   story: string;
   paragraphSeparator: string;
   style: string;
   characterDescriptions: string;
+  characters: CharacterDescription[];
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -21,6 +23,7 @@ export const useStoryGeneration = ({
   paragraphSeparator,
   style,
   characterDescriptions,
+  characters,
   isGenerating,
   setIsGenerating,
   onImagesGenerated
@@ -75,11 +78,20 @@ export const useStoryGeneration = ({
       try {
         // Generate images for each paragraph with consistent character descriptions
         const enhancedPrompts = paragraphs.map(p => {
+          // Start with the paragraph text and style
           let enhancedPrompt = `${p} in ${style} style`;
           
-          // Add character descriptions if provided
+          // Add character descriptions if available
+          if (characters.length > 0) {
+            const characterPrompt = characters.map(char => 
+              `${char.name}: ${char.appearance}`
+            ).join('; ');
+            enhancedPrompt = `${enhancedPrompt}. Characters: ${characterPrompt}`;
+          }
+          
+          // Add additional image instructions if provided
           if (characterDescriptions.trim()) {
-            enhancedPrompt = `${enhancedPrompt}. Characters: ${characterDescriptions}`;
+            enhancedPrompt = `${enhancedPrompt}. Scene details: ${characterDescriptions}`;
           }
           
           return enhancedPrompt;
