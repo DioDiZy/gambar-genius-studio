@@ -51,7 +51,7 @@ serve(async (req) => {
     console.log("Generating image with prompt:", body.prompt)
     
     try {
-      // Define model inputs with optional seed parameter for character consistency
+      // Define model inputs - ensuring num_inference_steps is always 4 or less
       const modelInputs = {
         prompt: body.prompt,
         go_fast: true,
@@ -60,7 +60,8 @@ serve(async (req) => {
         aspect_ratio: body.aspectRatio || "1:1",
         output_format: "webp",
         output_quality: 80,
-        num_inference_steps: body.num_inference_steps || 4
+        // Limit to 4 steps maximum as required by the model
+        num_inference_steps: Math.min(body.num_inference_steps || 3, 4)
       };
       
       // Add seed parameter if provided for character consistency

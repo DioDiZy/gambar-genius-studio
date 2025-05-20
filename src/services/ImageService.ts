@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface GenerateImageParams {
@@ -48,20 +47,19 @@ export async function generateMultipleImages(prompts: string[]): Promise<string[
   try {
     const imageUrls: string[] = [];
     
+    // Generate a consistent seed for this story generation session
+    const sessionSeed = Math.floor(Math.random() * 1000000);
+    
     // Generate images sequentially to avoid overwhelming the API
     for (const prompt of prompts) {
       console.log("Generating image with enhanced prompt:", prompt);
-      
-      // Add a consistent seed per story generation session for character consistency
-      // Note: The seed will still be different between different story generation sessions
-      const sessionSeed = Math.floor(Math.random() * 1000000);
       
       const { data: imageData, error: imageError } = await supabase.functions.invoke("generate-image", {
         body: {
           prompt: prompt,
           aspectRatio: "1:1",
-          seed: sessionSeed, // Use the same seed for all images in this batch for character consistency
-          num_inference_steps: 30, // Increase steps for better quality
+          seed: sessionSeed, // Use the same seed for all images in this batch
+          num_inference_steps: 4, // Keep at max value of 4 as required by the model
         },
       });
 
