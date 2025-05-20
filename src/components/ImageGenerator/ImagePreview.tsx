@@ -10,11 +10,10 @@ interface ImagePreviewProps {
   imageUrl: string;
   prompt: string;
   isGenerating: boolean;
-  confidenceScore?: number;
   onSaved: () => void;
 }
 
-export const ImagePreview = ({ imageUrl, prompt, isGenerating, confidenceScore, onSaved }: ImagePreviewProps) => {
+export const ImagePreview = ({ imageUrl, prompt, isGenerating, onSaved }: ImagePreviewProps) => {
   const [saving, setSaving] = useState(false);
   const { user } = useAuth(); // We get the user here in the React component
 
@@ -63,11 +62,6 @@ export const ImagePreview = ({ imageUrl, prompt, isGenerating, confidenceScore, 
     document.body.removeChild(link);
   };
 
-  // Generate a random confidence score between 70% and 95% for demonstration purposes
-  const displayConfidence = confidenceScore !== undefined 
-    ? confidenceScore 
-    : imageUrl ? Math.random() * 0.25 + 0.7 : undefined; // between 70-95%
-
   return (
     <Card>
       <CardHeader>
@@ -86,18 +80,11 @@ export const ImagePreview = ({ imageUrl, prompt, isGenerating, confidenceScore, 
               </div>
             </div>
           ) : imageUrl ? (
-            <div className="relative w-full h-full">
-              <img 
-                src={imageUrl} 
-                alt="Generated" 
-                className="w-full h-full object-cover"
-              />
-              {displayConfidence !== undefined && (
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 px-3 py-1 rounded-full text-xs">
-                  Accuracy: {Math.round(displayConfidence * 100)}%
-                </div>
-              )}
-            </div>
+            <img 
+              src={imageUrl} 
+              alt="Generated" 
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="text-center p-6">
               <div className="text-4xl mb-2">🖼️</div>

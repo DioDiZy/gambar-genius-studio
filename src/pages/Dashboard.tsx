@@ -20,7 +20,6 @@ const Dashboard = () => {
   // For story-based image generation
   const [storyImageUrls, setStoryImageUrls] = useState<string[]>([]);
   const [storyPrompts, setStoryPrompts] = useState<string[]>([]);
-  const [confidenceScores, setConfidenceScores] = useState<number[]>([]);
 
   // Query to fetch user's generated images with optimized settings
   const { data: userImages, refetch: refetchImages } = useQuery({
@@ -48,15 +47,9 @@ const Dashboard = () => {
     setCurrentPrompt(prompt);
   };
 
-  const handleStoryImagesGenerated = (urls: string[], prompts: string[], scores?: number[]) => {
+  const handleStoryImagesGenerated = (urls: string[], prompts: string[]) => {
     setStoryImageUrls(urls);
     setStoryPrompts(prompts);
-    if (scores) {
-      setConfidenceScores(scores);
-    } else {
-      // Generate default confidence scores if none provided (placeholder)
-      setConfidenceScores(urls.map(() => Math.random() * 0.3 + 0.65)); // Random scores between 65% and 95%
-    }
   };
 
   const handleImageSaved = () => {
@@ -102,7 +95,6 @@ const Dashboard = () => {
             <StoryImagesPreview
               imageUrls={storyImageUrls}
               prompts={storyPrompts}
-              confidenceScores={confidenceScores}
               isGenerating={isGenerating}
               onSaved={handleImageSaved}
             />
