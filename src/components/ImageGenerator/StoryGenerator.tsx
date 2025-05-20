@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -29,13 +30,19 @@ export const StoryGenerator = ({
   isGenerating,
   setIsGenerating
 }: StoryGeneratorProps) => {
+  const { language: appLanguage, t } = useLanguage();
   const [story, setStory] = useState("");
   const [paragraphSeparator, setParagraphSeparator] = useState("\n\n");
   const [style, setStyle] = useState("photorealistic");
   const [characterDescriptions, setCharacterDescriptions] = useState("");
   const [characters, setCharacters] = useState<CharacterDescription[]>([]);
   const [paragraphCount, setParagraphCount] = useState(0);
-  const [language, setLanguage] = useState("english");
+  const [language, setLanguage] = useState(appLanguage);
+  
+  // Update story language when app language changes
+  useEffect(() => {
+    setLanguage(appLanguage);
+  }, [appLanguage]);
   
   const { handleGenerateImages, paragraphs } = useStoryGeneration({
     story,
@@ -54,21 +61,15 @@ export const StoryGenerator = ({
     setParagraphCount(paragraphs.length);
   }, [paragraphs]);
 
-  const getLanguageLabel = () => {
-    return language === "indonesian" ? "Bahasa Cerita" : "Story Language";
-  };
-
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Book className="h-5 w-5" />
-          {language === "indonesian" ? "Cerita ke Gambar" : "Story to Images"}
+          {t("story.title")}
         </CardTitle>
         <CardDescription>
-          {language === "indonesian" 
-            ? "Tulis cerita dan hasilkan gambar storyboard yang konsisten untuk setiap paragraf" 
-            : "Write a story and generate consistent storyboard images for each paragraph"}
+          {t("story.description")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -76,7 +77,7 @@ export const StoryGenerator = ({
           <div className="flex items-center space-x-4 mb-4">
             <div className="flex items-center space-x-2">
               <Languages className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="language-select">{getLanguageLabel()}</Label>
+              <Label htmlFor="language-select">{t("story.language")}</Label>
             </div>
             <Select 
               value={language} 
@@ -84,11 +85,11 @@ export const StoryGenerator = ({
               disabled={isGenerating}
             >
               <SelectTrigger id="language-select" className="w-[180px]">
-                <SelectValue placeholder={language === "indonesian" ? "Pilih bahasa" : "Select language"} />
+                <SelectValue placeholder={t("app.language")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="english">English</SelectItem>
-                <SelectItem value="indonesian">Indonesian</SelectItem>
+                <SelectItem value="english">{t("app.english")}</SelectItem>
+                <SelectItem value="indonesian">{t("app.indonesian")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -103,7 +104,6 @@ export const StoryGenerator = ({
             isGenerating={isGenerating}
             characters={characters}
             onCharactersChange={setCharacters}
-            language={language}
           />
 
           <Separator className="my-4" />
@@ -113,7 +113,6 @@ export const StoryGenerator = ({
             onStoryChange={setStory}
             paragraphCount={paragraphCount}
             isGenerating={isGenerating}
-            language={language}
           />
 
           <div className="flex items-center justify-end">
@@ -121,7 +120,6 @@ export const StoryGenerator = ({
               onGenerate={handleGenerateImages}
               disabled={!story.trim()}
               isGenerating={isGenerating}
-              language={language}
             />
           </div>
         </div>
