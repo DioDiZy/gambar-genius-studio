@@ -15,7 +15,7 @@ interface UseStoryGenerationProps {
   characters: CharacterDescription[];
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
-  onImagesGenerated: (urls: string[], prompts: string[], confidenceScores?: number[]) => void;
+  onImagesGenerated: (urls: string[], prompts: string[]) => void;
   language?: string;
 }
 
@@ -125,10 +125,10 @@ export const useStoryGeneration = ({
         
         console.log("Enhanced prompts for image generation:", enhancedPrompts);
         
-        const { imageUrls, confidenceScores } = await generateMultipleImages(enhancedPrompts);
+        const imageUrls = await generateMultipleImages(enhancedPrompts);
         
         if (imageUrls.length > 0) {
-          onImagesGenerated(imageUrls, paragraphs, confidenceScores);
+          onImagesGenerated(imageUrls, paragraphs);
           toast.success(`Generated ${imageUrls.length} images successfully!`);
         } else {
           toast.error("Failed to generate images");
