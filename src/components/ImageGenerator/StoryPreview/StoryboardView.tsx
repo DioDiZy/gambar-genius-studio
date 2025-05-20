@@ -6,6 +6,7 @@ interface StoryboardViewProps {
   prompts: string[];
   currentIndex: number;
   isGenerating: boolean;
+  confidenceScores?: number[]; // Added confidence scores prop
   onSelectImage: (index: number) => void;
 }
 
@@ -14,6 +15,7 @@ export const StoryboardView = ({
   prompts,
   currentIndex,
   isGenerating,
+  confidenceScores,
   onSelectImage,
 }: StoryboardViewProps) => {
   const currentPrompt = prompts[currentIndex];
@@ -46,6 +48,11 @@ export const StoryboardView = ({
                 <div className="absolute bottom-1 right-1 bg-background/80 px-2 py-0.5 rounded text-xs font-medium">
                   Scene {idx + 1}
                 </div>
+                {confidenceScores?.[idx] !== undefined && (
+                  <div className="absolute top-1 left-1 bg-background/80 px-2 py-0.5 rounded text-xs font-medium">
+                    {Math.round(confidenceScores[idx] * 100)}%
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -11,6 +11,7 @@ interface StoryImagesPreviewProps {
   imageUrls: string[];
   prompts: string[];
   isGenerating: boolean;
+  confidenceScores?: number[]; // Added confidence scores prop
   onSaved: () => void;
 }
 
@@ -18,6 +19,7 @@ export const StoryImagesPreview = ({
   imageUrls, 
   prompts, 
   isGenerating, 
+  confidenceScores,
   onSaved 
 }: StoryImagesPreviewProps) => {
   const {
@@ -63,6 +65,7 @@ export const StoryImagesPreview = ({
             prompts={prompts}
             currentIndex={currentIndex}
             isGenerating={isGenerating}
+            confidenceScores={confidenceScores}
             onPrevious={() => handlePrevious(imageUrls.length)}
             onNext={() => handleNext(imageUrls.length)}
           />
@@ -72,6 +75,7 @@ export const StoryImagesPreview = ({
             prompts={prompts}
             currentIndex={currentIndex}
             isGenerating={isGenerating}
+            confidenceScores={confidenceScores}
             onSelectImage={handleSelectImage}
           />
         )}

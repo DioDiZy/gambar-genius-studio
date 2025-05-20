@@ -6,6 +6,7 @@ interface SingleImageViewProps {
   prompts: string[];
   currentIndex: number;
   isGenerating: boolean;
+  confidenceScores?: number[]; // Added confidence scores prop
   onPrevious: () => void;
   onNext: () => void;
 }
@@ -15,11 +16,13 @@ export const SingleImageView = ({
   prompts,
   currentIndex,
   isGenerating,
+  confidenceScores,
   onPrevious,
   onNext,
 }: SingleImageViewProps) => {
   const currentImage = imageUrls[currentIndex];
   const currentPrompt = prompts[currentIndex];
+  const currentConfidence = confidenceScores?.[currentIndex];
 
   return (
     <div className="border rounded-lg overflow-hidden bg-muted/30 aspect-square flex items-center justify-center">
@@ -37,6 +40,12 @@ export const SingleImageView = ({
             alt={`Generated from: ${currentPrompt}`} 
             className="w-full h-full object-cover"
           />
+          {/* Confidence score display */}
+          {currentConfidence !== undefined && (
+            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-background/80 px-3 py-1 rounded-full text-xs">
+              Accuracy: {Math.round(currentConfidence * 100)}%
+            </div>
+          )}
           {imageUrls.length > 1 && (
             <>
               <button 
