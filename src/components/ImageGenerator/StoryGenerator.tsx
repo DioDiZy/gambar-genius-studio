@@ -54,15 +54,21 @@ export const StoryGenerator = ({
     setParagraphCount(paragraphs.length);
   }, [paragraphs]);
 
+  const getLanguageLabel = () => {
+    return language === "indonesian" ? "Bahasa Cerita" : "Story Language";
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Book className="h-5 w-5" />
-          Story to Images
+          {language === "indonesian" ? "Cerita ke Gambar" : "Story to Images"}
         </CardTitle>
         <CardDescription>
-          Write a story and generate consistent storyboard images for each paragraph
+          {language === "indonesian" 
+            ? "Tulis cerita dan hasilkan gambar storyboard yang konsisten untuk setiap paragraf" 
+            : "Write a story and generate consistent storyboard images for each paragraph"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -70,7 +76,7 @@ export const StoryGenerator = ({
           <div className="flex items-center space-x-4 mb-4">
             <div className="flex items-center space-x-2">
               <Languages className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="language-select">Story Language</Label>
+              <Label htmlFor="language-select">{getLanguageLabel()}</Label>
             </div>
             <Select 
               value={language} 
@@ -78,7 +84,7 @@ export const StoryGenerator = ({
               disabled={isGenerating}
             >
               <SelectTrigger id="language-select" className="w-[180px]">
-                <SelectValue placeholder="Select language" />
+                <SelectValue placeholder={language === "indonesian" ? "Pilih bahasa" : "Select language"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="english">English</SelectItem>
@@ -115,6 +121,7 @@ export const StoryGenerator = ({
               onGenerate={handleGenerateImages}
               disabled={!story.trim()}
               isGenerating={isGenerating}
+              language={language}
             />
           </div>
         </div>

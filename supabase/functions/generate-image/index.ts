@@ -51,19 +51,28 @@ serve(async (req) => {
     console.log("Generating image with prompt:", body.prompt)
     
     try {
+      // Define model inputs with optional seed parameter for character consistency
+      const modelInputs = {
+        prompt: body.prompt,
+        go_fast: true,
+        megapixels: "1",
+        num_outputs: 1,
+        aspect_ratio: body.aspectRatio || "1:1",
+        output_format: "webp",
+        output_quality: 80,
+        num_inference_steps: body.num_inference_steps || 4
+      };
+      
+      // Add seed parameter if provided for character consistency
+      if (body.seed !== undefined) {
+        // @ts-ignore - Add seed parameter to modelInputs
+        modelInputs.seed = body.seed;
+      }
+
       const output = await replicate.run(
         "black-forest-labs/flux-schnell",
         {
-          input: {
-            prompt: body.prompt,
-            go_fast: true,
-            megapixels: "1",
-            num_outputs: 1,
-            aspect_ratio: body.aspectRatio || "1:1",
-            output_format: "webp",
-            output_quality: 80,
-            num_inference_steps: 4
-          }
+          input: modelInputs
         }
       )
 

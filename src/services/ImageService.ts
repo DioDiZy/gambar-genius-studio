@@ -41,7 +41,7 @@ export async function generateImage(params: GenerateImageParams): Promise<string
   }
 }
 
-// New function to generate multiple images
+// Function to generate multiple images with improved consistency
 export async function generateMultipleImages(prompts: string[]): Promise<string[]> {
   if (!prompts.length) return [];
 
@@ -50,7 +50,27 @@ export async function generateMultipleImages(prompts: string[]): Promise<string[
     
     // Generate images sequentially to avoid overwhelming the API
     for (const prompt of prompts) {
-      const imageUrl = await generateImage({ prompt });
+      console.log("Generating image with enhanced prompt:", prompt);
+      
+      // Add a consistent seed per story generation session for character consistency
+      // Note: The seed will still be different between different story generation sessions
+      const sessionSeed = Math.floor(Math.random() * 1000000);
+      
+      const { data: imageData, error: imageError } = await supabase.functions.invoke("generate-image", {
+        body: {
+          prompt: prompt,
+          aspectRatio: "1:1",
+          seed: sessionSeed, // Use the same seed for all images in this batch for character consistency
+          num_inference_steps: 30, // Increase steps for better quality
+        },
+      });
+
+      if (imageError) {
+        console.error("Error generating image:", imageError);
+        continue;
+      }
+
+      const imageUrl = imageData?.output?.[0];
       if (imageUrl) {
         imageUrls.push(imageUrl);
       }

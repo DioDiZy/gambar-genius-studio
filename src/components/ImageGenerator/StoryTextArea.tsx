@@ -33,9 +33,13 @@ export const StoryTextArea = ({
       : `${paragraphCount} paragraphs detected`;
   };
 
+  const getLabelText = () => {
+    return language === "indonesian" ? "Cerita Anda" : "Your Story";
+  };
+
   return (
     <div className="space-y-2">
-      <Label>{language === "indonesian" ? "Cerita Anda" : "Your Story"}</Label>
+      <Label>{getLabelText()}</Label>
       <Textarea
         placeholder={getPlaceholderByLanguage()}
         value={story}
