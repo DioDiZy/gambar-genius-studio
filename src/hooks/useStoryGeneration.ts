@@ -85,7 +85,12 @@ export const useStoryGeneration = ({
           
           // Add language information for non-English content
           if (language && language !== "english") {
-            enhancedPrompt = `${enhancedPrompt}. Text is in ${language} language`;
+            // For Indonesian, add more context to help the AI understand
+            if (language === "indonesian") {
+              enhancedPrompt = `${enhancedPrompt}. Text is in Indonesian language (Bahasa Indonesia). Visual representation should match Indonesian cultural context where appropriate.`;
+            } else {
+              enhancedPrompt = `${enhancedPrompt}. Text is in ${language} language`;
+            }
           }
           
           // Add character descriptions if available
