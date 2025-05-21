@@ -1,16 +1,24 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface GenerateImageParams {
   prompt: string;
   aspectRatio?: string;
+  language?: "english" | "indonesian";
 }
 
 export async function generateImage(params: GenerateImageParams): Promise<string | null> {
   try {
+    // Enhance prompt with language context if Indonesian is selected
+    let enhancedPrompt = params.prompt;
+    if (params.language === "indonesian") {
+      enhancedPrompt += ". Text is in Indonesian language (Bahasa Indonesia). Visual representation should match Indonesian cultural context where appropriate.";
+    }
+
     // Create the initial generation request
     const { data: initialData, error: initialError } = await supabase.functions.invoke("generate-image", {
       body: {
-        prompt: params.prompt,
+        prompt: enhancedPrompt,
         aspectRatio: params.aspectRatio || "1:1"
       },
     });
