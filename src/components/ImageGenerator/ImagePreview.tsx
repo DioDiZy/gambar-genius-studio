@@ -1,62 +1,81 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CustomButton } from "@/components/ui/custom-button";
-import { saveGeneratedImage } from "@/services/ImageService";
 import { toast } from "sonner";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Download, Save } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { saveGeneratedImage } from "@/services/ImageService";
 
 interface ImagePreviewProps {
   imageUrl: string;
   prompt: string;
   isGenerating: boolean;
   onSaved: () => void;
+  language?: "english" | "indonesian";
 }
 
-export const ImagePreview = ({ imageUrl, prompt, isGenerating, onSaved }: ImagePreviewProps) => {
+export const ImagePreview = ({ imageUrl, prompt, isGenerating, onSaved, language = "english" }: ImagePreviewProps) => {
   const [saving, setSaving] = useState(false);
-  const { user } = useAuth(); // We get the user here in the React component
+  const { user } = useAuth();
 
   const handleSave = async () => {
     if (!imageUrl || !prompt) {
-      toast.error("Missing data", { 
-        description: "Both image and prompt are required to save" 
-      });
+      toast.error(
+        language === "indonesian" ? "Data tidak lengkap" : "Missing data",
+        { 
+          description: language === "indonesian" 
+            ? "Gambar dan prompt diperlukan untuk menyimpan" 
+            : "Both image and prompt are required to save" 
+        }
+      );
       return;
     }
 
     if (!user) {
-      toast.error("Authentication required", {
-        description: "You must be logged in to save images"
-      });
+      toast.error(
+        language === "indonesian" ? "Autentikasi diperlukan" : "Authentication required",
+        {
+          description: language === "indonesian" 
+            ? "Anda harus masuk untuk menyimpan gambar" 
+            : "You must be logged in to save images"
+        }
+      );
       return;
     }
     
     try {
       setSaving(true);
-      toast.info("Saving your image...");
+      toast.info(language === "indonesian" ? "Menyimpan gambar Anda..." : "Saving your image...");
       
-      // Pass the user ID to the saveGeneratedImage function
       await saveGeneratedImage(imageUrl, prompt, user.id);
       
-      // Notify parent component to refetch images
       onSaved();
       
-      toast.success("Image saved to your gallery!");
+      toast.success(
+        language === "indonesian" 
+          ? "Gambar disimpan ke galeri Anda!" 
+          : "Image saved to your gallery!"
+      );
     } catch (error) {
       console.error("Error saving image:", error);
-      toast.error("Error saving image", {
-        description: error instanceof Error ? error.message : "Please try again"
-      });
+      toast.error(
+        language === "indonesian" ? "Kesalahan menyimpan gambar" : "Error saving image",
+        {
+          description: error instanceof Error ? error.message : "Please try again"
+        }
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDownload = (imageUrl: string) => {
+  const handleDownload = () => {
+    if (!imageUrl) return;
+    
     const link = document.createElement("a");
     link.href = imageUrl;
-    link.download = "generated-image.webp";
+    link.download = `AI-image-${Date.now()}.webp`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -65,52 +84,66 @@ export const ImagePreview = ({ imageUrl, prompt, isGenerating, onSaved }: ImageP
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Generated Image</CardTitle>
+        <CardTitle>{language === "indonesian" ? "Pratinjau Gambar" : "Image Preview"}</CardTitle>
         <CardDescription>
-          Your AI-generated image will appear here
+          {language === "indonesian" 
+            ? "Lihat hasil gambar yang dihasilkan" 
+            : "View your generated image result"}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-lg overflow-hidden bg-muted/30 aspect-square flex items-center justify-center">
+        <div className="border rounded-lg overflow-hidden bg-muted/30 aspect-square">
           {isGenerating ? (
-            <div className="text-center p-6">
+            <div className="h-full flex items-center justify-center">
               <div className="flex flex-col items-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                <p className="mt-4 text-muted-foreground">Creating your masterpiece...</p>
+                <p className="mt-4 text-muted-foreground">
+                  {language === "indonesian" 
+                    ? "Membuat karya seni Anda..." 
+                    : "Creating your masterpiece..."}
+                </p>
               </div>
             </div>
           ) : imageUrl ? (
             <img 
               src={imageUrl} 
-              alt="Generated" 
-              className="w-full h-full object-cover"
+              alt={prompt} 
+              className="w-full h-full object-cover" 
             />
           ) : (
-            <div className="text-center p-6">
+            <div className="h-full flex flex-col items-center justify-center p-6">
               <div className="text-4xl mb-2">🖼️</div>
-              <p className="text-muted-foreground text-sm">
-                Your generated image will appear here
+              <p className="text-center text-muted-foreground">
+                {language === "indonesian" 
+                  ? "Gambar yang dihasilkan akan muncul di sini" 
+                  : "Your generated image will appear here"}
               </p>
             </div>
           )}
         </div>
+
         {imageUrl && (
-          <div className="flex justify-between mt-4">
-            <CustomButton 
+          <div className="flex gap-2 mt-4">
+            <Button 
               variant="outline" 
-              size="sm"
-              onClick={() => handleDownload(imageUrl)}
+              className="flex-1"
+              onClick={handleDownload}
+              disabled={!imageUrl}
             >
-              Download
-            </CustomButton>
-            <CustomButton 
-              variant="gradient" 
-              size="sm"
+              <Download className="h-4 w-4 mr-2" />
+              {language === "indonesian" ? "Unduh" : "Download"}
+            </Button>
+            <Button 
+              variant="default" 
+              className="flex-1"
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || !imageUrl}
             >
-              {saving ? "Saving..." : "Save to Gallery"}
-            </CustomButton>
+              <Save className="h-4 w-4 mr-2" />
+              {saving 
+                ? (language === "indonesian" ? "Menyimpan..." : "Saving...") 
+                : (language === "indonesian" ? "Simpan ke Galeri" : "Save to Gallery")}
+            </Button>
           </div>
         )}
       </CardContent>

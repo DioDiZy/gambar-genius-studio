@@ -4,14 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 export interface GenerateImageParams {
   prompt: string;
   aspectRatio?: string;
+  language?: "english" | "indonesian";
 }
 
 export async function generateImage(params: GenerateImageParams): Promise<string | null> {
   try {
+    // Enhance prompt with language context if Indonesian is selected
+    let enhancedPrompt = params.prompt;
+    if (params.language === "indonesian") {
+      enhancedPrompt += ". Text is in Indonesian language (Bahasa Indonesia). Visual representation should match Indonesian cultural context where appropriate.";
+    }
+
     // Create the initial generation request
     const { data: initialData, error: initialError } = await supabase.functions.invoke("generate-image", {
       body: {
-        prompt: params.prompt,
+        prompt: enhancedPrompt,
         aspectRatio: params.aspectRatio || "1:1"
       },
     });
@@ -41,16 +48,35 @@ export async function generateImage(params: GenerateImageParams): Promise<string
   }
 }
 
-// New function to generate multiple images
+// Function to generate multiple images with improved consistency
 export async function generateMultipleImages(prompts: string[]): Promise<string[]> {
   if (!prompts.length) return [];
 
   try {
     const imageUrls: string[] = [];
     
+    // Generate a consistent seed for this story generation session
+    const sessionSeed = Math.floor(Math.random() * 1000000);
+    
     // Generate images sequentially to avoid overwhelming the API
     for (const prompt of prompts) {
-      const imageUrl = await generateImage({ prompt });
+      console.log("Generating image with enhanced prompt:", prompt);
+      
+      const { data: imageData, error: imageError } = await supabase.functions.invoke("generate-image", {
+        body: {
+          prompt: prompt,
+          aspectRatio: "1:1",
+          seed: sessionSeed, // Use the same seed for all images in this batch
+          num_inference_steps: 4, // Keep at max value of 4 as required by the model
+        },
+      });
+
+      if (imageError) {
+        console.error("Error generating image:", imageError);
+        continue;
+      }
+
+      const imageUrl = imageData?.output?.[0];
       if (imageUrl) {
         imageUrls.push(imageUrl);
       }

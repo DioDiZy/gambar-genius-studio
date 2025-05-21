@@ -11,11 +11,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoryGenerator } from "@/components/ImageGenerator/StoryGenerator";
 import { StoryImagesPreview } from "@/components/ImageGenerator/StoryImagesPreview";
 
+// Define supported languages to maintain consistency
+type SupportedLanguage = "english" | "indonesian";
+
 const Dashboard = () => {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState("");
   const [currentPrompt, setCurrentPrompt] = useState("");
+  const [language, setLanguage] = useState<SupportedLanguage>("english");
   
   // For story-based image generation
   const [storyImageUrls, setStoryImageUrls] = useState<string[]>([]);
@@ -59,12 +63,18 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <h1 className="text-3xl font-bold mb-8">Create AI Images</h1>
+      <h1 className="text-3xl font-bold mb-8">
+        {language === "indonesian" ? "Buat Gambar AI" : "Create AI Images"}
+      </h1>
 
       <Tabs defaultValue="single" className="mb-8">
         <TabsList className="mb-6">
-          <TabsTrigger value="single">Single Image</TabsTrigger>
-          <TabsTrigger value="story">Story to Images</TabsTrigger>
+          <TabsTrigger value="single">
+            {language === "indonesian" ? "Gambar Tunggal" : "Single Image"}
+          </TabsTrigger>
+          <TabsTrigger value="story">
+            {language === "indonesian" ? "Cerita ke Gambar" : "Story to Images"}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="single">
@@ -80,6 +90,7 @@ const Dashboard = () => {
               prompt={currentPrompt}
               isGenerating={isGenerating}
               onSaved={handleImageSaved}
+              language={language}
             />
           </div>
         </TabsContent>
