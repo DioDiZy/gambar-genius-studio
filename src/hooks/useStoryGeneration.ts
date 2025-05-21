@@ -7,6 +7,9 @@ import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
 import { CharacterDescription } from "@/types/story";
 
+// Define this type to be consistent with StoryGenerator component
+type SupportedLanguage = "english" | "indonesian";
+
 interface UseStoryGenerationProps {
   story: string;
   paragraphSeparator: string;
@@ -16,7 +19,7 @@ interface UseStoryGenerationProps {
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
-  language?: string;
+  language: SupportedLanguage;
 }
 
 export const useStoryGeneration = ({
@@ -28,7 +31,7 @@ export const useStoryGeneration = ({
   isGenerating,
   setIsGenerating,
   onImagesGenerated,
-  language = "english"
+  language
 }: UseStoryGenerationProps) => {
   const { user } = useAuth();
   const [paragraphs, setParagraphs] = useState<string[]>([]);

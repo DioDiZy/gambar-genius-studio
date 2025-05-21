@@ -24,6 +24,9 @@ interface StoryGeneratorProps {
   setIsGenerating: (value: boolean) => void;
 }
 
+// Define this type to be more specific about supported languages
+type SupportedLanguage = "english" | "indonesian";
+
 export const StoryGenerator = ({ 
   onImagesGenerated, 
   isGenerating,
@@ -35,7 +38,7 @@ export const StoryGenerator = ({
   const [characterDescriptions, setCharacterDescriptions] = useState("");
   const [characters, setCharacters] = useState<CharacterDescription[]>([]);
   const [paragraphCount, setParagraphCount] = useState(0);
-  const [language, setLanguage] = useState("english");
+  const [language, setLanguage] = useState<SupportedLanguage>("english");
   
   const { handleGenerateImages, paragraphs } = useStoryGeneration({
     story,
@@ -56,6 +59,11 @@ export const StoryGenerator = ({
 
   const getLanguageLabel = () => {
     return language === "indonesian" ? "Bahasa Cerita" : "Story Language";
+  };
+
+  // Create a properly typed handler function for language changes
+  const handleLanguageChange = (value: SupportedLanguage) => {
+    setLanguage(value);
   };
 
   return (
@@ -80,7 +88,7 @@ export const StoryGenerator = ({
             </div>
             <Select 
               value={language} 
-              onValueChange={setLanguage}
+              onValueChange={handleLanguageChange}
               disabled={isGenerating}
             >
               <SelectTrigger id="language-select" className="w-[180px]">
