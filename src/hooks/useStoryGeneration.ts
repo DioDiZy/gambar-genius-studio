@@ -7,9 +7,6 @@ import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
 import { CharacterDescription } from "@/types/story";
 
-// Define this type to be consistent with StoryGenerator component
-type SupportedLanguage = "english" | "indonesian";
-
 interface UseStoryGenerationProps {
   story: string;
   paragraphSeparator: string;
@@ -19,7 +16,7 @@ interface UseStoryGenerationProps {
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
-  language: SupportedLanguage;
+  language?: string;
 }
 
 export const useStoryGeneration = ({
@@ -31,7 +28,7 @@ export const useStoryGeneration = ({
   isGenerating,
   setIsGenerating,
   onImagesGenerated,
-  language
+  language = "english"
 }: UseStoryGenerationProps) => {
   const { user } = useAuth();
   const [paragraphs, setParagraphs] = useState<string[]>([]);
@@ -83,50 +80,29 @@ export const useStoryGeneration = ({
       try {
         // Generate images for each paragraph with consistent character descriptions
         const enhancedPrompts = paragraphs.map(p => {
-          // Create a base prompt that focuses on the scene from the paragraph
-          let enhancedPrompt = p;
+          // Start with the paragraph text and style
+          let enhancedPrompt = `${p} in ${style} style`;
           
-          // Add detailed style information
-          const styleMap: Record<string, string> = {
-            "photorealistic": "highly detailed photorealistic style with realistic lighting and textures",
-            "digital-art": "vibrant digital art style with rich colors",
-            "anime": "anime style with clean lines and expressive characters",
-            "3d-render": "3D rendered style with depth and realistic materials",
-            "oil-painting": "oil painting style with visible brush strokes and rich textures",
-            "watercolor": "delicate watercolor style with soft color blending",
-            "comic-book": "comic book style with bold outlines and flat colors",
-            "storyboard-sketch": "professional storyboard sketch style with clear scene composition"
-          };
+          // Add language information for non-English content
+          if (language && language !== "english") {
+            enhancedPrompt = `${enhancedPrompt}. Text is in ${language} language`;
+          }
           
-          const styleDescription = styleMap[style] || styleMap["photorealistic"];
-          enhancedPrompt = `${enhancedPrompt}, ${styleDescription}`;
-          
-          // Build a comprehensive character description block for consistency
+          // Add character descriptions if available
           if (characters.length > 0) {
-            enhancedPrompt += ". Characters in scene: ";
-            
-            const characterPrompts = characters.map(char => {
-              // Make the character description more detailed for consistency
-              return `${char.name} (${char.appearance}, consistent appearance throughout all scenes)`;
-            }).join('; ');
-            
-            enhancedPrompt += characterPrompts;
+            const characterPrompt = characters.map(char => 
+              `${char.name}: ${char.appearance}`
+            ).join('; ');
+            enhancedPrompt = `${enhancedPrompt}. Characters: ${characterPrompt}`;
           }
           
           // Add additional image instructions if provided
           if (characterDescriptions.trim()) {
-            enhancedPrompt += `. Scene details: ${characterDescriptions}`;
-          }
-          
-          // Add language-specific context
-          if (language === "indonesian") {
-            enhancedPrompt += ". Text is in Indonesian language (Bahasa Indonesia). Visual representation should match Indonesian cultural context where appropriate.";
+            enhancedPrompt = `${enhancedPrompt}. Scene details: ${characterDescriptions}`;
           }
           
           return enhancedPrompt;
         });
-        
-        console.log("Enhanced prompts for image generation:", enhancedPrompts);
         
         const imageUrls = await generateMultipleImages(enhancedPrompts);
         

@@ -17,7 +17,6 @@ interface StoryInputOptionsProps {
   isGenerating: boolean;
   characters: CharacterDescription[];
   onCharactersChange: (characters: CharacterDescription[]) => void;
-  language?: string;
 }
 
 export const StoryInputOptions = ({
@@ -29,8 +28,7 @@ export const StoryInputOptions = ({
   onCharacterDescriptionsChange,
   isGenerating,
   characters,
-  onCharactersChange,
-  language = "english"
+  onCharactersChange
 }: StoryInputOptionsProps) => {
   const [newCharacter, setNewCharacter] = useState<CharacterDescription>({ name: "", appearance: "" });
 
@@ -46,62 +44,24 @@ export const StoryInputOptions = ({
     onCharactersChange(updatedCharacters);
   };
 
-  const getPlaceholdersByLanguage = () => {
-    switch(language) {
-      case "indonesian":
-        return {
-          separatorLabel: "Pemisah Paragraf",
-          separatorPlaceholder: "Masukkan pemisah antar paragraf",
-          separatorHint: "Default adalah jeda baris ganda. Masukkan pemisah kustom seperti \"***\" atau \"###\" jika diperlukan.",
-          styleLabel: "Gaya",
-          charactersLabel: "Karakter",
-          charactersHint: "Belum ada karakter yang ditambahkan. Tambahkan karakter untuk konsistensi antar gambar.",
-          characterName: "Nama karakter",
-          characterAppearance: "Penampilan karakter",
-          characterTip: "Tambahkan karakter utama dengan penampilan spesifik mereka untuk konsistensi antar gambar.",
-          additionalLabel: "Instruksi Gambar Tambahan",
-          additionalPlaceholder: "Tambahkan instruksi tambahan untuk pembuatan gambar (latar belakang, setting, suasana, pencahayaan, dll.)",
-          additionalHint: "Instruksi ini akan diterapkan pada semua gambar yang dihasilkan untuk konsistensi."
-        };
-      case "english":
-      default:
-        return {
-          separatorLabel: "Paragraph Separator",
-          separatorPlaceholder: "Enter the separator between paragraphs",
-          separatorHint: "Default is double line break. Enter custom separators like \"***\" or \"###\" if needed.",
-          styleLabel: "Style",
-          charactersLabel: "Characters",
-          charactersHint: "No characters added yet. Add characters for consistency across images.",
-          characterName: "Character name",
-          characterAppearance: "Character appearance",
-          characterTip: "Add key characters with their specific appearances for consistency across images.",
-          additionalLabel: "Additional Image Instructions",
-          additionalPlaceholder: "Add any additional instructions for image generation (background, setting, atmosphere, lighting, etc.)",
-          additionalHint: "These instructions will be applied to all generated images for consistency."
-        };
-    }
-  };
-
-  const placeholders = getPlaceholdersByLanguage();
-
   return (
     <>
       <div className="space-y-2">
-        <Label>{placeholders.separatorLabel}</Label>
+        <Label>Paragraph Separator</Label>
         <Input 
-          placeholder={placeholders.separatorPlaceholder}
+          placeholder="Enter the separator between paragraphs"
           value={paragraphSeparator}
           onChange={(e) => onSeparatorChange(e.target.value)}
           className="mb-2"
           disabled={isGenerating}
         />
         <p className="text-xs text-muted-foreground">
-          {placeholders.separatorHint}
+          Default is double line break. Enter custom separators like "***" or "###" if needed.
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label>{placeholders.styleLabel}</Label>
+        <Label>Style</Label>
         <select 
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           value={style}
@@ -120,7 +80,7 @@ export const StoryInputOptions = ({
       </div>
       
       <div className="space-y-4">
-        <Label>{placeholders.charactersLabel}</Label>
+        <Label>Characters</Label>
         <div className="space-y-4 rounded-md border border-input p-3 bg-muted/20">
           {characters.length > 0 ? (
             <div className="space-y-3">
@@ -144,7 +104,7 @@ export const StoryInputOptions = ({
             </div>
           ) : (
             <p className="text-xs text-muted-foreground italic text-center py-2">
-              {placeholders.charactersHint}
+              No characters added yet. Add characters for consistency across images.
             </p>
           )}
           
@@ -152,7 +112,7 @@ export const StoryInputOptions = ({
             <div className="grid grid-cols-3 gap-2">
               <div className="col-span-1">
                 <Input
-                  placeholder={placeholders.characterName}
+                  placeholder="Character name"
                   value={newCharacter.name}
                   onChange={(e) => setNewCharacter({...newCharacter, name: e.target.value})}
                   disabled={isGenerating}
@@ -161,7 +121,7 @@ export const StoryInputOptions = ({
               <div className="col-span-2">
                 <div className="flex space-x-2">
                   <Input
-                    placeholder={placeholders.characterAppearance}
+                    placeholder="Character appearance"
                     value={newCharacter.appearance}
                     onChange={(e) => setNewCharacter({...newCharacter, appearance: e.target.value})}
                     disabled={isGenerating}
@@ -178,22 +138,22 @@ export const StoryInputOptions = ({
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              {placeholders.characterTip}
+              Add key characters with their specific appearances for consistency across images.
             </p>
           </div>
         </div>
         
         <div className="space-y-2">
-          <Label>{placeholders.additionalLabel}</Label>
+          <Label>Additional Image Instructions</Label>
           <Textarea
-            placeholder={placeholders.additionalPlaceholder}
+            placeholder="Add any additional instructions for image generation (background, setting, atmosphere, lighting, etc.)"
             value={characterDescriptions}
             onChange={(e) => onCharacterDescriptionsChange(e.target.value)}
             className="min-h-20"
             disabled={isGenerating}
           />
           <p className="text-xs text-muted-foreground">
-            {placeholders.additionalHint}
+            These instructions will be applied to all generated images for consistency.
           </p>
         </div>
       </div>

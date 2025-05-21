@@ -1,36 +1,24 @@
 
-import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import { CustomButton } from "@/components/ui/custom-button";
 
 interface StoryGenerationButtonProps {
   onGenerate: () => void;
-  disabled?: boolean;
-  isGenerating?: boolean;
-  language?: string;
+  disabled: boolean;
+  isGenerating: boolean;
 }
 
 export const StoryGenerationButton = ({
   onGenerate,
-  disabled = false,
-  isGenerating = false,
-  language = "english"
+  disabled,
+  isGenerating
 }: StoryGenerationButtonProps) => {
-  const buttonText = () => {
-    if (language === "indonesian") {
-      return isGenerating ? "Menghasilkan..." : "Hasilkan Gambar";
-    }
-    return isGenerating ? "Generating..." : "Generate Images";
-  };
-
   return (
-    <Button
+    <CustomButton
+      variant="gradient"
       onClick={onGenerate}
       disabled={disabled || isGenerating}
-      className="gap-2"
-      size="lg"
     >
-      <Sparkles className="h-4 w-4" />
-      {buttonText()}
-    </Button>
+      {isGenerating ? "Generating..." : "Generate Images"}
+    </CustomButton>
   );
 };
