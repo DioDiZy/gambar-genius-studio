@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { filterContent } from "@/utils/contentFilter";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -66,6 +66,37 @@ export const StoryGenerator = ({
     setLanguage(value);
   };
 
+  // Add content validation when story changes
+  const handleStoryChange = (value: string) => {
+    // Check content before setting
+    const contentCheck = filterContent(value, language);
+    if (!contentCheck.isAppropriate) {
+      toast.error(
+        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
+        {
+          description: contentCheck.reason
+        }
+      );
+      return; // Don't update the story if content is inappropriate
+    }
+    setStory(value);
+  };
+
+  // Add validation for character descriptions
+  const handleCharacterDescriptionsChange = (value: string) => {
+    const contentCheck = filterContent(value, language);
+    if (!contentCheck.isAppropriate) {
+      toast.error(
+        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
+        {
+          description: contentCheck.reason
+        }
+      );
+      return;
+    }
+    setCharacterDescriptions(value);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -107,7 +138,7 @@ export const StoryGenerator = ({
             style={style}
             onStyleChange={setStyle}
             characterDescriptions={characterDescriptions}
-            onCharacterDescriptionsChange={setCharacterDescriptions}
+            onCharacterDescriptionsChange={handleCharacterDescriptionsChange}
             isGenerating={isGenerating}
             characters={characters}
             onCharactersChange={setCharacters}
@@ -118,7 +149,7 @@ export const StoryGenerator = ({
 
           <StoryTextArea
             story={story}
-            onStoryChange={setStory}
+            onStoryChange={handleStoryChange}
             paragraphCount={paragraphCount}
             isGenerating={isGenerating}
             language={language}

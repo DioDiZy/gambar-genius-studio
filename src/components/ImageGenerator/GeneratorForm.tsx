@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { generateImage } from "@/services/ImageService";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { filterContent } from "@/utils/contentFilter";
 
 interface GeneratorFormProps {
   onImageGenerated: (url: string, prompt: string) => void;
@@ -31,7 +31,21 @@ export const GeneratorForm = ({
   const { user } = useAuth();
 
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setPrompt(e.target.value);
+    const newPrompt = e.target.value;
+    
+    // Check content before setting
+    const contentCheck = filterContent(newPrompt, language);
+    if (!contentCheck.isAppropriate) {
+      toast.error(
+        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
+        {
+          description: contentCheck.reason
+        }
+      );
+      return; // Don't update the prompt if content is inappropriate
+    }
+    
+    setPrompt(newPrompt);
   };
 
   const handleAspectRatioChange = (value: string) => {
@@ -46,6 +60,18 @@ export const GeneratorForm = ({
   const handleGenerateImage = async () => {
     if (!prompt.trim()) {
       toast.error(language === "indonesian" ? "Masukkan prompt" : "Please enter a prompt");
+      return;
+    }
+
+    // Double-check content before generation
+    const contentCheck = filterContent(prompt, language);
+    if (!contentCheck.isAppropriate) {
+      toast.error(
+        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
+        {
+          description: contentCheck.reason
+        }
+      );
       return;
     }
 
