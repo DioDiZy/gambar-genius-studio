@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { generateImage } from "@/services/ImageService";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { filterContent } from "@/utils/contentFilter";
+import { filterContent, getChildFriendlyAlternatives } from "@/utils/contentFilter";
 
 interface GeneratorFormProps {
   onImageGenerated: (url: string, prompt: string) => void;
@@ -27,19 +28,26 @@ export const GeneratorForm = ({
 }: GeneratorFormProps) => {
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1:1");
-  const [language, setLanguage] = useState<SupportedLanguage>("english");
+  const [language, setLanguage] = useState<SupportedLanguage>("indonesian"); // Default to Indonesian for children
   const { user } = useAuth();
 
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newPrompt = e.target.value;
     
-    // Check content before setting
+    // Enhanced content check with suggestions
     const contentCheck = filterContent(newPrompt, language);
     if (!contentCheck.isAppropriate) {
+      // Show child-friendly suggestions
+      const alternatives = getChildFriendlyAlternatives(language);
+      const suggestionText = language === "indonesian" 
+        ? `\n\nSaran tema gambar: ${alternatives.slice(0, 3).join(', ')}`
+        : `\n\nImage theme suggestions: ${alternatives.slice(0, 3).join(', ')}`;
+      
       toast.error(
-        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
+        language === "indonesian" ? "Kata-kata Tidak Sesuai" : "Inappropriate Content",
         {
-          description: contentCheck.reason
+          description: contentCheck.reason + suggestionText,
+          duration: 6000 // Longer duration for educational content
         }
       );
       return; // Don't update the prompt if content is inappropriate
@@ -59,7 +67,7 @@ export const GeneratorForm = ({
 
   const handleGenerateImage = async () => {
     if (!prompt.trim()) {
-      toast.error(language === "indonesian" ? "Masukkan prompt" : "Please enter a prompt");
+      toast.error(language === "indonesian" ? "Masukkan deskripsi gambar" : "Please enter an image description");
       return;
     }
 
@@ -67,7 +75,7 @@ export const GeneratorForm = ({
     const contentCheck = filterContent(prompt, language);
     if (!contentCheck.isAppropriate) {
       toast.error(
-        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
+        language === "indonesian" ? "Kata-kata Tidak Sesuai" : "Inappropriate Content",
         {
           description: contentCheck.reason
         }
@@ -102,7 +110,7 @@ export const GeneratorForm = ({
       setIsGenerating(true);
       
       toast.info(
-        language === "indonesian" ? "Membuat gambar..." : "Creating image...",
+        language === "indonesian" ? "Membuat gambar yang ramah anak..." : "Creating child-friendly image...",
         { 
           description: language === "indonesian"
             ? "Ini mungkin memerlukan beberapa saat"
@@ -111,8 +119,12 @@ export const GeneratorForm = ({
       );
       
       try {
-        // Pass language to the image generation service
-        const imageUrl = await generateImage({ prompt, aspectRatio, language });
+        // Enhanced prompt for child-safe content
+        const childSafePrompt = language === "indonesian" 
+          ? `${prompt}, ramah anak, sesuai untuk semua umur, tidak ada konten dewasa`
+          : `${prompt}, child-friendly, suitable for all ages, no adult content`;
+        
+        const imageUrl = await generateImage({ prompt: childSafePrompt, aspectRatio, language });
         
         if (imageUrl) {
           onImageGenerated(imageUrl, prompt);
@@ -167,19 +179,25 @@ export const GeneratorForm = ({
 
   const getPlaceholderText = () => {
     return language === "indonesian" 
-      ? "Misalnya: Kucing putih berbulu lebat duduk di taman yang indah, dengan bunga-bunga berwarna cerah di sekitarnya, gaya fotografi profesional" 
-      : "Example: A fluffy white cat sitting in a beautiful garden, with colorful flowers around, professional photography style";
+      ? "Contoh: Seekor kucing putih lucu bermain di taman yang indah dengan bunga-bunga berwarna cerah, gaya kartun ramah anak" 
+      : "Example: A cute white cat playing in a beautiful garden with colorful flowers, child-friendly cartoon style";
+  };
+
+  const getTitle = () => {
+    return language === "indonesian" ? "Buat Gambar Ramah Anak" : "Create Child-Friendly Image";
+  };
+
+  const getDescription = () => {
+    return language === "indonesian" 
+      ? "Masukkan deskripsi yang sesuai untuk anak-anak untuk membuat gambar AI yang aman" 
+      : "Enter a child-appropriate description to create safe AI images";
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{language === "indonesian" ? "Buat Gambar AI" : "Create AI Image"}</CardTitle>
-        <CardDescription>
-          {language === "indonesian" 
-            ? "Masukkan prompt terperinci untuk membuat gambar AI sesuai dengan keinginan Anda" 
-            : "Enter a detailed prompt to create an AI image to your specifications"}
-        </CardDescription>
+        <CardTitle>{getTitle()}</CardTitle>
+        <CardDescription>{getDescription()}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -199,14 +217,14 @@ export const GeneratorForm = ({
                 <SelectValue placeholder={language === "indonesian" ? "Pilih bahasa" : "Select language"} />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="indonesian">Indonesian (Bahasa Indonesia)</SelectItem>
                 <SelectItem value="english">English</SelectItem>
-                <SelectItem value="indonesian">Indonesian</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="prompt">{language === "indonesian" ? "Prompt Anda" : "Your Prompt"}</Label>
+            <Label htmlFor="prompt">{language === "indonesian" ? "Deskripsi Gambar" : "Image Description"}</Label>
             <Textarea
               id="prompt"
               placeholder={getPlaceholderText()}

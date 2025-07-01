@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,17 +45,20 @@ export const useStoryGeneration = ({
 
   const handleGenerateImages = async () => {
     if (!story.trim()) {
-      toast.error("Please enter a story");
+      toast.error(
+        language === "indonesian" ? "Mohon masukkan cerita" : "Please enter a story"
+      );
       return;
     }
 
-    // Validate story content before proceeding
+    // Enhanced validation with better error messages for children
     const contentValidation = validateStoryContent(story, paragraphSeparator, language);
     if (!contentValidation.isAppropriate) {
       toast.error(
-        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
+        language === "indonesian" ? "Cerita Tidak Sesuai untuk Anak" : "Story Not Suitable for Children",
         {
-          description: contentValidation.reason
+          description: contentValidation.reason,
+          duration: 6000
         }
       );
       return;
@@ -65,9 +69,10 @@ export const useStoryGeneration = ({
       const characterValidation = validateStoryContent(characterDescriptions, '\n', language);
       if (!characterValidation.isAppropriate) {
         toast.error(
-          language === "indonesian" ? "Konten Tidak Pantas dalam Deskripsi Karakter" : "Inappropriate Content in Character Descriptions",
+          language === "indonesian" ? "Deskripsi Karakter Tidak Sesuai" : "Character Description Not Appropriate",
           {
-            description: characterValidation.reason
+            description: characterValidation.reason,
+            duration: 5000
           }
         );
         return;
@@ -89,39 +94,76 @@ export const useStoryGeneration = ({
       const totalImages = paragraphs.length;
 
       if (totalImages === 0) {
-        toast.error("No valid paragraphs found");
+        toast.error(
+          language === "indonesian" ? "Tidak ada paragraf yang valid ditemukan" : "No valid paragraphs found"
+        );
         return;
       }
 
       if (!profile || profile.credits < totalImages) {
-        toast.error("Not enough credits", {
-          description: `You need ${totalImages} credits to generate images for all paragraphs`
-        });
+        toast.error(
+          language === "indonesian" ? "Kredit tidak cukup" : "Not enough credits", 
+          {
+            description: language === "indonesian"
+              ? `Anda memerlukan ${totalImages} kredit untuk membuat gambar dari semua paragraf`
+              : `You need ${totalImages} credits to generate images for all paragraphs`
+          }
+        );
         return;
       }
 
       setIsGenerating(true);
       
-      toast.info(`Generating ${totalImages} images...`, {
-        description: "This may take a few moments"
-      });
+      toast.info(
+        language === "indonesian" 
+          ? `Membuat ${totalImages} gambar ramah anak...` 
+          : `Generating ${totalImages} child-friendly images...`, 
+        {
+          description: language === "indonesian"
+            ? "Ini mungkin memerlukan beberapa saat"
+            : "This may take a few moments"
+        }
+      );
       
       try {
-        // Generate images for each paragraph with consistent character descriptions
+        // Generate images for each paragraph with enhanced child-safe prompts
         const enhancedPrompts = paragraphs.map(p => {
           // Create a base prompt that focuses on the scene from the paragraph
           let enhancedPrompt = p;
           
+          // Add child-safety context first
+          const childSafetyContext = language === "indonesian"
+            ? "Gambar ramah anak, sesuai untuk semua umur, tidak ada konten dewasa, "
+            : "Child-friendly image, suitable for all ages, no adult content, ";
+          
+          enhancedPrompt = childSafetyContext + enhancedPrompt;
+          
           // Add detailed style information
           const styleMap: Record<string, string> = {
-            "photorealistic": "highly detailed photorealistic style with realistic lighting and textures",
-            "digital-art": "vibrant digital art style with rich colors",
-            "anime": "anime style with clean lines and expressive characters",
-            "3d-render": "3D rendered style with depth and realistic materials",
-            "oil-painting": "oil painting style with visible brush strokes and rich textures",
-            "watercolor": "delicate watercolor style with soft color blending",
-            "comic-book": "comic book style with bold outlines and flat colors",
-            "storyboard-sketch": "professional storyboard sketch style with clear scene composition"
+            "photorealistic": language === "indonesian" 
+              ? "gaya foto realistis dengan detail yang indah dan pencahayaan yang baik"
+              : "highly detailed photorealistic style with beautiful details and good lighting",
+            "digital-art": language === "indonesian"
+              ? "gaya seni digital dengan warna-warna cerah dan indah"
+              : "vibrant digital art style with bright beautiful colors",
+            "anime": language === "indonesian"
+              ? "gaya anime dengan karakter yang lucu dan ekspresif"
+              : "anime style with cute and expressive characters",
+            "3d-render": language === "indonesian"
+              ? "gaya render 3D dengan kedalaman dan material yang realistis"
+              : "3D rendered style with depth and realistic materials",
+            "oil-painting": language === "indonesian"
+              ? "gaya lukisan minyak dengan tekstur yang indah"
+              : "oil painting style with beautiful textures",
+            "watercolor": language === "indonesian"
+              ? "gaya cat air dengan perpaduan warna yang lembut"
+              : "delicate watercolor style with soft color blending",
+            "comic-book": language === "indonesian"
+              ? "gaya komik dengan garis tegas dan warna cerah"
+              : "comic book style with bold outlines and bright colors",
+            "storybook-sketch": language === "indonesian"
+              ? "gaya sketsa buku cerita dengan komposisi yang jelas"
+              : "professional storybook sketch style with clear composition"
           };
           
           const styleDescription = styleMap[style] || styleMap["photorealistic"];
@@ -129,11 +171,16 @@ export const useStoryGeneration = ({
           
           // Build a comprehensive character description block for consistency
           if (characters.length > 0) {
-            enhancedPrompt += ". Characters in scene: ";
+            const characterPrefix = language === "indonesian" 
+              ? ". Karakter dalam cerita: "
+              : ". Characters in scene: ";
+            enhancedPrompt += characterPrefix;
             
             const characterPrompts = characters.map(char => {
-              // Make the character description more detailed for consistency
-              return `${char.name} (${char.appearance}, consistent appearance throughout all scenes)`;
+              const consistencyNote = language === "indonesian"
+                ? "penampilan konsisten di semua adegan"
+                : "consistent appearance throughout all scenes";
+              return `${char.name} (${char.appearance}, ${consistencyNote})`;
             }).join('; ');
             
             enhancedPrompt += characterPrompts;
@@ -141,50 +188,74 @@ export const useStoryGeneration = ({
           
           // Add additional image instructions if provided
           if (characterDescriptions.trim()) {
-            enhancedPrompt += `. Scene details: ${characterDescriptions}`;
+            const detailPrefix = language === "indonesian"
+              ? ". Detail adegan: "
+              : ". Scene details: ";
+            enhancedPrompt += `${detailPrefix}${characterDescriptions}`;
           }
           
           // Add language-specific context
           if (language === "indonesian") {
-            enhancedPrompt += ". Text is in Indonesian language (Bahasa Indonesia). Visual representation should match Indonesian cultural context where appropriate.";
+            enhancedPrompt += ". Teks dalam bahasa Indonesia. Representasi visual harus sesuai dengan konteks budaya Indonesia yang ramah anak.";
+          } else {
+            enhancedPrompt += ". Child-friendly visual representation with appropriate cultural context.";
           }
           
           return enhancedPrompt;
         });
         
-        console.log("Enhanced prompts for image generation:", enhancedPrompts);
+        console.log("Enhanced child-safe prompts for image generation:", enhancedPrompts);
         
         const imageUrls = await generateMultipleImages(enhancedPrompts);
         
         if (imageUrls.length > 0) {
           onImagesGenerated(imageUrls, paragraphs);
-          toast.success(`Generated ${imageUrls.length} images successfully!`);
+          toast.success(
+            language === "indonesian"
+              ? `Berhasil membuat ${imageUrls.length} gambar ramah anak!`
+              : `Generated ${imageUrls.length} child-friendly images successfully!`
+          );
         } else {
-          toast.error("Failed to generate images");
+          toast.error(
+            language === "indonesian" ? "Gagal membuat gambar" : "Failed to generate images"
+          );
         }
       } catch (error) {
         console.error("Error generating images:", error);
         
         // Check for billing error
         if (error instanceof Error && error.message.includes("Billing required")) {
-          toast.error("Replicate API requires billing", {
-            description: "Please visit replicate.com/account/billing to set up billing for your account.",
-            action: {
-              label: "Visit Billing",
-              onClick: () => window.open("https://replicate.com/account/billing", "_blank")
+          toast.error(
+            language === "indonesian" 
+              ? "Replicate API memerlukan penagihan" 
+              : "Replicate API requires billing",
+            {
+              description: language === "indonesian"
+                ? "Silakan kunjungi replicate.com/account/billing untuk mengatur penagihan untuk akun Anda."
+                : "Please visit replicate.com/account/billing to set up billing for your account.",
+              action: {
+                label: language === "indonesian" ? "Kunjungi Penagihan" : "Visit Billing",
+                onClick: () => window.open("https://replicate.com/account/billing", "_blank")
+              }
             }
-          });
+          );
         } else {
-          toast.error("Error generating images", {
-            description: error instanceof Error ? error.message : "Please try again"
-          });
+          toast.error(
+            language === "indonesian" ? "Kesalahan membuat gambar" : "Error generating images",
+            {
+              description: error instanceof Error ? error.message : "Please try again"
+            }
+          );
         }
       }
     } catch (error) {
       console.error("Error checking credits:", error);
-      toast.error("Error checking credits", {
-        description: error instanceof Error ? error.message : "Please try again"
-      });
+      toast.error(
+        language === "indonesian" ? "Kesalahan memeriksa kredit" : "Error checking credits",
+        {
+          description: error instanceof Error ? error.message : "Please try again"
+        }
+      );
     } finally {
       setIsGenerating(false);
     }
