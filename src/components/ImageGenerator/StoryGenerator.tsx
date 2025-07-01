@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Book, Languages } from "lucide-react";
+import { Book, Languages, Zap } from "lucide-react";
 import { useStoryGeneration } from "@/hooks/useStoryGeneration";
 import { StoryInputOptions } from "./StoryInputOptions";
 import { StoryTextArea } from "./StoryTextArea";
@@ -17,7 +17,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { filterContent, getChildFriendlyAlternatives } from "@/utils/contentFilter";
+import { CLIPEnhancedService } from "@/services/CLIPEnhancedService";
+import { IndonesianNLPService } from "@/services/IndonesianNLPService";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -39,7 +43,8 @@ export const StoryGenerator = ({
   const [characterDescriptions, setCharacterDescriptions] = useState("");
   const [characters, setCharacters] = useState<CharacterDescription[]>([]);
   const [paragraphCount, setParagraphCount] = useState(0);
-  const [language, setLanguage] = useState<SupportedLanguage>("indonesian"); // Default to Indonesian for children
+  const [language, setLanguage] = useState<SupportedLanguage>("indonesian");
+  const [clipAnalysis, setClipAnalysis] = useState<any>(null);
   
   const { handleGenerateImages, paragraphs } = useStoryGeneration({
     story,
@@ -56,7 +61,23 @@ export const StoryGenerator = ({
   // Update paragraph count whenever story or separator changes
   useEffect(() => {
     setParagraphCount(paragraphs.length);
-  }, [paragraphs]);
+    
+    // Perform CLIP analysis for Indonesian content
+    if (language === "indonesian" && story.trim()) {
+      const sampleParagraph = paragraphs[0] || story.substring(0, 200);
+      if (sampleParagraph) {
+        const analysis = CLIPEnhancedService.enhancePromptWithCLIP(
+          sampleParagraph,
+          style,
+          language
+        );
+        const validation = CLIPEnhancedService.validatePromptForCLIP(analysis.clipOptimizedPrompt);
+        setClipAnalysis({ analysis, validation });
+      }
+    } else {
+      setClipAnalysis(null);
+    }
+  }, [paragraphs, language, story, style]);
 
   const getLanguageLabel = () => {
     return language === "indonesian" ? "Bahasa Cerita" : "Story Language";
@@ -65,6 +86,7 @@ export const StoryGenerator = ({
   // Create a properly typed handler function for language changes
   const handleLanguageChange = (value: SupportedLanguage) => {
     setLanguage(value);
+    setClipAnalysis(null); // Reset analysis when language changes
   };
 
   // Enhanced content validation with better error messages for children
@@ -114,10 +136,16 @@ export const StoryGenerator = ({
         <CardTitle className="flex items-center gap-2">
           <Book className="h-5 w-5" />
           {language === "indonesian" ? "Cerita ke Gambar" : "Story to Images"}
+          {language === "indonesian" && (
+            <Badge variant="secondary" className="ml-2">
+              <Zap className="h-3 w-3 mr-1" />
+              CLIP Enhanced
+            </Badge>
+          )}
         </CardTitle>
         <CardDescription>
           {language === "indonesian" 
-            ? "Tulis cerita yang ramah anak dan hasilkan gambar storyboard yang konsisten untuk setiap paragraf" 
+            ? "Tulis cerita yang ramah anak dan hasilkan gambar storyboard yang konsisten dengan teknologi CLIP dan NLP Indonesia untuk hasil yang lebih akurat" 
             : "Write a child-friendly story and generate consistent storyboard images for each paragraph"}
         </CardDescription>
       </CardHeader>
@@ -142,6 +170,42 @@ export const StoryGenerator = ({
               </SelectContent>
             </Select>
           </div>
+
+          {/* CLIP Analysis Display for Indonesian */}
+          {language === "indonesian" && clipAnalysis && (
+            <Alert className="bg-blue-50 border-blue-200">
+              <Zap className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <p className="font-medium">Analisis CLIP untuk Bahasa Indonesia:</p>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="font-medium">Skor Kualitas: {clipAnalysis.validation.score}/100</p>
+                      <p className="text-muted-foreground">
+                        {clipAnalysis.validation.isOptimal ? "Optimal untuk gambar" : "Dapat ditingkatkan"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Kata Kunci Visual:</p>
+                      <p className="text-muted-foreground">
+                        {clipAnalysis.analysis.visualKeywords.slice(0, 3).join(", ") || "Tidak ada"}
+                      </p>
+                    </div>
+                  </div>
+                  {clipAnalysis.validation.suggestions.length > 0 && (
+                    <div className="mt-2">
+                      <p className="font-medium text-sm">Saran untuk hasil lebih baik:</p>
+                      <ul className="text-xs text-muted-foreground list-disc list-inside">
+                        {clipAnalysis.validation.suggestions.slice(0, 2).map((suggestion, idx) => (
+                          <li key={idx}>{suggestion}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
 
           <StoryInputOptions
             paragraphSeparator={paragraphSeparator}

@@ -116,20 +116,21 @@ export const useStoryGeneration = ({
 
       setIsGenerating(true);
       
+      // Enhanced toast message for Indonesian with CLIP technology
       toast.info(
         language === "indonesian" 
           ? `Memproses dengan teknologi CLIP dan NLP Indonesia untuk ${totalImages} gambar berkualitas tinggi...` 
           : `Processing with CLIP technology and Indonesian NLP for ${totalImages} high-quality images...`, 
         {
           description: language === "indonesian"
-            ? "Mengoptimalkan akurasi bahasa Indonesia untuk hasil yang lebih sesuai"
-            : "Optimizing Indonesian language accuracy for better results"
+            ? "Mengoptimalkan akurasi bahasa Indonesia untuk hasil yang lebih sesuai dengan cerita Anda"
+            : "Optimizing Indonesian language accuracy for better results matching your story"
         }
       );
       
       try {
         // Generate enhanced prompts using Indonesian NLP and CLIP optimization
-        const enhancedPrompts = paragraphs.map(paragraph => {
+        const enhancedPrompts = paragraphs.map((paragraph, index) => {
           // Start with child-safety context
           const childSafetyContext = language === "indonesian"
             ? "Gambar ramah anak, sesuai untuk semua umur, tidak ada konten dewasa, "
@@ -139,10 +140,10 @@ export const useStoryGeneration = ({
           
           // Apply Indonesian NLP processing if Indonesian language is selected
           if (language === "indonesian") {
-            console.log("Applying Indonesian NLP processing to paragraph:", paragraph);
+            console.log(`Applying Indonesian NLP processing to paragraph ${index + 1}:`, paragraph);
             
             const nlpResult = IndonesianNLPService.processIndonesianPrompt(paragraph);
-            console.log("NLP processed result:", nlpResult);
+            console.log(`NLP processed result for paragraph ${index + 1}:`, nlpResult);
             
             // Use the NLP-enhanced prompt as base
             enhancedPrompt = childSafetyContext + nlpResult.enhancedPrompt;
@@ -154,7 +155,17 @@ export const useStoryGeneration = ({
               language
             );
             
-            console.log("CLIP enhanced prompt:", clipEnhanced.clipOptimizedPrompt);
+            console.log(`CLIP enhanced prompt for paragraph ${index + 1}:`, clipEnhanced.clipOptimizedPrompt);
+            console.log(`Visual keywords for paragraph ${index + 1}:`, clipEnhanced.visualKeywords);
+            console.log(`Semantic context for paragraph ${index + 1}:`, clipEnhanced.semanticContext);
+            
+            // Validate prompt quality
+            const validation = CLIPEnhancedService.validatePromptForCLIP(clipEnhanced.clipOptimizedPrompt);
+            console.log(`Prompt quality score for paragraph ${index + 1}:`, validation.score);
+            if (validation.suggestions.length > 0) {
+              console.log(`Prompt suggestions for paragraph ${index + 1}:`, validation.suggestions);
+            }
+            
             enhancedPrompt = clipEnhanced.clipOptimizedPrompt;
           }
           
@@ -193,11 +204,19 @@ export const useStoryGeneration = ({
         
         if (imageUrls.length > 0) {
           onImagesGenerated(imageUrls, paragraphs);
-          toast.success(
-            language === "indonesian"
-              ? `Berhasil membuat ${imageUrls.length} gambar berkualitas tinggi dengan teknologi CLIP dan NLP Indonesia!`
-              : `Generated ${imageUrls.length} high-quality images with CLIP and Indonesian NLP technology!`
-          );
+          
+          // Enhanced success message for Indonesian
+          const successMessage = language === "indonesian"
+            ? `Berhasil membuat ${imageUrls.length} gambar berkualitas tinggi dengan teknologi CLIP dan NLP Indonesia!`
+            : `Generated ${imageUrls.length} high-quality images with CLIP and Indonesian NLP technology!`;
+          
+          const successDescription = language === "indonesian"
+            ? "Gambar telah dioptimalkan untuk akurasi bahasa Indonesia dan kesesuaian dengan cerita Anda"
+            : "Images have been optimized for Indonesian language accuracy and story matching";
+          
+          toast.success(successMessage, {
+            description: successDescription
+          });
         } else {
           toast.error(
             language === "indonesian" ? "Gagal membuat gambar" : "Failed to generate images"
