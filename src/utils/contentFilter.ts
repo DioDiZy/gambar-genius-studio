@@ -76,7 +76,7 @@ export const filterContent = (text: string, language: 'english' | 'indonesian' =
   for (const pattern of inappropriatePatterns) {
     if (pattern.test(normalizedText)) {
       return {
-        isAppriopriate: false,
+        isAppropriate: false,
         reason: language === 'indonesian'
           ? 'Konten tidak pantas terdeteksi. Silakan gunakan bahasa yang lebih sopan.'
           : 'Inappropriate content detected. Please use more appropriate language.'
