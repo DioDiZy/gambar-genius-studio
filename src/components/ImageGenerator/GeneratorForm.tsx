@@ -1,16 +1,16 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Languages } from "lucide-react";
+import { Sparkles, Languages, Zap } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { generateImage } from "@/services/ImageService";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { filterContent, getChildFriendlyAlternatives } from "@/utils/contentFilter";
+import { CLIPEnhancedService } from "@/services/CLIPEnhancedService";
 
 interface GeneratorFormProps {
   onImageGenerated: (url: string, prompt: string) => void;
@@ -29,6 +29,8 @@ export const GeneratorForm = ({
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [language, setLanguage] = useState<SupportedLanguage>("indonesian"); // Default to Indonesian for children
+  const [style, setStyle] = useState("photorealistic");
+  const [showCLIPOptimization, setShowCLIPOptimization] = useState(false);
   const { user } = useAuth();
 
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -54,15 +56,25 @@ export const GeneratorForm = ({
     }
     
     setPrompt(newPrompt);
+    
+    // Show CLIP optimization info for Indonesian prompts
+    if (language === "indonesian" && newPrompt.length > 10) {
+      setShowCLIPOptimization(true);
+    }
   };
 
   const handleAspectRatioChange = (value: string) => {
     setAspectRatio(value);
   };
 
+  const handleStyleChange = (value: string) => {
+    setStyle(value);
+  };
+
   // Create a properly typed handler function for language changes
   const handleLanguageChange = (value: SupportedLanguage) => {
     setLanguage(value);
+    setShowCLIPOptimization(value === "indonesian" && prompt.length > 10);
   };
 
   const handleGenerateImage = async () => {
@@ -81,6 +93,22 @@ export const GeneratorForm = ({
         }
       );
       return;
+    }
+
+    // Validate prompt quality for CLIP if Indonesian
+    if (language === "indonesian") {
+      const clipValidation = CLIPEnhancedService.validatePromptForCLIP(prompt);
+      if (!clipValidation.isOptimal && clipValidation.score < 50) {
+        toast.warning(
+          language === "indonesian" ? "Prompt dapat dioptimalkan" : "Prompt can be optimized",
+          {
+            description: language === "indonesian" 
+              ? `Skor kualitas: ${clipValidation.score}/100. ${clipValidation.suggestions.slice(0, 2).join(', ')}`
+              : `Quality score: ${clipValidation.score}/100. ${clipValidation.suggestions.slice(0, 2).join(', ')}`,
+            duration: 4000
+          }
+        );
+      }
     }
 
     try {
@@ -109,27 +137,29 @@ export const GeneratorForm = ({
 
       setIsGenerating(true);
       
-      toast.info(
-        language === "indonesian" ? "Membuat gambar yang ramah anak..." : "Creating child-friendly image...",
-        { 
-          description: language === "indonesian"
-            ? "Ini mungkin memerlukan beberapa saat"
-            : "This may take a few moments" 
+      const processingMessage = language === "indonesian" 
+        ? "Memproses dengan teknologi CLIP dan NLP Indonesia..."
+        : "Processing with CLIP and Indonesian NLP technology...";
+      
+      toast.info(processingMessage, { 
+        description: language === "indonesian"
+          ? "Mengoptimalkan akurasi bahasa Indonesia untuk hasil yang lebih sesuai"
+          : "Optimizing Indonesian language accuracy for better results" 
         }
       );
       
       try {
-        // Enhanced prompt for child-safe content
-        const childSafePrompt = language === "indonesian" 
-          ? `${prompt}, ramah anak, sesuai untuk semua umur, tidak ada konten dewasa`
-          : `${prompt}, child-friendly, suitable for all ages, no adult content`;
-        
-        const imageUrl = await generateImage({ prompt: childSafePrompt, aspectRatio, language });
+        const imageUrl = await generateImage({ 
+          prompt: prompt, 
+          aspectRatio, 
+          language,
+          style
+        });
         
         if (imageUrl) {
           onImageGenerated(imageUrl, prompt);
           toast.success(
-            language === "indonesian" ? "Gambar berhasil dibuat!" : "Image created successfully!"
+            language === "indonesian" ? "Gambar berkualitas tinggi berhasil dibuat!" : "High-quality image created successfully!"
           );
         } else {
           toast.error(
@@ -184,19 +214,23 @@ export const GeneratorForm = ({
   };
 
   const getTitle = () => {
-    return language === "indonesian" ? "Buat Gambar Ramah Anak" : "Create Child-Friendly Image";
+    return language === "indonesian" ? "Buat Gambar Ramah Anak dengan Teknologi CLIP" : "Create Child-Friendly Image with CLIP Technology";
   };
 
   const getDescription = () => {
     return language === "indonesian" 
-      ? "Masukkan deskripsi yang sesuai untuk anak-anak untuk membuat gambar AI yang aman" 
-      : "Enter a child-appropriate description to create safe AI images";
+      ? "Masukkan deskripsi yang sesuai untuk anak-anak. Teknologi CLIP dan NLP Indonesia akan mengoptimalkan akurasi gambar" 
+      : "Enter a child-appropriate description. CLIP and Indonesian NLP technology will optimize image accuracy";
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{getTitle()}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5" />
+          {getTitle()}
+          {language === "indonesian" && <Zap className="h-4 w-4 text-orange-500" />}
+        </CardTitle>
         <CardDescription>{getDescription()}</CardDescription>
       </CardHeader>
       <CardContent>
@@ -217,11 +251,23 @@ export const GeneratorForm = ({
                 <SelectValue placeholder={language === "indonesian" ? "Pilih bahasa" : "Select language"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="indonesian">Indonesian (Bahasa Indonesia)</SelectItem>
-                <SelectItem value="english">English</SelectItem>
+                <SelectItem value="indonesian">🇮🇩 Indonesian (Optimized)</SelectItem>
+                <SelectItem value="english">🇺🇸 English</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {showCLIPOptimization && language === "indonesian" && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-orange-700 text-sm font-medium mb-1">
+                <Zap className="h-4 w-4" />
+                Optimasi CLIP & NLP Indonesia Aktif
+              </div>
+              <p className="text-orange-600 text-xs">
+                Prompt Anda akan diproses dengan teknologi CLIP dan NLP Indonesia untuk hasil yang lebih akurat dan sesuai budaya.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="prompt">{language === "indonesian" ? "Deskripsi Gambar" : "Image Description"}</Label>
@@ -253,6 +299,26 @@ export const GeneratorForm = ({
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="style">{language === "indonesian" ? "Gaya Gambar" : "Image Style"}</Label>
+            <Select 
+              value={style} 
+              onValueChange={handleStyleChange}
+              disabled={isGenerating}
+            >
+              <SelectTrigger id="style">
+                <SelectValue placeholder={language === "indonesian" ? "Pilih gaya" : "Select style"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="photorealistic">{language === "indonesian" ? "Foto Realistis" : "Photorealistic"}</SelectItem>
+                <SelectItem value="digital-art">{language === "indonesian" ? "Seni Digital" : "Digital Art"}</SelectItem>
+                <SelectItem value="anime">{language === "indonesian" ? "Anime" : "Anime"}</SelectItem>
+                <SelectItem value="watercolor">{language === "indonesian" ? "Cat Air" : "Watercolor"}</SelectItem>
+                <SelectItem value="comic-book">{language === "indonesian" ? "Komik" : "Comic Book"}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           
           <Button 
             onClick={handleGenerateImage} 
@@ -262,8 +328,8 @@ export const GeneratorForm = ({
           >
             <Sparkles className="mr-2 h-4 w-4" />
             {isGenerating 
-              ? (language === "indonesian" ? "Sedang Membuat..." : "Generating...") 
-              : (language === "indonesian" ? "Buat Gambar" : "Generate Image")}
+              ? (language === "indonesian" ? "Sedang Memproses..." : "Processing...") 
+              : (language === "indonesian" ? "Buat Gambar dengan CLIP" : "Generate Image with CLIP")}
           </Button>
         </div>
       </CardContent>

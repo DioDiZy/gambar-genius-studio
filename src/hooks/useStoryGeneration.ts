@@ -7,6 +7,8 @@ import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
 import { CharacterDescription } from "@/types/story";
 import { validateStoryContent } from "@/utils/contentFilter";
+import { CLIPEnhancedService } from "@/services/CLIPEnhancedService";
+import { IndonesianNLPService } from "@/services/IndonesianNLPService";
 
 // Define this type to be consistent with StoryGenerator component
 type SupportedLanguage = "english" | "indonesian";
@@ -116,60 +118,47 @@ export const useStoryGeneration = ({
       
       toast.info(
         language === "indonesian" 
-          ? `Membuat ${totalImages} gambar ramah anak...` 
-          : `Generating ${totalImages} child-friendly images...`, 
+          ? `Memproses dengan teknologi CLIP dan NLP Indonesia untuk ${totalImages} gambar berkualitas tinggi...` 
+          : `Processing with CLIP technology and Indonesian NLP for ${totalImages} high-quality images...`, 
         {
           description: language === "indonesian"
-            ? "Ini mungkin memerlukan beberapa saat"
-            : "This may take a few moments"
+            ? "Mengoptimalkan akurasi bahasa Indonesia untuk hasil yang lebih sesuai"
+            : "Optimizing Indonesian language accuracy for better results"
         }
       );
       
       try {
-        // Generate images for each paragraph with enhanced child-safe prompts
-        const enhancedPrompts = paragraphs.map(p => {
-          // Create a base prompt that focuses on the scene from the paragraph
-          let enhancedPrompt = p;
-          
-          // Add child-safety context first
+        // Generate enhanced prompts using Indonesian NLP and CLIP optimization
+        const enhancedPrompts = paragraphs.map(paragraph => {
+          // Start with child-safety context
           const childSafetyContext = language === "indonesian"
             ? "Gambar ramah anak, sesuai untuk semua umur, tidak ada konten dewasa, "
             : "Child-friendly image, suitable for all ages, no adult content, ";
           
-          enhancedPrompt = childSafetyContext + enhancedPrompt;
+          let enhancedPrompt = childSafetyContext + paragraph;
           
-          // Add detailed style information
-          const styleMap: Record<string, string> = {
-            "photorealistic": language === "indonesian" 
-              ? "gaya foto realistis dengan detail yang indah dan pencahayaan yang baik"
-              : "highly detailed photorealistic style with beautiful details and good lighting",
-            "digital-art": language === "indonesian"
-              ? "gaya seni digital dengan warna-warna cerah dan indah"
-              : "vibrant digital art style with bright beautiful colors",
-            "anime": language === "indonesian"
-              ? "gaya anime dengan karakter yang lucu dan ekspresif"
-              : "anime style with cute and expressive characters",
-            "3d-render": language === "indonesian"
-              ? "gaya render 3D dengan kedalaman dan material yang realistis"
-              : "3D rendered style with depth and realistic materials",
-            "oil-painting": language === "indonesian"
-              ? "gaya lukisan minyak dengan tekstur yang indah"
-              : "oil painting style with beautiful textures",
-            "watercolor": language === "indonesian"
-              ? "gaya cat air dengan perpaduan warna yang lembut"
-              : "delicate watercolor style with soft color blending",
-            "comic-book": language === "indonesian"
-              ? "gaya komik dengan garis tegas dan warna cerah"
-              : "comic book style with bold outlines and bright colors",
-            "storybook-sketch": language === "indonesian"
-              ? "gaya sketsa buku cerita dengan komposisi yang jelas"
-              : "professional storybook sketch style with clear composition"
-          };
+          // Apply Indonesian NLP processing if Indonesian language is selected
+          if (language === "indonesian") {
+            console.log("Applying Indonesian NLP processing to paragraph:", paragraph);
+            
+            const nlpResult = IndonesianNLPService.processIndonesianPrompt(paragraph);
+            console.log("NLP processed result:", nlpResult);
+            
+            // Use the NLP-enhanced prompt as base
+            enhancedPrompt = childSafetyContext + nlpResult.enhancedPrompt;
+            
+            // Apply CLIP optimization
+            const clipEnhanced = CLIPEnhancedService.enhancePromptWithCLIP(
+              enhancedPrompt,
+              style,
+              language
+            );
+            
+            console.log("CLIP enhanced prompt:", clipEnhanced.clipOptimizedPrompt);
+            enhancedPrompt = clipEnhanced.clipOptimizedPrompt;
+          }
           
-          const styleDescription = styleMap[style] || styleMap["photorealistic"];
-          enhancedPrompt = `${enhancedPrompt}, ${styleDescription}`;
-          
-          // Build a comprehensive character description block for consistency
+          // Build character consistency block
           if (characters.length > 0) {
             const characterPrefix = language === "indonesian" 
               ? ". Karakter dalam cerita: "
@@ -186,34 +175,28 @@ export const useStoryGeneration = ({
             enhancedPrompt += characterPrompts;
           }
           
-          // Add additional image instructions if provided
+          // Add additional scene details if provided
           if (characterDescriptions.trim()) {
             const detailPrefix = language === "indonesian"
-              ? ". Detail adegan: "
-              : ". Scene details: ";
+              ? ". Detail adegan tambahan: "
+              : ". Additional scene details: ";
             enhancedPrompt += `${detailPrefix}${characterDescriptions}`;
-          }
-          
-          // Add language-specific context
-          if (language === "indonesian") {
-            enhancedPrompt += ". Teks dalam bahasa Indonesia. Representasi visual harus sesuai dengan konteks budaya Indonesia yang ramah anak.";
-          } else {
-            enhancedPrompt += ". Child-friendly visual representation with appropriate cultural context.";
           }
           
           return enhancedPrompt;
         });
         
-        console.log("Enhanced child-safe prompts for image generation:", enhancedPrompts);
+        console.log("Final enhanced prompts for image generation:", enhancedPrompts);
         
-        const imageUrls = await generateMultipleImages(enhancedPrompts);
+        // Generate images with enhanced prompts
+        const imageUrls = await generateMultipleImages(enhancedPrompts, language, style);
         
         if (imageUrls.length > 0) {
           onImagesGenerated(imageUrls, paragraphs);
           toast.success(
             language === "indonesian"
-              ? `Berhasil membuat ${imageUrls.length} gambar ramah anak!`
-              : `Generated ${imageUrls.length} child-friendly images successfully!`
+              ? `Berhasil membuat ${imageUrls.length} gambar berkualitas tinggi dengan teknologi CLIP dan NLP Indonesia!`
+              : `Generated ${imageUrls.length} high-quality images with CLIP and Indonesian NLP technology!`
           );
         } else {
           toast.error(
