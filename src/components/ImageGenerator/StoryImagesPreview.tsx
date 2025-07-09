@@ -6,22 +6,19 @@ import { SingleImageView } from "./StoryPreview/SingleImageView";
 import { StoryboardView } from "./StoryPreview/StoryboardView";
 import { StoryPreviewActions } from "./StoryPreview/StoryPreviewActions";
 import { ViewModeToggle } from "./StoryPreview/ViewModeToggle";
-import { ClipValidation } from "./ClipValidation";
 
 interface StoryImagesPreviewProps {
   imageUrls: string[];
   prompts: string[];
   isGenerating: boolean;
   onSaved: () => void;
-  characterDescriptions?: string[];
 }
 
 export const StoryImagesPreview = ({ 
   imageUrls, 
   prompts, 
   isGenerating, 
-  onSaved,
-  characterDescriptions = []
+  onSaved 
 }: StoryImagesPreviewProps) => {
   const {
     currentIndex,
@@ -41,67 +38,57 @@ export const StoryImagesPreview = ({
   const currentPrompt = prompts[currentIndex];
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center gap-2">
-              <BookText className="h-5 w-5" />
-              Story Images {imageUrls.length > 0 ? `(${currentIndex + 1}/${imageUrls.length})` : ""}
-            </CardTitle>
-            {imageUrls.length > 0 && (
-              <ViewModeToggle 
-                viewMode={viewMode} 
-                onViewModeChange={setViewMode} 
-              />
-            )}
-          </div>
-          <CardDescription>
-            Storyboard images generated from your story paragraphs
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {viewMode === 'single' ? (
-            <SingleImageView
-              imageUrls={imageUrls}
-              prompts={prompts}
-              currentIndex={currentIndex}
-              isGenerating={isGenerating}
-              onPrevious={() => handlePrevious(imageUrls.length)}
-              onNext={() => handleNext(imageUrls.length)}
-            />
-          ) : (
-            <StoryboardView
-              imageUrls={imageUrls}
-              prompts={prompts}
-              currentIndex={currentIndex}
-              isGenerating={isGenerating}
-              onSelectImage={handleSelectImage}
-            />
-          )}
-
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center gap-2">
+            <BookText className="h-5 w-5" />
+            Story Images {imageUrls.length > 0 ? `(${currentIndex + 1}/${imageUrls.length})` : ""}
+          </CardTitle>
           {imageUrls.length > 0 && (
-            <StoryPreviewActions
-              imageUrls={imageUrls}
-              currentImage={currentImage}
-              currentPrompt={currentPrompt}
-              saving={saving}
-              onSave={handleSave}
-              onDownload={handleDownload}
-              onDownloadAll={() => handleDownloadAll(imageUrls)}
-              viewMode={viewMode}
+            <ViewModeToggle 
+              viewMode={viewMode} 
+              onViewModeChange={setViewMode} 
             />
           )}
-        </CardContent>
-      </Card>
+        </div>
+        <CardDescription>
+          Storyboard images generated from your story paragraphs
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {viewMode === 'single' ? (
+          <SingleImageView
+            imageUrls={imageUrls}
+            prompts={prompts}
+            currentIndex={currentIndex}
+            isGenerating={isGenerating}
+            onPrevious={() => handlePrevious(imageUrls.length)}
+            onNext={() => handleNext(imageUrls.length)}
+          />
+        ) : (
+          <StoryboardView
+            imageUrls={imageUrls}
+            prompts={prompts}
+            currentIndex={currentIndex}
+            isGenerating={isGenerating}
+            onSelectImage={handleSelectImage}
+          />
+        )}
 
-      {/* CLIP Validation */}
-      <ClipValidation
-        imageUrls={imageUrls}
-        prompts={prompts}
-        characterDescriptions={characterDescriptions}
-        isVisible={imageUrls.length > 0 && !isGenerating}
-      />
-    </div>
+        {imageUrls.length > 0 && (
+          <StoryPreviewActions
+            imageUrls={imageUrls}
+            currentImage={currentImage}
+            currentPrompt={currentPrompt}
+            saving={saving}
+            onSave={handleSave}
+            onDownload={handleDownload}
+            onDownloadAll={() => handleDownloadAll(imageUrls)}
+            viewMode={viewMode}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 };
