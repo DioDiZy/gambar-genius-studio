@@ -10,6 +10,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 // Validation schema
 const signUpSchema = z.object({
@@ -26,6 +28,7 @@ type SignUpValues = z.infer<typeof signUpSchema>;
 const SignUp = () => {
   const { signUp, user, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
 
   // Initialize form
   const form = useForm<SignUpValues>({
@@ -40,8 +43,16 @@ const SignUp = () => {
 
   const onSubmit = async (data: SignUpValues) => {
     setIsSubmitting(true);
+    setConnectionError(false);
+    
     try {
+      console.log('Form submitted with data:', { ...data, password: '[REDACTED]' });
       await signUp(data.email, data.password, data.name);
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      if (error.message?.includes('fetch') || error.name?.includes('Fetch')) {
+        setConnectionError(true);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -64,6 +75,15 @@ const SignUp = () => {
                 Start creating amazing AI-generated images today
               </p>
             </div>
+
+            {connectionError && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Unable to connect to the server. Please check your internet connection and try again.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

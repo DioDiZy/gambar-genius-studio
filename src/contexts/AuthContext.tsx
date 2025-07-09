@@ -28,13 +28,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
+        setIsLoading(false);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error getting session:', error);
+      }
+      console.log('Initial session:', session);
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
@@ -47,10 +53,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setIsLoading(true);
+      console.log('Attempting to sign up user:', email);
+      
+      const redirectUrl = `${window.location.origin}/dashboard`;
+      
       const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
           },
@@ -58,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
+        console.error('Sign up error:', error);
         toast({
           title: "Registration failed",
           description: error.message,
@@ -66,15 +78,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      toast({
-        title: "Registration successful",
-        description: "Welcome to PembuatGambar! You are now logged in.",
-      });
-
-      // Navigate to dashboard after successful signup
-      navigate("/dashboard");
-    } catch (error) {
+      console.log('Sign up successful:', data);
+      
+      // If user is immediately confirmed, show success message
+      if (data.user && !data.user.email_confirmed_at) {
+        toast({
+          title: "Registration successful",
+          description: "Please check your email to verify your account.",
+        });
+      } else {
+        toast({
+          title: "Registration successful",
+          description: "Welcome to PembuatGambar! You are now logged in.",
+        });
+        // Navigate to dashboard after successful signup
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
       console.error("Error signing up:", error);
+      // More specific error handling
+      if (error.message?.includes('fetch')) {
+        toast({
+          title: "Connection Error",
+          description: "Unable to connect to authentication service. Please check your internet connection and try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -84,12 +113,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      console.log('Attempting to sign in user:', email);
+      
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Sign in error:', error);
         toast({
           title: "Sign in failed",
           description: error.message,
@@ -98,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
+      console.log('Sign in successful:', data);
       toast({
         title: "Sign in successful",
         description: "Welcome back to PembuatGambar!",
@@ -105,8 +138,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Navigate to dashboard after successful login
       navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing in:", error);
+      // More specific error handling
+      if (error.message?.includes('fetch')) {
+        toast({
+          title: "Connection Error",
+          description: "Unable to connect to authentication service. Please check your internet connection and try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have been successfully signed out.",
       });
       navigate("/");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing out:", error);
       toast({
         title: "Error signing out",
