@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { filterContent, getChildFriendlyAlternatives } from "@/utils/contentFilter";
+import { filterContent } from "@/utils/contentFilter";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -39,7 +38,7 @@ export const StoryGenerator = ({
   const [characterDescriptions, setCharacterDescriptions] = useState("");
   const [characters, setCharacters] = useState<CharacterDescription[]>([]);
   const [paragraphCount, setParagraphCount] = useState(0);
-  const [language, setLanguage] = useState<SupportedLanguage>("indonesian"); // Default to Indonesian for children
+  const [language, setLanguage] = useState<SupportedLanguage>("english");
   
   const { handleGenerateImages, paragraphs } = useStoryGeneration({
     story,
@@ -67,22 +66,15 @@ export const StoryGenerator = ({
     setLanguage(value);
   };
 
-  // Enhanced content validation with better error messages for children
+  // Add content validation when story changes
   const handleStoryChange = (value: string) => {
     // Check content before setting
     const contentCheck = filterContent(value, language);
     if (!contentCheck.isAppropriate) {
-      // Show child-friendly suggestions
-      const alternatives = getChildFriendlyAlternatives(language);
-      const suggestionText = language === "indonesian" 
-        ? `\n\nSaran tema cerita: ${alternatives.slice(0, 3).join(', ')}`
-        : `\n\nStory theme suggestions: ${alternatives.slice(0, 3).join(', ')}`;
-      
       toast.error(
-        language === "indonesian" ? "Kata-kata Tidak Sesuai" : "Inappropriate Content",
+        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
         {
-          description: contentCheck.reason + suggestionText,
-          duration: 6000 // Longer duration for educational content
+          description: contentCheck.reason
         }
       );
       return; // Don't update the story if content is inappropriate
@@ -90,17 +82,14 @@ export const StoryGenerator = ({
     setStory(value);
   };
 
-  // Add validation for character descriptions with suggestions
+  // Add validation for character descriptions
   const handleCharacterDescriptionsChange = (value: string) => {
     const contentCheck = filterContent(value, language);
     if (!contentCheck.isAppropriate) {
       toast.error(
-        language === "indonesian" ? "Deskripsi Karakter Tidak Sesuai" : "Inappropriate Character Description",
+        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
         {
-          description: contentCheck.reason + (language === "indonesian" 
-            ? "\n\nContoh yang baik: 'Seorang pria baik hati dengan senyuman ramah'" 
-            : "\n\nGood example: 'A kind man with a friendly smile'"),
-          duration: 5000
+          description: contentCheck.reason
         }
       );
       return;
@@ -117,8 +106,8 @@ export const StoryGenerator = ({
         </CardTitle>
         <CardDescription>
           {language === "indonesian" 
-            ? "Tulis cerita yang ramah anak dan hasilkan gambar storyboard yang konsisten untuk setiap paragraf" 
-            : "Write a child-friendly story and generate consistent storyboard images for each paragraph"}
+            ? "Tulis cerita dan hasilkan gambar storyboard yang konsisten untuk setiap paragraf" 
+            : "Write a story and generate consistent storyboard images for each paragraph"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -137,8 +126,8 @@ export const StoryGenerator = ({
                 <SelectValue placeholder={language === "indonesian" ? "Pilih bahasa" : "Select language"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="indonesian">Indonesian (Bahasa Indonesia)</SelectItem>
                 <SelectItem value="english">English</SelectItem>
+                <SelectItem value="indonesian">Indonesian</SelectItem>
               </SelectContent>
             </Select>
           </div>
