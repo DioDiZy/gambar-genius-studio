@@ -1,5 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
+import { translateForImageGeneration } from "./TranslationService";
 
 export interface GenerateImageParams {
   prompt: string;
@@ -9,11 +9,22 @@ export interface GenerateImageParams {
 
 export async function generateImage(params: GenerateImageParams): Promise<string | null> {
   try {
-    // Enhance prompt with language context if Indonesian is selected
+    // Translate Indonesian text to English for better image generation
     let enhancedPrompt = params.prompt;
-    if (params.language === "indonesian") {
-      enhancedPrompt += ". Text is in Indonesian language (Bahasa Indonesia). Visual representation should match Indonesian cultural context where appropriate.";
+    if (params.language === "indonesian" || enhancedPrompt.length > 0) {
+      enhancedPrompt = await translateForImageGeneration(params.prompt);
     }
+
+    // Add language context if Indonesian was selected
+    if (params.language === "indonesian") {
+      enhancedPrompt += ". Visual representation should match Indonesian cultural context where appropriate.";
+    }
+
+    console.log('Image generation prompt:', {
+      original: params.prompt,
+      enhanced: enhancedPrompt,
+      language: params.language
+    });
 
     // Create the initial generation request
     const { data: initialData, error: initialError } = await supabase.functions.invoke("generate-image", {
@@ -58,8 +69,17 @@ export async function generateMultipleImages(prompts: string[]): Promise<string[
     // Generate a consistent seed for this story generation session
     const sessionSeed = Math.floor(Math.random() * 1000000);
     
+    // Translate all prompts first
+    const translatedPrompts = await Promise.all(
+      prompts.map(async (prompt) => {
+        const translatedPrompt = await translateForImageGeneration(prompt);
+        console.log('Story prompt translation:', { original: prompt, translated: translatedPrompt });
+        return translatedPrompt;
+      })
+    );
+    
     // Generate images sequentially to avoid overwhelming the API
-    for (const prompt of prompts) {
+    for (const prompt of translatedPrompts) {
       console.log("Generating image with enhanced prompt:", prompt);
       
       const { data: imageData, error: imageError } = await supabase.functions.invoke("generate-image", {

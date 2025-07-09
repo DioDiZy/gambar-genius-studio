@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
 import { CharacterDescription } from "@/types/story";
+import { translateForImageGeneration } from "@/services/TranslationService";
 
 // Define this type to be consistent with StoryGenerator component
 type SupportedLanguage = "english" | "indonesian";
@@ -77,14 +78,16 @@ export const useStoryGeneration = ({
       setIsGenerating(true);
       
       toast.info(`Generating ${totalImages} images...`, {
-        description: "This may take a few moments"
+        description: language === "indonesian" 
+          ? "Menerjemahkan teks Indonesia ke bahasa Inggris untuk hasil yang lebih baik"
+          : "Translating Indonesian text to English for better results"
       });
       
       try {
         // Generate images for each paragraph with consistent character descriptions
-        const enhancedPrompts = paragraphs.map(p => {
-          // Create a base prompt that focuses on the scene from the paragraph
-          let enhancedPrompt = p;
+        const enhancedPrompts = await Promise.all(paragraphs.map(async (p) => {
+          // Translate paragraph if it's in Indonesian
+          let enhancedPrompt = await translateForImageGeneration(p);
           
           // Add detailed style information
           const styleMap: Record<string, string> = {
@@ -105,26 +108,28 @@ export const useStoryGeneration = ({
           if (characters.length > 0) {
             enhancedPrompt += ". Characters in scene: ";
             
-            const characterPrompts = characters.map(char => {
-              // Make the character description more detailed for consistency
-              return `${char.name} (${char.appearance}, consistent appearance throughout all scenes)`;
-            }).join('; ');
+            const characterPrompts = await Promise.all(characters.map(async (char) => {
+              // Translate character appearance if needed
+              const translatedAppearance = await translateForImageGeneration(char.appearance);
+              return `${char.name} (${translatedAppearance}, consistent appearance throughout all scenes)`;
+            }));
             
-            enhancedPrompt += characterPrompts;
+            enhancedPrompt += characterPrompts.join('; ');
           }
           
           // Add additional image instructions if provided
           if (characterDescriptions.trim()) {
-            enhancedPrompt += `. Scene details: ${characterDescriptions}`;
+            const translatedDescriptions = await translateForImageGeneration(characterDescriptions);
+            enhancedPrompt += `. Scene details: ${translatedDescriptions}`;
           }
           
           // Add language-specific context
           if (language === "indonesian") {
-            enhancedPrompt += ". Text is in Indonesian language (Bahasa Indonesia). Visual representation should match Indonesian cultural context where appropriate.";
+            enhancedPrompt += ". Visual representation should match Indonesian cultural context where appropriate.";
           }
           
           return enhancedPrompt;
-        });
+        }));
         
         console.log("Enhanced prompts for image generation:", enhancedPrompts);
         
