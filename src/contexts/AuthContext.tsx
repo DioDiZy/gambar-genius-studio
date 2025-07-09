@@ -23,141 +23,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Helper function to check network connectivity
-  const isOnline = () => {
-    return navigator.onLine;
-  };
-
-  // Helper function to handle network errors
-  const handleNetworkError = (error: any) => {
-    console.error('Network error details:', error);
-    
-    if (!isOnline()) {
-      toast({
-        title: "No Internet Connection",
-        description: "Please check your internet connection and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check for specific fetch/network errors
-    if (error.message?.toLowerCase().includes('fetch') || 
-        error.name?.toLowerCase().includes('fetch') ||
-        error.message?.toLowerCase().includes('network') ||
-        error.message?.toLowerCase().includes('connection')) {
-      toast({
-        title: "Connection Error",
-        description: "Unable to connect to the authentication service. Please try again in a moment.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Generic error handling
-    toast({
-      title: "Authentication Error",
-      description: error.message || "An unexpected error occurred. Please try again.",
-      variant: "destructive",
-    });
-  };
-
   // Initialize auth state
   useEffect(() => {
-    let mounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        // Set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, session) => {
-            if (!mounted) return;
-            
-            console.log('Auth state changed:', event, session);
-            setSession(session);
-            setUser(session?.user ?? null);
-            setIsLoading(false);
-          }
-        );
-
-        // Check for existing session with retry logic
-        let retries = 3;
-        while (retries > 0 && mounted) {
-          try {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            
-            if (!mounted) return;
-            
-            if (error) {
-              console.error('Error getting session:', error);
-              if (retries === 1) {
-                // Last retry failed
-                setIsLoading(false);
-                return;
-              }
-            } else {
-              console.log('Initial session:', session);
-              setSession(session);
-              setUser(session?.user ?? null);
-              setIsLoading(false);
-              break;
-            }
-          } catch (err) {
-            console.error('Session check attempt failed:', err);
-            if (retries === 1) {
-              setIsLoading(false);
-            }
-          }
-          
-          retries--;
-          if (retries > 0) {
-            // Wait before retry
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        }
-
-        return () => {
-          mounted = false;
-          subscription.unsubscribe();
-        };
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
       }
-    };
+    );
 
-    initializeAuth();
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
 
-    return () => {
-      mounted = false;
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Sign up function with improved error handling
+  // Sign up function
   const signUp = async (email: string, password: string, fullName: string) => {
-    if (!isOnline()) {
-      toast({
-        title: "No Internet Connection",
-        description: "Please check your internet connection and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    
     try {
-      console.log('Attempting to sign up user:', email);
-      
-      const redirectUrl = `${window.location.origin}/dashboard`;
-      
+      setIsLoading(true);
       const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
           },
@@ -165,70 +58,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        console.error('Sign up error:', error);
-        handleNetworkError(error);
-        return;
+        toast({
+          title: "Registration failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
       }
 
-      console.log('Sign up successful:', data);
-      
-      if (data.user && !data.user.email_confirmed_at) {
-        toast({
-          title: "Registration successful",
-          description: "Please check your email to verify your account.",
-        });
-      } else {
-        toast({
-          title: "Registration successful",
-          description: "Welcome to PembuatGambar! You are now logged in.",
-        });
-        navigate("/dashboard");
-      }
-    } catch (error: any) {
+      toast({
+        title: "Registration successful",
+        description: "Welcome to PembuatGambar! You are now logged in.",
+      });
+
+      // Navigate to dashboard after successful signup
+      navigate("/dashboard");
+    } catch (error) {
       console.error("Error signing up:", error);
-      handleNetworkError(error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Sign in function with improved error handling
+  // Sign in function
   const signIn = async (email: string, password: string) => {
-    if (!isOnline()) {
-      toast({
-        title: "No Internet Connection",
-        description: "Please check your internet connection and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    
     try {
-      console.log('Attempting to sign in user:', email);
-      
+      setIsLoading(true);
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error('Sign in error:', error);
-        handleNetworkError(error);
-        return;
+        toast({
+          title: "Sign in failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
       }
 
-      console.log('Sign in successful:', data);
       toast({
         title: "Sign in successful",
         description: "Welcome back to PembuatGambar!",
       });
 
+      // Navigate to dashboard after successful login
       navigate("/dashboard");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error signing in:", error);
-      handleNetworkError(error);
     } finally {
       setIsLoading(false);
     }
@@ -244,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have been successfully signed out.",
       });
       navigate("/");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error signing out:", error);
       toast({
         title: "Error signing out",
