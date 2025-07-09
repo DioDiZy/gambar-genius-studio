@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { filterContent } from "@/utils/contentFilter";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -25,24 +24,21 @@ interface StoryGeneratorProps {
   setIsGenerating: (value: boolean) => void;
 }
 
+// Define this type to be more specific about supported languages
+type SupportedLanguage = "english" | "indonesian";
+
 export const StoryGenerator = ({ 
   onImagesGenerated, 
   isGenerating,
   setIsGenerating
 }: StoryGeneratorProps) => {
-  const { language: appLanguage, t } = useLanguage();
   const [story, setStory] = useState("");
   const [paragraphSeparator, setParagraphSeparator] = useState("\n\n");
   const [style, setStyle] = useState("photorealistic");
   const [characterDescriptions, setCharacterDescriptions] = useState("");
   const [characters, setCharacters] = useState<CharacterDescription[]>([]);
   const [paragraphCount, setParagraphCount] = useState(0);
-  const [language, setLanguage] = useState(appLanguage);
-  
-  // Update story language when app language changes
-  useEffect(() => {
-    setLanguage(appLanguage);
-  }, [appLanguage]);
+  const [language, setLanguage] = useState<SupportedLanguage>("english");
   
   const { handleGenerateImages, paragraphs } = useStoryGeneration({
     story,
@@ -61,15 +57,57 @@ export const StoryGenerator = ({
     setParagraphCount(paragraphs.length);
   }, [paragraphs]);
 
+  const getLanguageLabel = () => {
+    return language === "indonesian" ? "Bahasa Cerita" : "Story Language";
+  };
+
+  // Create a properly typed handler function for language changes
+  const handleLanguageChange = (value: SupportedLanguage) => {
+    setLanguage(value);
+  };
+
+  // Add content validation when story changes
+  const handleStoryChange = (value: string) => {
+    // Check content before setting
+    const contentCheck = filterContent(value, language);
+    if (!contentCheck.isAppropriate) {
+      toast.error(
+        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
+        {
+          description: contentCheck.reason
+        }
+      );
+      return; // Don't update the story if content is inappropriate
+    }
+    setStory(value);
+  };
+
+  // Add validation for character descriptions
+  const handleCharacterDescriptionsChange = (value: string) => {
+    const contentCheck = filterContent(value, language);
+    if (!contentCheck.isAppropriate) {
+      toast.error(
+        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
+        {
+          description: contentCheck.reason
+        }
+      );
+      return;
+    }
+    setCharacterDescriptions(value);
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Book className="h-5 w-5" />
-          {t("story.title")}
+          {language === "indonesian" ? "Cerita ke Gambar" : "Story to Images"}
         </CardTitle>
         <CardDescription>
-          {t("story.description")}
+          {language === "indonesian" 
+            ? "Tulis cerita dan hasilkan gambar storyboard yang konsisten untuk setiap paragraf" 
+            : "Write a story and generate consistent storyboard images for each paragraph"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -77,19 +115,19 @@ export const StoryGenerator = ({
           <div className="flex items-center space-x-4 mb-4">
             <div className="flex items-center space-x-2">
               <Languages className="h-4 w-4 text-muted-foreground" />
-              <Label htmlFor="language-select">{t("story.language")}</Label>
+              <Label htmlFor="language-select">{getLanguageLabel()}</Label>
             </div>
             <Select 
               value={language} 
-              onValueChange={setLanguage}
+              onValueChange={handleLanguageChange}
               disabled={isGenerating}
             >
               <SelectTrigger id="language-select" className="w-[180px]">
-                <SelectValue placeholder={t("app.language")} />
+                <SelectValue placeholder={language === "indonesian" ? "Pilih bahasa" : "Select language"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="english">{t("app.english")}</SelectItem>
-                <SelectItem value="indonesian">{t("app.indonesian")}</SelectItem>
+                <SelectItem value="english">English</SelectItem>
+                <SelectItem value="indonesian">Indonesian</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -100,19 +138,21 @@ export const StoryGenerator = ({
             style={style}
             onStyleChange={setStyle}
             characterDescriptions={characterDescriptions}
-            onCharacterDescriptionsChange={setCharacterDescriptions}
+            onCharacterDescriptionsChange={handleCharacterDescriptionsChange}
             isGenerating={isGenerating}
             characters={characters}
             onCharactersChange={setCharacters}
+            language={language}
           />
 
           <Separator className="my-4" />
 
           <StoryTextArea
             story={story}
-            onStoryChange={setStory}
+            onStoryChange={handleStoryChange}
             paragraphCount={paragraphCount}
             isGenerating={isGenerating}
+            language={language}
           />
 
           <div className="flex items-center justify-end">
@@ -120,6 +160,7 @@ export const StoryGenerator = ({
               onGenerate={handleGenerateImages}
               disabled={!story.trim()}
               isGenerating={isGenerating}
+              language={language}
             />
           </div>
         </div>

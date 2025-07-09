@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
 import { CharacterDescription } from "@/types/story";
+import { validateStoryContent } from "@/utils/contentFilter";
+
+// Define this type to be consistent with StoryGenerator component
+type SupportedLanguage = "english" | "indonesian";
 
 interface UseStoryGenerationProps {
   story: string;
@@ -16,7 +19,7 @@ interface UseStoryGenerationProps {
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
-  language?: string;
+  language: SupportedLanguage;
 }
 
 export const useStoryGeneration = ({
@@ -28,7 +31,7 @@ export const useStoryGeneration = ({
   isGenerating,
   setIsGenerating,
   onImagesGenerated,
-  language = "english"
+  language
 }: UseStoryGenerationProps) => {
   const { user } = useAuth();
   const [paragraphs, setParagraphs] = useState<string[]>([]);
@@ -43,6 +46,32 @@ export const useStoryGeneration = ({
     if (!story.trim()) {
       toast.error("Please enter a story");
       return;
+    }
+
+    // Validate story content before proceeding
+    const contentValidation = validateStoryContent(story, paragraphSeparator, language);
+    if (!contentValidation.isAppropriate) {
+      toast.error(
+        language === "indonesian" ? "Konten Tidak Pantas" : "Inappropriate Content",
+        {
+          description: contentValidation.reason
+        }
+      );
+      return;
+    }
+
+    // Also validate character descriptions if provided
+    if (characterDescriptions.trim()) {
+      const characterValidation = validateStoryContent(characterDescriptions, '\n', language);
+      if (!characterValidation.isAppropriate) {
+        toast.error(
+          language === "indonesian" ? "Konten Tidak Pantas dalam Deskripsi Karakter" : "Inappropriate Content in Character Descriptions",
+          {
+            description: characterValidation.reason
+          }
+        );
+        return;
+      }
     }
 
     try {

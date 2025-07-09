@@ -1,20 +1,26 @@
 
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StoryGenerationButtonProps {
   onGenerate: () => void;
   disabled?: boolean;
   isGenerating?: boolean;
+  language?: string;
 }
 
 export const StoryGenerationButton = ({
   onGenerate,
   disabled = false,
   isGenerating = false,
+  language = "english"
 }: StoryGenerationButtonProps) => {
-  const { t } = useLanguage();
+  const buttonText = () => {
+    if (language === "indonesian") {
+      return isGenerating ? "Menghasilkan..." : "Hasilkan Gambar";
+    }
+    return isGenerating ? "Generating..." : "Generate Images";
+  };
 
   return (
     <Button
@@ -24,7 +30,7 @@ export const StoryGenerationButton = ({
       size="lg"
     >
       <Sparkles className="h-4 w-4" />
-      {isGenerating ? t("story.generating") : t("story.generate")}
+      {buttonText()}
     </Button>
   );
 };

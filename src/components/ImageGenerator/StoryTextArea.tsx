@@ -1,13 +1,13 @@
 
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StoryTextAreaProps {
   story: string;
   onStoryChange: (value: string) => void;
   paragraphCount: number;
   isGenerating: boolean;
+  language?: string;
 }
 
 export const StoryTextArea = ({
@@ -15,9 +15,8 @@ export const StoryTextArea = ({
   onStoryChange,
   paragraphCount,
   isGenerating,
+  language = "english"
 }: StoryTextAreaProps) => {
-  const { language, t } = useLanguage();
-
   const getPlaceholderByLanguage = () => {
     switch(language) {
       case "indonesian":
@@ -28,9 +27,19 @@ export const StoryTextArea = ({
     }
   };
 
+  const getCountLabel = () => {
+    return language === "indonesian" 
+      ? `${paragraphCount} paragraf terdeteksi` 
+      : `${paragraphCount} paragraphs detected`;
+  };
+
+  const getLabelText = () => {
+    return language === "indonesian" ? "Cerita Anda" : "Your Story";
+  };
+
   return (
     <div className="space-y-2">
-      <Label>{t("story.yourStory")}</Label>
+      <Label>{getLabelText()}</Label>
       <Textarea
         placeholder={getPlaceholderByLanguage()}
         value={story}
@@ -39,7 +48,7 @@ export const StoryTextArea = ({
         disabled={isGenerating}
       />
       <p className="text-sm text-muted-foreground">
-        {t("story.paragraphsDetected").replace("{count}", paragraphCount.toString())}
+        {getCountLabel()}
       </p>
     </div>
   );
