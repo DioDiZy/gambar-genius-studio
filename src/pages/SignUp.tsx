@@ -3,7 +3,7 @@ import { Navbar } from "@/components/Navbar";
 import { CustomButton } from "@/components/ui/custom-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
@@ -11,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Wifi, WifiOff } from "lucide-react";
 
 // Validation schema
 const signUpSchema = z.object({
@@ -28,7 +28,7 @@ type SignUpValues = z.infer<typeof signUpSchema>;
 const SignUp = () => {
   const { signUp, user, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   // Initialize form
   const form = useForm<SignUpValues>({
@@ -41,18 +41,32 @@ const SignUp = () => {
     },
   });
 
+  // Monitor network connectivity
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   const onSubmit = async (data: SignUpValues) => {
+    if (!isOnline) {
+      return;
+    }
+
     setIsSubmitting(true);
-    setConnectionError(false);
     
     try {
       console.log('Form submitted with data:', { ...data, password: '[REDACTED]' });
       await signUp(data.email, data.password, data.name);
     } catch (error: any) {
       console.error('Registration error:', error);
-      if (error.message?.includes('fetch') || error.name?.includes('Fetch')) {
-        setConnectionError(true);
-      }
     } finally {
       setIsSubmitting(false);
     }
@@ -76,13 +90,20 @@ const SignUp = () => {
               </p>
             </div>
 
-            {connectionError && (
+            {!isOnline && (
               <Alert variant="destructive" className="mb-6">
-                <AlertCircle className="h-4 w-4" />
+                <WifiOff className="h-4 w-4" />
                 <AlertDescription>
-                  Unable to connect to the server. Please check your internet connection and try again.
+                  No internet connection detected. Please check your connection and try again.
                 </AlertDescription>
               </Alert>
+            )}
+
+            {isOnline && (
+              <div className="flex items-center gap-2 mb-4 text-sm text-green-600">
+                <Wifi className="h-4 w-4" />
+                <span>Connected</span>
+              </div>
             )}
 
             <Form {...form}>
@@ -97,7 +118,7 @@ const SignUp = () => {
                         <Input
                           placeholder="John Doe"
                           {...field}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || !isOnline}
                         />
                       </FormControl>
                       <FormMessage />
@@ -116,7 +137,7 @@ const SignUp = () => {
                           placeholder="your@email.com"
                           {...field}
                           type="email"
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || !isOnline}
                         />
                       </FormControl>
                       <FormMessage />
@@ -135,7 +156,7 @@ const SignUp = () => {
                           placeholder="••••••••"
                           {...field}
                           type="password"
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || !isOnline}
                         />
                       </FormControl>
                       <FormMessage className="text-xs">
@@ -154,7 +175,7 @@ const SignUp = () => {
                         <Checkbox
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || !isOnline}
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
@@ -178,9 +199,10 @@ const SignUp = () => {
                   type="submit"
                   variant="gradient"
                   className="w-full"
-                  disabled={isSubmitting || !form.getValues().agreedToTerms}
+                  disabled={isSubmitting || !form.getValues().agreedToTerms || !isOnline}
                 >
-                  {isSubmitting ? "Creating Account..." : "Create Account"}
+                  {isSubmitting ? "Creating Account..." : 
+                   !isOnline ? "No Connection" : "Create Account"}
                 </CustomButton>
               </form>
             </Form>
