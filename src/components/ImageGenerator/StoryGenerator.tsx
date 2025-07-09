@@ -19,7 +19,7 @@ import {
 import { Label } from "@/components/ui/label";
 
 interface StoryGeneratorProps {
-  onImagesGenerated: (urls: string[], prompts: string[]) => void;
+  onImagesGenerated: (urls: string[], prompts: string[], characterDescriptions?: string[]) => void;
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
 }
@@ -48,7 +48,11 @@ export const StoryGenerator = ({
     characters,
     isGenerating,
     setIsGenerating,
-    onImagesGenerated,
+    onImagesGenerated: (urls: string[], prompts: string[]) => {
+      // Pass character descriptions to the parent for CLIP validation
+      const characterDescriptionsArray = characters.map(char => char.appearance);
+      onImagesGenerated(urls, prompts, characterDescriptionsArray);
+    },
     language
   });
 
