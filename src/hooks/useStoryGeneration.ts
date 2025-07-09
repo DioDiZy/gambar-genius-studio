@@ -6,12 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
 import { CharacterDescription } from "@/types/story";
-import { validateStoryContent } from "@/utils/contentFilter";
-import { CLIPEnhancedService } from "@/services/CLIPEnhancedService";
-import { IndonesianNLPService } from "@/services/IndonesianNLPService";
-
-// Define this type to be consistent with StoryGenerator component
-type SupportedLanguage = "english" | "indonesian";
 
 interface UseStoryGenerationProps {
   story: string;
@@ -22,7 +16,7 @@ interface UseStoryGenerationProps {
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
-  language: SupportedLanguage;
+  language?: string;
 }
 
 export const useStoryGeneration = ({
@@ -34,7 +28,7 @@ export const useStoryGeneration = ({
   isGenerating,
   setIsGenerating,
   onImagesGenerated,
-  language
+  language = "english"
 }: UseStoryGenerationProps) => {
   const { user } = useAuth();
   const [paragraphs, setParagraphs] = useState<string[]>([]);
@@ -47,38 +41,8 @@ export const useStoryGeneration = ({
 
   const handleGenerateImages = async () => {
     if (!story.trim()) {
-      toast.error(
-        language === "indonesian" ? "Mohon masukkan cerita" : "Please enter a story"
-      );
+      toast.error("Please enter a story");
       return;
-    }
-
-    // Enhanced validation with better error messages for children
-    const contentValidation = validateStoryContent(story, paragraphSeparator, language);
-    if (!contentValidation.isAppropriate) {
-      toast.error(
-        language === "indonesian" ? "Cerita Tidak Sesuai untuk Anak" : "Story Not Suitable for Children",
-        {
-          description: contentValidation.reason,
-          duration: 6000
-        }
-      );
-      return;
-    }
-
-    // Also validate character descriptions if provided
-    if (characterDescriptions.trim()) {
-      const characterValidation = validateStoryContent(characterDescriptions, '\n', language);
-      if (!characterValidation.isAppropriate) {
-        toast.error(
-          language === "indonesian" ? "Deskripsi Karakter Tidak Sesuai" : "Character Description Not Appropriate",
-          {
-            description: characterValidation.reason,
-            duration: 5000
-          }
-        );
-        return;
-      }
     }
 
     try {
@@ -96,168 +60,102 @@ export const useStoryGeneration = ({
       const totalImages = paragraphs.length;
 
       if (totalImages === 0) {
-        toast.error(
-          language === "indonesian" ? "Tidak ada paragraf yang valid ditemukan" : "No valid paragraphs found"
-        );
+        toast.error("No valid paragraphs found");
         return;
       }
 
       if (!profile || profile.credits < totalImages) {
-        toast.error(
-          language === "indonesian" ? "Kredit tidak cukup" : "Not enough credits", 
-          {
-            description: language === "indonesian"
-              ? `Anda memerlukan ${totalImages} kredit untuk membuat gambar dari semua paragraf`
-              : `You need ${totalImages} credits to generate images for all paragraphs`
-          }
-        );
+        toast.error("Not enough credits", {
+          description: `You need ${totalImages} credits to generate images for all paragraphs`
+        });
         return;
       }
 
       setIsGenerating(true);
       
-      // Enhanced toast message for Indonesian with CLIP technology
-      toast.info(
-        language === "indonesian" 
-          ? `Memproses dengan teknologi CLIP dan NLP Indonesia untuk ${totalImages} gambar berkualitas tinggi...` 
-          : `Processing with CLIP technology and Indonesian NLP for ${totalImages} high-quality images...`, 
-        {
-          description: language === "indonesian"
-            ? "Mengoptimalkan akurasi bahasa Indonesia untuk hasil yang lebih sesuai dengan cerita Anda"
-            : "Optimizing Indonesian language accuracy for better results matching your story"
-        }
-      );
+      toast.info(`Generating ${totalImages} images...`, {
+        description: "This may take a few moments"
+      });
       
       try {
-        // Generate enhanced prompts using Indonesian NLP and CLIP optimization
-        const enhancedPrompts = paragraphs.map((paragraph, index) => {
-          // Start with child-safety context
-          const childSafetyContext = language === "indonesian"
-            ? "Gambar ramah anak, sesuai untuk semua umur, tidak ada konten dewasa, "
-            : "Child-friendly image, suitable for all ages, no adult content, ";
+        // Generate images for each paragraph with consistent character descriptions
+        const enhancedPrompts = paragraphs.map(p => {
+          // Create a base prompt that focuses on the scene from the paragraph
+          let enhancedPrompt = p;
           
-          let enhancedPrompt = childSafetyContext + paragraph;
+          // Add detailed style information
+          const styleMap: Record<string, string> = {
+            "photorealistic": "highly detailed photorealistic style with realistic lighting and textures",
+            "digital-art": "vibrant digital art style with rich colors",
+            "anime": "anime style with clean lines and expressive characters",
+            "3d-render": "3D rendered style with depth and realistic materials",
+            "oil-painting": "oil painting style with visible brush strokes and rich textures",
+            "watercolor": "delicate watercolor style with soft color blending",
+            "comic-book": "comic book style with bold outlines and flat colors",
+            "storyboard-sketch": "professional storyboard sketch style with clear scene composition"
+          };
           
-          // Apply Indonesian NLP processing if Indonesian language is selected
-          if (language === "indonesian") {
-            console.log(`Applying Indonesian NLP processing to paragraph ${index + 1}:`, paragraph);
-            
-            const nlpResult = IndonesianNLPService.processIndonesianPrompt(paragraph);
-            console.log(`NLP processed result for paragraph ${index + 1}:`, nlpResult);
-            
-            // Use the NLP-enhanced prompt as base
-            enhancedPrompt = childSafetyContext + nlpResult.enhancedPrompt;
-            
-            // Apply CLIP optimization
-            const clipEnhanced = CLIPEnhancedService.enhancePromptWithCLIP(
-              enhancedPrompt,
-              style,
-              language
-            );
-            
-            console.log(`CLIP enhanced prompt for paragraph ${index + 1}:`, clipEnhanced.clipOptimizedPrompt);
-            console.log(`Visual keywords for paragraph ${index + 1}:`, clipEnhanced.visualKeywords);
-            console.log(`Semantic context for paragraph ${index + 1}:`, clipEnhanced.semanticContext);
-            
-            // Validate prompt quality
-            const validation = CLIPEnhancedService.validatePromptForCLIP(clipEnhanced.clipOptimizedPrompt);
-            console.log(`Prompt quality score for paragraph ${index + 1}:`, validation.score);
-            if (validation.suggestions.length > 0) {
-              console.log(`Prompt suggestions for paragraph ${index + 1}:`, validation.suggestions);
-            }
-            
-            enhancedPrompt = clipEnhanced.clipOptimizedPrompt;
-          }
+          const styleDescription = styleMap[style] || styleMap["photorealistic"];
+          enhancedPrompt = `${enhancedPrompt}, ${styleDescription}`;
           
-          // Build character consistency block
+          // Build a comprehensive character description block for consistency
           if (characters.length > 0) {
-            const characterPrefix = language === "indonesian" 
-              ? ". Karakter dalam cerita: "
-              : ". Characters in scene: ";
-            enhancedPrompt += characterPrefix;
+            enhancedPrompt += ". Characters in scene: ";
             
             const characterPrompts = characters.map(char => {
-              const consistencyNote = language === "indonesian"
-                ? "penampilan konsisten di semua adegan"
-                : "consistent appearance throughout all scenes";
-              return `${char.name} (${char.appearance}, ${consistencyNote})`;
+              // Make the character description more detailed for consistency
+              return `${char.name} (${char.appearance}, consistent appearance throughout all scenes)`;
             }).join('; ');
             
             enhancedPrompt += characterPrompts;
           }
           
-          // Add additional scene details if provided
+          // Add additional image instructions if provided
           if (characterDescriptions.trim()) {
-            const detailPrefix = language === "indonesian"
-              ? ". Detail adegan tambahan: "
-              : ". Additional scene details: ";
-            enhancedPrompt += `${detailPrefix}${characterDescriptions}`;
+            enhancedPrompt += `. Scene details: ${characterDescriptions}`;
+          }
+          
+          // Add language-specific context
+          if (language === "indonesian") {
+            enhancedPrompt += ". Text is in Indonesian language (Bahasa Indonesia). Visual representation should match Indonesian cultural context where appropriate.";
           }
           
           return enhancedPrompt;
         });
         
-        console.log("Final enhanced prompts for image generation:", enhancedPrompts);
+        console.log("Enhanced prompts for image generation:", enhancedPrompts);
         
-        // Generate images with enhanced prompts
-        const imageUrls = await generateMultipleImages(enhancedPrompts, language, style);
+        const imageUrls = await generateMultipleImages(enhancedPrompts);
         
         if (imageUrls.length > 0) {
           onImagesGenerated(imageUrls, paragraphs);
-          
-          // Enhanced success message for Indonesian
-          const successMessage = language === "indonesian"
-            ? `Berhasil membuat ${imageUrls.length} gambar berkualitas tinggi dengan teknologi CLIP dan NLP Indonesia!`
-            : `Generated ${imageUrls.length} high-quality images with CLIP and Indonesian NLP technology!`;
-          
-          const successDescription = language === "indonesian"
-            ? "Gambar telah dioptimalkan untuk akurasi bahasa Indonesia dan kesesuaian dengan cerita Anda"
-            : "Images have been optimized for Indonesian language accuracy and story matching";
-          
-          toast.success(successMessage, {
-            description: successDescription
-          });
+          toast.success(`Generated ${imageUrls.length} images successfully!`);
         } else {
-          toast.error(
-            language === "indonesian" ? "Gagal membuat gambar" : "Failed to generate images"
-          );
+          toast.error("Failed to generate images");
         }
       } catch (error) {
         console.error("Error generating images:", error);
         
         // Check for billing error
         if (error instanceof Error && error.message.includes("Billing required")) {
-          toast.error(
-            language === "indonesian" 
-              ? "Replicate API memerlukan penagihan" 
-              : "Replicate API requires billing",
-            {
-              description: language === "indonesian"
-                ? "Silakan kunjungi replicate.com/account/billing untuk mengatur penagihan untuk akun Anda."
-                : "Please visit replicate.com/account/billing to set up billing for your account.",
-              action: {
-                label: language === "indonesian" ? "Kunjungi Penagihan" : "Visit Billing",
-                onClick: () => window.open("https://replicate.com/account/billing", "_blank")
-              }
+          toast.error("Replicate API requires billing", {
+            description: "Please visit replicate.com/account/billing to set up billing for your account.",
+            action: {
+              label: "Visit Billing",
+              onClick: () => window.open("https://replicate.com/account/billing", "_blank")
             }
-          );
+          });
         } else {
-          toast.error(
-            language === "indonesian" ? "Kesalahan membuat gambar" : "Error generating images",
-            {
-              description: error instanceof Error ? error.message : "Please try again"
-            }
-          );
+          toast.error("Error generating images", {
+            description: error instanceof Error ? error.message : "Please try again"
+          });
         }
       }
     } catch (error) {
       console.error("Error checking credits:", error);
-      toast.error(
-        language === "indonesian" ? "Kesalahan memeriksa kredit" : "Error checking credits",
-        {
-          description: error instanceof Error ? error.message : "Please try again"
-        }
-      );
+      toast.error("Error checking credits", {
+        description: error instanceof Error ? error.message : "Please try again"
+      });
     } finally {
       setIsGenerating(false);
     }

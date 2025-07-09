@@ -1,50 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
-import { CLIPEnhancedService } from "./CLIPEnhancedService";
-import { IndonesianNLPService } from "./IndonesianNLPService";
 
 export interface GenerateImageParams {
   prompt: string;
   aspectRatio?: string;
-  language?: "english" | "indonesian";
-  style?: string;
 }
 
 export async function generateImage(params: GenerateImageParams): Promise<string | null> {
   try {
-    let enhancedPrompt = params.prompt;
-    
-    // Apply Indonesian NLP and CLIP enhancement if Indonesian is selected
-    if (params.language === "indonesian") {
-      console.log("Applying Indonesian NLP and CLIP enhancement...");
-      
-      const clipEnhanced = CLIPEnhancedService.enhancePromptWithCLIP(
-        params.prompt,
-        params.style || 'photorealistic',
-        params.language
-      );
-      
-      enhancedPrompt = clipEnhanced.clipOptimizedPrompt;
-      
-      console.log("Original prompt:", params.prompt);
-      console.log("CLIP-enhanced prompt:", enhancedPrompt);
-      console.log("Visual keywords:", clipEnhanced.visualKeywords);
-      console.log("Semantic context:", clipEnhanced.semanticContext);
-      
-      // Validate prompt quality
-      const validation = CLIPEnhancedService.validatePromptForCLIP(enhancedPrompt);
-      console.log("Prompt quality score:", validation.score);
-      if (validation.suggestions.length > 0) {
-        console.log("Prompt suggestions:", validation.suggestions);
-      }
-    } else {
-      // For English, add basic enhancements
-      enhancedPrompt += ". Child-friendly visual representation with appropriate cultural context.";
-    }
-
     // Create the initial generation request
     const { data: initialData, error: initialError } = await supabase.functions.invoke("generate-image", {
       body: {
-        prompt: enhancedPrompt,
+        prompt: params.prompt,
         aspectRatio: params.aspectRatio || "1:1"
       },
     });
@@ -74,12 +40,8 @@ export async function generateImage(params: GenerateImageParams): Promise<string
   }
 }
 
-// Function to generate multiple images with improved consistency and Indonesian optimization
-export async function generateMultipleImages(
-  prompts: string[], 
-  language: string = "english",
-  style: string = "photorealistic"
-): Promise<string[]> {
+// Function to generate multiple images with improved consistency
+export async function generateMultipleImages(prompts: string[]): Promise<string[]> {
   if (!prompts.length) return [];
 
   try {
@@ -88,23 +50,13 @@ export async function generateMultipleImages(
     // Generate a consistent seed for this story generation session
     const sessionSeed = Math.floor(Math.random() * 1000000);
     
-    // Process prompts with Indonesian NLP and CLIP enhancement
-    const processedPrompts = prompts.map(prompt => {
-      if (language === "indonesian") {
-        const clipEnhanced = CLIPEnhancedService.enhancePromptWithCLIP(prompt, style, language);
-        console.log(`Processed prompt: ${prompt} -> ${clipEnhanced.clipOptimizedPrompt}`);
-        return clipEnhanced.clipOptimizedPrompt;
-      }
-      return prompt;
-    });
-    
     // Generate images sequentially to avoid overwhelming the API
-    for (const processedPrompt of processedPrompts) {
-      console.log("Generating image with CLIP-enhanced prompt:", processedPrompt);
+    for (const prompt of prompts) {
+      console.log("Generating image with enhanced prompt:", prompt);
       
       const { data: imageData, error: imageError } = await supabase.functions.invoke("generate-image", {
         body: {
-          prompt: processedPrompt,
+          prompt: prompt,
           aspectRatio: "1:1",
           seed: sessionSeed, // Use the same seed for all images in this batch
           num_inference_steps: 4, // Keep at max value of 4 as required by the model
