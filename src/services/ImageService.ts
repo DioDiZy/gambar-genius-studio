@@ -9,11 +9,8 @@ export interface GenerateImageParams {
 
 export async function generateImage(params: GenerateImageParams): Promise<string | null> {
   try {
-    // Translate Indonesian text to English for better image generation
-    let enhancedPrompt = params.prompt;
-    if (params.language === "indonesian" || enhancedPrompt.length > 0) {
-      enhancedPrompt = await translateForImageGeneration(params.prompt);
-    }
+    // Always translate text to English for better image generation accuracy
+    let enhancedPrompt = await translateForImageGeneration(params.prompt);
 
     // Add language context if Indonesian was selected
     if (params.language === "indonesian") {
