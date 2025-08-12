@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
 import { CharacterDescription } from "@/types/story";
-import { translateForImageGeneration } from "@/services/TranslationService";
+import { createStoryboardPrompts } from "@/services/StoryboardService";
 
 // Define this type to be consistent with StoryGenerator component
 type SupportedLanguage = "english" | "indonesian";
@@ -84,54 +84,17 @@ export const useStoryGeneration = ({
       });
       
       try {
-        // Generate images for each paragraph with consistent character descriptions
-        const enhancedPrompts = await Promise.all(paragraphs.map(async (p) => {
-          // Translate paragraph if it's in Indonesian
-          let enhancedPrompt = await translateForImageGeneration(p);
-          
-          // Add detailed style information
-          const styleMap: Record<string, string> = {
-            "photorealistic": "highly detailed photorealistic style with realistic lighting and textures",
-            "digital-art": "vibrant digital art style with rich colors",
-            "anime": "anime style with clean lines and expressive characters",
-            "3d-render": "3D rendered style with depth and realistic materials",
-            "oil-painting": "oil painting style with visible brush strokes and rich textures",
-            "watercolor": "delicate watercolor style with soft color blending",
-            "comic-book": "comic book style with bold outlines and flat colors",
-            "storyboard-sketch": "professional storyboard sketch style with clear scene composition"
-          };
-          
-          const styleDescription = styleMap[style] || styleMap["photorealistic"];
-          enhancedPrompt = `${enhancedPrompt}, ${styleDescription}`;
-          
-          // Build a comprehensive character description block for consistency
-          if (characters.length > 0) {
-            enhancedPrompt += ". Characters in scene: ";
-            
-            const characterPrompts = await Promise.all(characters.map(async (char) => {
-              // Translate character appearance if needed
-              const translatedAppearance = await translateForImageGeneration(char.appearance);
-              return `${char.name} (${translatedAppearance}, consistent appearance throughout all scenes)`;
-            }));
-            
-            enhancedPrompt += characterPrompts.join('; ');
-          }
-          
-          // Add additional image instructions if provided
-          if (characterDescriptions.trim()) {
-            const translatedDescriptions = await translateForImageGeneration(characterDescriptions);
-            enhancedPrompt += `. Scene details: ${translatedDescriptions}`;
-          }
-          
-          // Add language-specific context
-          if (language === "indonesian") {
-            enhancedPrompt += ". Visual representation should match Indonesian cultural context where appropriate.";
-          }
-          
-          return enhancedPrompt;
-        }));
+        // Generate enhanced storyboard prompts with visual continuity
+        console.log("Creating storyboard prompts with enhanced continuity...");
+        const enhancedPrompts = await createStoryboardPrompts(
+          paragraphs,
+          characters,
+          style,
+          characterDescriptions,
+          language
+        );
         
-        console.log("Enhanced prompts for image generation:", enhancedPrompts);
+        console.log("Enhanced storyboard prompts generated:", enhancedPrompts);
         
         const imageUrls = await generateMultipleImages(enhancedPrompts);
         

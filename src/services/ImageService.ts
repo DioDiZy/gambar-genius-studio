@@ -56,7 +56,7 @@ export async function generateImage(params: GenerateImageParams): Promise<string
   }
 }
 
-// Function to generate multiple images with improved consistency
+// Function to generate multiple images with storyboard continuity
 export async function generateMultipleImages(prompts: string[]): Promise<string[]> {
   if (!prompts.length) return [];
 
@@ -66,42 +66,42 @@ export async function generateMultipleImages(prompts: string[]): Promise<string[
     // Generate a consistent seed for this story generation session
     const sessionSeed = Math.floor(Math.random() * 1000000);
     
-    // Translate all prompts first
-    const translatedPrompts = await Promise.all(
-      prompts.map(async (prompt) => {
-        const translatedPrompt = await translateForImageGeneration(prompt);
-        console.log('Story prompt translation:', { original: prompt, translated: translatedPrompt });
-        return translatedPrompt;
-      })
-    );
+    console.log("Starting storyboard generation with enhanced continuity");
+    console.log("Enhanced prompts for storyboard:", prompts);
     
-    // Generate images sequentially to avoid overwhelming the API
-    for (const prompt of translatedPrompts) {
-      console.log("Generating image with enhanced prompt:", prompt);
+    // Generate images sequentially to maintain story flow and visual consistency
+    for (let i = 0; i < prompts.length; i++) {
+      const prompt = prompts[i];
+      console.log(`Generating storyboard frame ${i + 1}/${prompts.length}:`, prompt);
+      
+      // Use slight seed variation to maintain consistency while allowing some variation
+      const frameSeeds = sessionSeed + (i * 10); // Small increment for variation within consistency
       
       const { data: imageData, error: imageError } = await supabase.functions.invoke("generate-image", {
         body: {
           prompt: prompt,
           aspectRatio: "1:1",
-          seed: sessionSeed, // Use the same seed for all images in this batch
+          seed: frameSeeds,
           num_inference_steps: 4, // Keep at max value of 4 as required by the model
         },
       });
 
       if (imageError) {
-        console.error("Error generating image:", imageError);
+        console.error(`Error generating storyboard frame ${i + 1}:`, imageError);
         continue;
       }
 
       const imageUrl = imageData?.output?.[0];
       if (imageUrl) {
         imageUrls.push(imageUrl);
+        console.log(`Successfully generated storyboard frame ${i + 1}`);
       }
     }
     
+    console.log(`Storyboard generation complete: ${imageUrls.length}/${prompts.length} frames generated`);
     return imageUrls;
   } catch (error) {
-    console.error("Error generating multiple images:", error);
+    console.error("Error generating storyboard images:", error);
     throw error;
   }
 }
