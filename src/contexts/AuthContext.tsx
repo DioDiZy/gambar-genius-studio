@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -47,6 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setIsLoading(true);
+      
+      console.log('Attempting to sign up with Supabase URL:', SUPABASE_URL);
+      
       const { error, data } = await supabase.auth.signUp({
         email,
         password,
@@ -54,17 +57,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             full_name: fullName,
           },
+          emailRedirectTo: `${window.location.origin}/`,
         },
       });
 
       if (error) {
+        console.error('Supabase signup error:', error);
+        
+        let errorMessage = error.message;
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Unable to connect to authentication service. Please check your internet connection and try again.';
+        } else if (error.message.includes('User already registered')) {
+          errorMessage = 'An account with this email already exists. Please sign in instead.';
+        }
+        
         toast({
           title: "Registration failed",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive",
         });
         throw error;
       }
+
+      console.log('Sign up successful:', data);
 
       toast({
         title: "Registration successful",
@@ -75,6 +90,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       navigate("/dashboard");
     } catch (error) {
       console.error("Error signing up:", error);
+      
+      // Handle network errors specifically
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        toast({
+          title: "Connection Error",
+          description: "Unable to connect to the authentication service. Please check your internet connection or try disabling browser extensions that might block requests.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -84,20 +108,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      
+      // Add debugging info
+      console.log('Attempting to sign in with Supabase URL:', SUPABASE_URL);
+      console.log('Network connectivity check...');
+      
       const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Supabase auth error:', error);
+        
+        // Provide more specific error handling
+        let errorMessage = error.message;
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Unable to connect to authentication service. Please check your internet connection and try again.';
+        } else if (error.message.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Please check your email and click the confirmation link before signing in.';
+        }
+        
         toast({
           title: "Sign in failed",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive",
         });
         throw error;
       }
 
+      console.log('Sign in successful:', data);
+      
       toast({
         title: "Sign in successful",
         description: "Welcome back to PembuatGambar!",
@@ -107,6 +150,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       navigate("/dashboard");
     } catch (error) {
       console.error("Error signing in:", error);
+      
+      // Handle network errors specifically
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        toast({
+          title: "Connection Error",
+          description: "Unable to connect to the authentication service. Please check your internet connection or try disabling browser extensions that might block requests.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
