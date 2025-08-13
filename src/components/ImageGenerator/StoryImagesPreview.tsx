@@ -7,6 +7,7 @@ import { StoryboardView } from "./StoryPreview/StoryboardView";
 import { StoryPreviewActions } from "./StoryPreview/StoryPreviewActions";
 import { ViewModeToggle } from "./StoryPreview/ViewModeToggle";
 import { StoryboardContinuity } from "./StoryboardContinuity";
+import { StoryboardAnalyzer } from "./StoryboardAnalyzer";
 
 interface StoryImagesPreviewProps {
   imageUrls: string[];

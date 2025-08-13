@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
 import { CharacterDescription } from "@/types/story";
-import { createStoryboardPrompts } from "@/services/StoryboardService";
+import { createStoryboardPrompts, createStructuredStoryboardPrompts } from "@/services/StoryboardService";
 
 // Define this type to be consistent with StoryGenerator component
 type SupportedLanguage = "english" | "indonesian";
@@ -20,6 +20,7 @@ interface UseStoryGenerationProps {
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
+  onStructuredDataGenerated?: (structuredData: any) => void;
   language: SupportedLanguage;
 }
 
@@ -32,6 +33,7 @@ export const useStoryGeneration = ({
   isGenerating,
   setIsGenerating,
   onImagesGenerated,
+  onStructuredDataGenerated,
   language
 }: UseStoryGenerationProps) => {
   const { user } = useAuth();
@@ -84,15 +86,22 @@ export const useStoryGeneration = ({
       });
       
       try {
-        // Generate enhanced storyboard prompts with visual continuity
-        console.log("Creating storyboard prompts with enhanced continuity...");
-        const enhancedPrompts = await createStoryboardPrompts(
+        // Generate enhanced storyboard prompts with visual continuity and structured data
+        console.log("Creating structured storyboard prompts with enhanced continuity...");
+        const structuredResult = await createStructuredStoryboardPrompts(
           paragraphs,
           characters,
           style,
           characterDescriptions,
           language
         );
+        
+        const enhancedPrompts = structuredResult.prompts;
+        
+        // Pass structured data to callback if provided
+        if (onStructuredDataGenerated) {
+          onStructuredDataGenerated(structuredResult);
+        }
         
         console.log("Enhanced storyboard prompts generated:", enhancedPrompts);
         

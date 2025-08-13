@@ -213,6 +213,61 @@ export async function createStoryboardPrompts(
   characterDescriptions: string,
   language: "english" | "indonesian"
 ): Promise<string[]> {
+  // Import and use the enhanced service
+  const { EnhancedStoryboardService } = await import('./EnhancedStoryboardService');
+  const enhancedService = new EnhancedStoryboardService(characters);
+  
+  const storyboardPrompts = await enhancedService.createStructuredPrompts(
+    paragraphs,
+    style,
+    characterDescriptions,
+    language
+  );
+  
+  return enhancedService.getSimplifiedPrompts();
+}
+
+/**
+ * Create structured JSON prompts with pronoun resolution and enhanced continuity
+ */
+export async function createStructuredStoryboardPrompts(
+  paragraphs: string[],
+  characters: CharacterDescription[],
+  style: string,
+  characterDescriptions: string,
+  language: "english" | "indonesian"
+): Promise<any> {
+  const { EnhancedStoryboardService } = await import('./EnhancedStoryboardService');
+  const enhancedService = new EnhancedStoryboardService(characters);
+  
+  const storyboardPrompts = await enhancedService.createStructuredPrompts(
+    paragraphs,
+    style,
+    characterDescriptions,
+    language
+  );
+  
+  return {
+    prompts: enhancedService.getSimplifiedPrompts(),
+    structuredData: enhancedService.getStoryboardJSON(),
+    metadata: {
+      totalScenes: paragraphs.length,
+      charactersResolved: characters.length,
+      enhancedFormat: true
+    }
+  };
+}
+
+/**
+ * Legacy function - maintained for backward compatibility
+ */
+export async function createLegacyStoryboardPrompts(
+  paragraphs: string[],
+  characters: CharacterDescription[],
+  style: string,
+  characterDescriptions: string,
+  language: "english" | "indonesian"
+): Promise<string[]> {
   const { scenes, transitions } = analyzeStoryStructure(paragraphs);
   const enhancedPrompts: string[] = [];
   
