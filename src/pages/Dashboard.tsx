@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoryGenerator } from "@/components/ImageGenerator/StoryGenerator";
 import { StoryImagesPreview } from "@/components/ImageGenerator/StoryImagesPreview";
 import { StoryboardAnalyzer } from "@/components/ImageGenerator/StoryboardAnalyzer";
+import { CreditsDisplay } from "@/components/CreditsDisplay";
 
 // Define supported languages to maintain consistency
 type SupportedLanguage = "english" | "indonesian";
@@ -76,9 +77,16 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <h1 className="text-3xl font-bold mb-8">
-        {language === "indonesian" ? "Buat Gambar AI" : "Create AI Images"}
-      </h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold">
+          {language === "indonesian" ? "Buat Gambar AI" : "Create AI Images"}
+        </h1>
+      </div>
+
+      {/* Credits display at top */}
+      <div className="mb-8">
+        <CreditsDisplay />
+      </div>
 
       <Tabs defaultValue="single" className="mb-8">
         <TabsList className="mb-6">
