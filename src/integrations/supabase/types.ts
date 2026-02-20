@@ -84,6 +84,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_credits: { Args: { amount: number }; Returns: number }
       decrement_credits: { Args: { amount: number }; Returns: number }
       increment_count: { Args: { amount: number }; Returns: number }
     }
