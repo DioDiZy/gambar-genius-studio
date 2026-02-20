@@ -82,9 +82,10 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       })
-    } catch (apiError) {
+    } catch (apiError: unknown) {
       // Check if it's a payment required error
-      if (apiError.message && apiError.message.includes("402 Payment Required")) {
+      const errMsg = apiError instanceof Error ? apiError.message : String(apiError);
+      if (errMsg.includes("402 Payment Required")) {
         return new Response(JSON.stringify({ 
           error: "Billing required for Replicate API", 
           details: "You need to set up billing on your Replicate account to use this feature. Please visit https://replicate.com/account/billing to set up billing."
@@ -96,9 +97,9 @@ serve(async (req) => {
       
       throw apiError;
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in replicate function:", error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     })
