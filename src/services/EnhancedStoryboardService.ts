@@ -311,10 +311,21 @@ export class EnhancedStoryboardService {
     language: "english" | "indonesian",
     sceneIndex: number
   ): Promise<string> {
-    // Start with translated and resolved text
+    // Use structured prompt engine v2.0 for storyboard-sketch style
+    if (style === "storyboard-sketch") {
+      return this.buildStoryboardSketchPrompt(
+        resolvedText,
+        characterReferences,
+        sceneMetadata,
+        characterDescriptions,
+        language,
+        sceneIndex
+      );
+    }
+
+    // Default prompt building for other styles
     let prompt = await translateForImageGeneration(resolvedText);
 
-    // Add style
     const styleMap: Record<string, string> = {
       "photorealistic": "highly detailed photorealistic style with realistic lighting and textures",
       "digital-art": "vibrant digital art style with rich colors",
@@ -323,56 +334,120 @@ export class EnhancedStoryboardService {
       "oil-painting": "oil painting style with visible brush strokes and rich textures",
       "watercolor": "delicate watercolor style with soft color blending",
       "comic-book": "comic book style with bold outlines and flat colors",
-      "storyboard-sketch": "professional storyboard sketch style with clear scene composition"
     };
     
     const styleDescription = styleMap[style] || styleMap["photorealistic"];
     prompt += `, ${styleDescription}`;
 
-    // Add camera composition
     prompt += `, ${sceneMetadata.cameraAngle}`;
-
-    // Add emotional tone and atmosphere
     prompt += `, ${sceneMetadata.emotionalTone} atmosphere`;
 
-    // Add character consistency details
     if (characterReferences.length > 0) {
       const charDetails = characterReferences
         .filter(char => char.roleInScene === 'primary' || char.roleInScene === 'secondary')
         .map(char => `${char.name} (${char.appearance}, consistent appearance)`)
         .join('; ');
-      
       if (charDetails) {
         prompt += `. Characters: ${charDetails}`;
       }
     }
 
-    // Add visual continuity
     if (sceneIndex > 0) {
       const continuityElements = visualElements
         .filter(elem => elem.consistencyWeight > 0.7)
         .map(elem => elem.description);
-      
       if (continuityElements.length > 0) {
         prompt += `. Visual continuity: ${continuityElements.join(', ')}`;
       }
     }
 
-    // Add scene-specific details
     if (characterDescriptions.trim()) {
       const translatedDescriptions = await translateForImageGeneration(characterDescriptions);
       prompt += `. Additional details: ${translatedDescriptions}`;
     }
 
-    // Add technical requirements
     prompt += `. Professional storyboard frame, clear composition, cinematic quality`;
 
-    // Add language-specific context
     if (language === "indonesian") {
       prompt += ". Include Indonesian cultural context where appropriate";
     }
 
     return prompt;
+  }
+
+  /**
+   * Prompt Engine v2.0 — Structured prompt for Storyboard Sketch style (Flux.1-dev)
+   */
+  private async buildStoryboardSketchPrompt(
+    resolvedText: string,
+    characterReferences: any[],
+    sceneMetadata: SceneMetadata,
+    characterDescriptions: string,
+    language: "english" | "indonesian",
+    sceneIndex: number
+  ): Promise<string> {
+    const translatedScene = await translateForImageGeneration(resolvedText);
+
+    // PREFIX: style preset
+    const prefix = "Storyboard Sketch style, professional storyboard panel.";
+
+    // CHARACTER ANCHOR: primary character with full description
+    let characterAnchor = "";
+    if (characterReferences.length > 0) {
+      const primary = characterReferences.find(c => c.roleInScene === 'primary') || characterReferences[0];
+      characterAnchor = `Core Character: ${primary.name}, ${primary.appearance}.`;
+    }
+
+    // SCENE ACTION: the paragraph content
+    const sceneAction = `Current Scene: ${translatedScene}.`;
+
+    // ENVIRONMENT: additional instructions + lighting + atmosphere
+    const envParts: string[] = [];
+    envParts.push(`${sceneMetadata.cameraAngle}`);
+    if (sceneMetadata.timeOfDay) {
+      envParts.push(`${sceneMetadata.timeOfDay} lighting`);
+    }
+    envParts.push(`${sceneMetadata.emotionalTone} atmosphere`);
+    if (characterDescriptions.trim()) {
+      const translatedDesc = await translateForImageGeneration(characterDescriptions);
+      envParts.push(translatedDesc);
+    }
+    const environment = `Environment & Lighting: ${envParts.join(', ')}.`;
+
+    // SUFFIX: character consistency enforcement
+    let suffix = "High quality sketch.";
+    if (characterReferences.length > 0) {
+      const primary = characterReferences.find(c => c.roleInScene === 'primary') || characterReferences[0];
+      suffix = `Ensuring ${primary.name} looks exactly the same as previous panels. High quality sketch.`;
+    }
+
+    // Panel-specific weighting (re-enforce on panel 3+ to prevent drift)
+    let panelWeighting = "";
+    if (sceneIndex === 0) {
+      panelWeighting = "Focus on character introduction and setting.";
+    } else if (sceneIndex === 1) {
+      panelWeighting = "Focus on interaction with environment.";
+    } else {
+      // Every 3rd panel or later: critical re-enforcement
+      const primary = characterReferences.find(c => c.roleInScene === 'primary') || characterReferences[0];
+      const charName = primary?.name || "the character";
+      panelWeighting = `CRITICAL: Re-enforce character features to prevent drift. Focus on ${charName}'s reaction.`;
+    }
+
+    // Secondary characters
+    let secondaryChars = "";
+    const secondaries = characterReferences.filter(c => c.roleInScene === 'secondary');
+    if (secondaries.length > 0) {
+      secondaryChars = ` Also present: ${secondaries.map(c => `${c.name} (${c.appearance})`).join('; ')}.`;
+    }
+
+    const fullPrompt = [prefix, characterAnchor, sceneAction, environment, panelWeighting, suffix, secondaryChars]
+      .filter(Boolean)
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    return fullPrompt;
   }
 
   /**
