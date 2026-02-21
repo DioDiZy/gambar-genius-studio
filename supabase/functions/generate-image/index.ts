@@ -9,7 +9,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -48,34 +47,50 @@ serve(async (req) => {
       )
     }
 
-    console.log("Generating image with prompt:", body.prompt)
+    // Determine which model to use
+    const useDevModel = body.model === "flux-dev";
+    const modelId = useDevModel 
+      ? "black-forest-labs/flux-dev"
+      : "black-forest-labs/flux-schnell";
+
+    console.log(`Generating image with model: ${modelId}, prompt:`, body.prompt)
     
     try {
-      // Define model inputs - ensuring num_inference_steps is always 4 or less
-      const modelInputs = {
-        prompt: body.prompt,
-        go_fast: true,
-        megapixels: "1",
-        num_outputs: 1,
-        aspect_ratio: body.aspectRatio || "1:1",
-        output_format: "webp",
-        output_quality: 80,
-        // Limit to 4 steps maximum as required by the model
-        num_inference_steps: Math.min(body.num_inference_steps || 3, 4)
-      };
+      let modelInputs: Record<string, unknown>;
+
+      if (useDevModel) {
+        // Flux.1-dev settings: supports guidance_scale, higher inference steps, negative prompt
+        modelInputs = {
+          prompt: body.prompt,
+          go_fast: true,
+          megapixels: "1",
+          num_outputs: 1,
+          aspect_ratio: body.aspectRatio || "1:1",
+          output_format: "webp",
+          output_quality: 80,
+          guidance: body.guidance_scale ?? 3.5,
+          num_inference_steps: body.num_inference_steps ?? 28,
+        };
+      } else {
+        // Flux-schnell settings: max 4 inference steps
+        modelInputs = {
+          prompt: body.prompt,
+          go_fast: true,
+          megapixels: "1",
+          num_outputs: 1,
+          aspect_ratio: body.aspectRatio || "1:1",
+          output_format: "webp",
+          output_quality: 80,
+          num_inference_steps: Math.min(body.num_inference_steps || 3, 4),
+        };
+      }
       
       // Add seed parameter if provided for character consistency
       if (body.seed !== undefined) {
-        // @ts-ignore - Add seed parameter to modelInputs
         modelInputs.seed = body.seed;
       }
 
-      const output = await replicate.run(
-        "black-forest-labs/flux-schnell",
-        {
-          input: modelInputs
-        }
-      )
+      const output = await replicate.run(modelId, { input: modelInputs });
 
       console.log("Generation response:", output)
       return new Response(JSON.stringify({ output }), {
@@ -83,7 +98,6 @@ serve(async (req) => {
         status: 200,
       })
     } catch (apiError: unknown) {
-      // Check if it's a payment required error
       const errMsg = apiError instanceof Error ? apiError.message : String(apiError);
       if (errMsg.includes("402 Payment Required")) {
         return new Response(JSON.stringify({ 
@@ -94,7 +108,6 @@ serve(async (req) => {
           status: 402,
         })
       }
-      
       throw apiError;
     }
   } catch (error: unknown) {

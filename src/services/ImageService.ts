@@ -56,33 +56,56 @@ export async function generateImage(params: GenerateImageParams): Promise<string
   }
 }
 
+// Model configuration per style
+interface StoryboardModelConfig {
+  model?: string;
+  seed?: number;
+  guidance_scale?: number;
+  num_inference_steps?: number;
+  negative_prompt?: string;
+}
+
+function getModelConfigForStyle(style: string, sessionSeed: number, frameIndex: number): StoryboardModelConfig {
+  if (style === "storyboard-sketch") {
+    return {
+      model: "flux-dev",
+      seed: sessionSeed, // Same seed for all frames for consistency
+      guidance_scale: 3.5,
+      num_inference_steps: 28,
+    };
+  }
+  // Default: flux-schnell
+  return {
+    seed: sessionSeed + (frameIndex * 10),
+    num_inference_steps: 4,
+  };
+}
+
 // Function to generate multiple images with storyboard continuity
-export async function generateMultipleImages(prompts: string[]): Promise<string[]> {
+export async function generateMultipleImages(prompts: string[], style: string = "photorealistic"): Promise<string[]> {
   if (!prompts.length) return [];
 
   try {
     const imageUrls: string[] = [];
     
     // Generate a consistent seed for this story generation session
-    const sessionSeed = Math.floor(Math.random() * 1000000);
+    const sessionSeed = Math.floor(Math.random() * 4294967295);
     
-    console.log("Starting storyboard generation with enhanced continuity");
+    const isSketchStyle = style === "storyboard-sketch";
+    console.log(`Starting storyboard generation with ${isSketchStyle ? "Flux.1-dev (Storyboard Sketch)" : "Flux-schnell"}`);
     console.log("Enhanced prompts for storyboard:", prompts);
     
-    // Generate images sequentially to maintain story flow and visual consistency
     for (let i = 0; i < prompts.length; i++) {
       const prompt = prompts[i];
       console.log(`Generating storyboard frame ${i + 1}/${prompts.length}:`, prompt);
       
-      // Use slight seed variation to maintain consistency while allowing some variation
-      const frameSeeds = sessionSeed + (i * 10); // Small increment for variation within consistency
+      const config = getModelConfigForStyle(style, sessionSeed, i);
       
       const { data: imageData, error: imageError } = await supabase.functions.invoke("generate-image", {
         body: {
           prompt: prompt,
           aspectRatio: "1:1",
-          seed: frameSeeds,
-          num_inference_steps: 4, // Keep at max value of 4 as required by the model
+          ...config,
         },
       });
 

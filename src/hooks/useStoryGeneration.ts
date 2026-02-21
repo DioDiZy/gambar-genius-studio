@@ -105,7 +105,7 @@ export const useStoryGeneration = ({
         
         console.log("Enhanced storyboard prompts generated:", enhancedPrompts);
         
-        const imageUrls = await generateMultipleImages(enhancedPrompts);
+        const imageUrls = await generateMultipleImages(enhancedPrompts, style);
         
         if (imageUrls.length > 0) {
           onImagesGenerated(imageUrls, paragraphs);
