@@ -7,7 +7,7 @@ import { Clock, Image, Medal } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CreditsDisplay } from "@/components/CreditsDisplay";
+
 
 const Profile = () => {
   const { user } = useAuth();
@@ -104,10 +104,6 @@ const Profile = () => {
           </Card>
         </div>
 
-        {/* Credits Section */}
-        <div className="mt-8">
-          <CreditsDisplay />
-        </div>
       </div>
     </DashboardLayout>
   );
