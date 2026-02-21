@@ -11,8 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoryGenerator } from "@/components/ImageGenerator/StoryGenerator";
 import { StoryImagesPreview } from "@/components/ImageGenerator/StoryImagesPreview";
 import { StoryboardAnalyzer } from "@/components/ImageGenerator/StoryboardAnalyzer";
-import { TemplateStoryboard } from "@/components/ImageGenerator/TemplateStoryboard";
-import { CreditsDisplay } from "@/components/CreditsDisplay";
 
 // Define supported languages to maintain consistency
 type SupportedLanguage = "english" | "indonesian";
@@ -84,10 +82,6 @@ const Dashboard = () => {
         </h1>
       </div>
 
-      {/* Credits display at top */}
-      <div className="mb-8">
-        <CreditsDisplay />
-      </div>
 
       <Tabs defaultValue="single" className="mb-8">
         <TabsList className="mb-6">
@@ -96,9 +90,6 @@ const Dashboard = () => {
           </TabsTrigger>
           <TabsTrigger value="story">
             {language === "indonesian" ? "Cerita ke Gambar" : "Story to Images"}
-          </TabsTrigger>
-          <TabsTrigger value="template">
-            {language === "indonesian" ? "Template Storyboard" : "Template Storyboard"}
           </TabsTrigger>
         </TabsList>
 
@@ -146,21 +137,6 @@ const Dashboard = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="template">
-          <div className="grid lg:grid-cols-2 gap-8">
-            <TemplateStoryboard
-              onImagesGenerated={handleStoryImagesGenerated}
-              isGenerating={isGenerating}
-              setIsGenerating={setIsGenerating}
-            />
-            <StoryImagesPreview
-              imageUrls={storyImageUrls}
-              prompts={storyPrompts}
-              isGenerating={isGenerating}
-              onSaved={handleImageSaved}
-            />
-          </div>
-        </TabsContent>
       </Tabs>
 
       {/* Gallery Section */}
