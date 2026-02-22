@@ -14,25 +14,23 @@ export const GalleryItem = ({ imageUrl, prompt, createdAt }: GalleryItemProps) =
 
   const handleDownload = () => {
     try {
-      // Extract filename from URL
       const urlParts = imageUrl.split('/');
-      const fileName = urlParts[urlParts.length - 1] || `ai-image-${Date.now()}.webp`;
-      
+      const fileName = urlParts[urlParts.length - 1] || `gambar-ai-${Date.now()}.webp`;
       const link = document.createElement("a");
       link.href = imageUrl;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast.success("Image downloaded successfully");
+      toast.success("Gambar berhasil diunduh");
     } catch (error) {
       console.error("Download error:", error);
-      toast.error("Failed to download image");
+      toast.error("Gagal mengunduh gambar");
     }
   };
 
   const handleAddToFavorites = () => {
-    toast.info("Favorites feature coming soon!");
+    toast.info("Fitur favorit segera hadir!");
   };
 
   return (
@@ -48,23 +46,15 @@ export const GalleryItem = ({ imageUrl, prompt, createdAt }: GalleryItemProps) =
         loading="lazy"
       />
       <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-opacity duration-300 ${isHovering ? 'opacity-100' : 'opacity-0'} flex flex-col justify-end p-3`}>
-        <div className="text-white text-xs line-clamp-2 mb-2">
-          {prompt}
-        </div>
+        <div className="text-white text-xs line-clamp-2 mb-2">{prompt}</div>
         <div className="flex justify-between items-center">
-          <button 
-            onClick={handleDownload}
-            className="text-white text-xs hover:text-blue-300 flex items-center gap-1 transition-colors"
-          >
+          <button onClick={handleDownload} className="text-white text-xs hover:text-blue-300 flex items-center gap-1 transition-colors">
             <Download className="h-3 w-3" />
-            Download
+            Unduh
           </button>
-          <button 
-            onClick={handleAddToFavorites}
-            className="text-white text-xs hover:text-red-300 flex items-center gap-1 transition-colors"
-          >
+          <button onClick={handleAddToFavorites} className="text-white text-xs hover:text-red-300 flex items-center gap-1 transition-colors">
             <Heart className="h-3 w-3" />
-            Favorite
+            Favorit
           </button>
         </div>
       </div>

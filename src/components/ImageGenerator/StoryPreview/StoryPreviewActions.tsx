@@ -1,7 +1,6 @@
 
 import { Download, Save } from "lucide-react";
 import { CustomButton } from "@/components/ui/custom-button";
-import { toast } from "sonner";
 
 interface StoryPreviewActionsProps {
   imageUrls: string[];
@@ -33,22 +32,14 @@ export const StoryPreviewActions = ({
       )}
       <div className="flex justify-between">
         <div className="flex gap-2">
-          <CustomButton 
-            variant="outline" 
-            size="sm"
-            onClick={() => onDownload(currentImage)}
-          >
+          <CustomButton variant="outline" size="sm" onClick={() => onDownload(currentImage)}>
             <Download className="mr-2 h-4 w-4" />
-            Download
+            Unduh
           </CustomButton>
           {imageUrls.length > 1 && (
-            <CustomButton
-              variant="outline"
-              size="sm"
-              onClick={onDownloadAll}
-            >
+            <CustomButton variant="outline" size="sm" onClick={onDownloadAll}>
               <Download className="mr-2 h-4 w-4" />
-              Download All
+              Unduh Semua
             </CustomButton>
           )}
         </div>
@@ -59,7 +50,7 @@ export const StoryPreviewActions = ({
           disabled={saving}
         >
           <Save className="mr-2 h-4 w-4" />
-          {saving ? "Saving..." : "Save to Gallery"}
+          {saving ? "Menyimpan..." : "Simpan ke Galeri"}
         </CustomButton>
       </div>
     </div>

@@ -17,61 +17,43 @@ const Settings = () => {
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Settings</h1>
+        <h1 className="text-3xl font-bold mb-8">Pengaturan</h1>
         
         <Tabs defaultValue="profile">
           <TabsList className="mb-8">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="profile">Profil</TabsTrigger>
+            <TabsTrigger value="account">Akun</TabsTrigger>
+            <TabsTrigger value="notifications">Notifikasi</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile">
             <Card>
               <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>
-                  Update your profile information
-                </CardDescription>
+                <CardTitle>Informasi Profil</CardTitle>
+                <CardDescription>Perbarui informasi profil Anda</CardDescription>
               </CardHeader>
               <CardContent>
                 <form className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input 
-                      id="name" 
-                      value={name} 
-                      onChange={(e) => setName(e.target.value)} 
-                    />
+                    <Label htmlFor="name">Nama Lengkap</Label>
+                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
                   </div>
-                  
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
-                    />
+                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="avatar">Profile Picture</Label>
+                    <Label htmlFor="avatar">Foto Profil</Label>
                     <div className="flex items-center gap-4">
-                      <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-xl">
-                        JD
-                      </div>
+                      <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-xl">JD</div>
                       <div>
                         <Input id="avatar" type="file" />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Supported formats: JPG, PNG. Max size: 2MB.
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">Format yang didukung: JPG, PNG. Maks: 2MB.</p>
                       </div>
                     </div>
                   </div>
-                  
                   <div className="flex justify-end">
-                    <CustomButton type="submit">Save Changes</CustomButton>
+                    <CustomButton type="submit">Simpan Perubahan</CustomButton>
                   </div>
                 </form>
               </CardContent>
@@ -81,30 +63,25 @@ const Settings = () => {
           <TabsContent value="account">
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle>Change Password</CardTitle>
-                <CardDescription>
-                  Update your password to keep your account secure
-                </CardDescription>
+                <CardTitle>Ubah Kata Sandi</CardTitle>
+                <CardDescription>Perbarui kata sandi untuk menjaga keamanan akun Anda</CardDescription>
               </CardHeader>
               <CardContent>
                 <form className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <Label htmlFor="currentPassword">Kata Sandi Saat Ini</Label>
                     <Input id="currentPassword" type="password" />
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
+                    <Label htmlFor="newPassword">Kata Sandi Baru</Label>
                     <Input id="newPassword" type="password" />
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <Label htmlFor="confirmPassword">Konfirmasi Kata Sandi Baru</Label>
                     <Input id="confirmPassword" type="password" />
                   </div>
-                  
                   <div className="flex justify-end">
-                    <CustomButton type="submit">Update Password</CustomButton>
+                    <CustomButton type="submit">Perbarui Kata Sandi</CustomButton>
                   </div>
                 </form>
               </CardContent>
@@ -112,18 +89,15 @@ const Settings = () => {
             
             <Card>
               <CardHeader>
-                <CardTitle className="text-destructive">Danger Zone</CardTitle>
-                <CardDescription>
-                  Permanently delete your account and all associated data
-                </CardDescription>
+                <CardTitle className="text-destructive">Zona Berbahaya</CardTitle>
+                <CardDescription>Hapus akun Anda dan semua data terkait secara permanen</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  This action cannot be undone. This will permanently delete your account
-                  and remove all your data from our servers.
+                  Tindakan ini tidak dapat dibatalkan. Ini akan menghapus akun Anda secara permanen dan menghapus semua data Anda dari server kami.
                 </p>
                 <CustomButton variant="outline" className="text-destructive border-destructive hover:bg-destructive/10">
-                  Delete Account
+                  Hapus Akun
                 </CustomButton>
               </CardContent>
             </Card>
@@ -132,39 +106,24 @@ const Settings = () => {
           <TabsContent value="notifications">
             <Card>
               <CardHeader>
-                <CardTitle>Notification Settings</CardTitle>
-                <CardDescription>
-                  Manage how you receive notifications
-                </CardDescription>
+                <CardTitle>Pengaturan Notifikasi</CardTitle>
+                <CardDescription>Kelola cara Anda menerima notifikasi</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="email-notifications" className="text-base">Email Notifications</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Receive notifications about your generated images
-                      </p>
+                      <Label htmlFor="email-notifications" className="text-base">Notifikasi Email</Label>
+                      <p className="text-sm text-muted-foreground">Terima notifikasi tentang gambar yang dihasilkan</p>
                     </div>
-                    <Switch 
-                      id="email-notifications" 
-                      checked={emailNotifications}
-                      onCheckedChange={setEmailNotifications}
-                    />
+                    <Switch id="email-notifications" checked={emailNotifications} onCheckedChange={setEmailNotifications} />
                   </div>
-                  
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="marketing-emails" className="text-base">Marketing Emails</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Receive updates about new features and promotions
-                      </p>
+                      <Label htmlFor="marketing-emails" className="text-base">Email Pemasaran</Label>
+                      <p className="text-sm text-muted-foreground">Terima informasi tentang fitur baru dan promosi</p>
                     </div>
-                    <Switch 
-                      id="marketing-emails" 
-                      checked={marketingEmails}
-                      onCheckedChange={setMarketingEmails}
-                    />
+                    <Switch id="marketing-emails" checked={marketingEmails} onCheckedChange={setMarketingEmails} />
                   </div>
                 </div>
               </CardContent>

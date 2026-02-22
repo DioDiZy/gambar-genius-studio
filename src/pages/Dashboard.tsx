@@ -12,23 +12,17 @@ import { StoryGenerator } from "@/components/ImageGenerator/StoryGenerator";
 import { StoryImagesPreview } from "@/components/ImageGenerator/StoryImagesPreview";
 import { StoryboardAnalyzer } from "@/components/ImageGenerator/StoryboardAnalyzer";
 
-// Define supported languages to maintain consistency
-type SupportedLanguage = "english" | "indonesian";
-
 const Dashboard = () => {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState("");
   const [currentPrompt, setCurrentPrompt] = useState("");
-  const [language, setLanguage] = useState<SupportedLanguage>("english");
   
-  // For story-based image generation
   const [storyImageUrls, setStoryImageUrls] = useState<string[]>([]);
   const [storyPrompts, setStoryPrompts] = useState<string[]>([]);
   const [structuredData, setStructuredData] = useState<any>(null);
   const [showAnalyzer, setShowAnalyzer] = useState(false);
 
-  // Query to fetch user's generated images with optimized settings
   const { data: userImages, refetch: refetchImages } = useQuery({
     queryKey: ["userImages", user?.id],
     queryFn: async () => {
@@ -37,7 +31,6 @@ const Dashboard = () => {
         .select("*")
         .eq("user_id", user?.id)
         .order("created_at", { ascending: false });
-        
       if (error) {
         console.error("Error fetching images:", error);
         throw error;
@@ -46,7 +39,7 @@ const Dashboard = () => {
     },
     enabled: !!user?.id,
     refetchOnWindowFocus: false,
-    staleTime: 60000, // Data considered fresh for 1 minute
+    staleTime: 60000,
   });
 
   const handleImageGenerated = (url: string, prompt: string) => {
@@ -65,9 +58,7 @@ const Dashboard = () => {
   };
 
   const handleImageSaved = () => {
-    // Refetch the user's images to update the gallery
     refetchImages();
-    // Clear story data when images are saved
     setStoryImageUrls([]);
     setStoryPrompts([]);
     setStructuredData(null);
@@ -77,25 +68,17 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">
-          {language === "indonesian" ? "Buat Gambar AI" : "Create AI Images"}
-        </h1>
+        <h1 className="text-3xl font-bold">Buat Gambar AI</h1>
       </div>
-
 
       <Tabs defaultValue="single" className="mb-8">
         <TabsList className="mb-6">
-          <TabsTrigger value="single">
-            {language === "indonesian" ? "Gambar Tunggal" : "Single Image"}
-          </TabsTrigger>
-          <TabsTrigger value="story">
-            {language === "indonesian" ? "Cerita ke Gambar" : "Story to Images"}
-          </TabsTrigger>
+          <TabsTrigger value="single">Gambar Tunggal</TabsTrigger>
+          <TabsTrigger value="story">Cerita ke Gambar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="single">
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Single Image Generation */}
             <GeneratorForm 
               onImageGenerated={handleImageGenerated}
               isGenerating={isGenerating}
@@ -106,7 +89,6 @@ const Dashboard = () => {
               prompt={currentPrompt}
               isGenerating={isGenerating}
               onSaved={handleImageSaved}
-              language={language}
             />
           </div>
         </TabsContent>
@@ -114,7 +96,6 @@ const Dashboard = () => {
         <TabsContent value="story">
           <div className="space-y-8">
             <div className="grid lg:grid-cols-2 gap-8">
-              {/* Story-based Image Generation */}
               <StoryGenerator
                 onImagesGenerated={handleStoryImagesGenerated}
                 onStructuredDataGenerated={handleStructuredDataGenerated}
@@ -128,18 +109,14 @@ const Dashboard = () => {
                 onSaved={handleImageSaved}
               />
             </div>
-            
-            {/* Storyboard Analysis */}
             <StoryboardAnalyzer
               storyboardData={structuredData}
               isVisible={showAnalyzer}
             />
           </div>
         </TabsContent>
-
       </Tabs>
 
-      {/* Gallery Section */}
       <Gallery userImages={userImages} />
     </DashboardLayout>
   );

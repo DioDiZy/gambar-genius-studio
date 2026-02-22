@@ -11,13 +11,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
-// Validation schema
 const signUpSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters long" }),
+  name: z.string().min(2, { message: "Nama minimal 2 karakter" }),
+  email: z.string().email({ message: "Masukkan alamat email yang valid" }),
+  password: z.string().min(8, { message: "Kata sandi minimal 8 karakter" }),
   agreedToTerms: z.boolean().refine(val => val === true, {
-    message: "You must agree to the terms and privacy policy"
+    message: "Anda harus menyetujui syarat dan kebijakan privasi"
   }),
 });
 
@@ -27,7 +26,6 @@ const SignUp = () => {
   const { signUp, user, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -47,7 +45,6 @@ const SignUp = () => {
     }
   };
 
-  // If the user is already authenticated, redirect to the dashboard
   if (user && !isLoading) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -59,9 +56,9 @@ const SignUp = () => {
         <div className="container max-w-md mx-auto">
           <div className="bg-background border rounded-xl shadow-sm p-8">
             <div className="mb-8 text-center">
-              <h1 className="text-2xl font-bold">Create an Account</h1>
+              <h1 className="text-2xl font-bold">Buat Akun</h1>
               <p className="text-sm text-muted-foreground mt-2">
-                Start creating amazing AI-generated images today
+                Mulai buat gambar AI yang menakjubkan hari ini
               </p>
             </div>
 
@@ -72,10 +69,10 @@ const SignUp = () => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>Nama Lengkap</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="John Doe"
+                          placeholder="Nama Anda"
                           {...field}
                           disabled={isSubmitting}
                         />
@@ -93,7 +90,7 @@ const SignUp = () => {
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="your@email.com"
+                          placeholder="email@anda.com"
                           {...field}
                           type="email"
                           disabled={isSubmitting}
@@ -109,7 +106,7 @@ const SignUp = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>Kata Sandi</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="••••••••"
@@ -119,7 +116,7 @@ const SignUp = () => {
                         />
                       </FormControl>
                       <FormMessage className="text-xs">
-                        Password must be at least 8 characters long
+                        Kata sandi minimal 8 karakter
                       </FormMessage>
                     </FormItem>
                   )}
@@ -139,13 +136,13 @@ const SignUp = () => {
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel className="text-sm text-muted-foreground leading-none">
-                          I agree to the{" "}
+                          Saya menyetujui{" "}
                           <Link to="/terms" className="text-primary hover:underline">
-                            Terms of Service
+                            Syarat & Ketentuan
                           </Link>{" "}
-                          and{" "}
+                          dan{" "}
                           <Link to="/privacy" className="text-primary hover:underline">
-                            Privacy Policy
+                            Kebijakan Privasi
                           </Link>
                         </FormLabel>
                         <FormMessage />
@@ -160,16 +157,16 @@ const SignUp = () => {
                   className="w-full"
                   disabled={isSubmitting || !form.getValues().agreedToTerms}
                 >
-                  {isSubmitting ? "Creating Account..." : "Create Account"}
+                  {isSubmitting ? "Membuat Akun..." : "Buat Akun"}
                 </CustomButton>
               </form>
             </Form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Already have an account?{" "}
+                Sudah punya akun?{" "}
                 <Link to="/signin" className="text-primary hover:underline">
-                  Sign in
+                  Masuk
                 </Link>
               </p>
             </div>

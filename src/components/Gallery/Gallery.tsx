@@ -29,12 +29,8 @@ export const Gallery = ({ userImages }: GalleryProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const imagesPerPage = 8;
   
-  // Filter images based on search query
   const filteredImages = userImages ? 
-    userImages.filter(img => 
-      img.prompt.toLowerCase().includes(searchQuery.toLowerCase())
-    ) : 
-    [];
+    userImages.filter(img => img.prompt.toLowerCase().includes(searchQuery.toLowerCase())) : [];
   
   const paginatedImages = filteredImages.slice(
     (currentPage - 1) * imagesPerPage, 
@@ -43,25 +39,22 @@ export const Gallery = ({ userImages }: GalleryProps) => {
   
   const totalPages = Math.ceil(filteredImages.length / imagesPerPage);
   
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+  const handlePageChange = (page: number) => setCurrentPage(page);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1);
   };
 
   return (
     <section className="mt-12">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Your Gallery</h2>
-        
+        <h2 className="text-2xl font-bold">Galeri Anda</h2>
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search by prompt..."
+            placeholder="Cari berdasarkan prompt..."
             value={searchQuery}
             onChange={handleSearchChange}
             className="pl-9 w-full"
@@ -71,8 +64,8 @@ export const Gallery = ({ userImages }: GalleryProps) => {
       
       <Tabs defaultValue="recent">
         <TabsList className="mb-6">
-          <TabsTrigger value="recent">Recent Images</TabsTrigger>
-          <TabsTrigger value="favorite">Favorites</TabsTrigger>
+          <TabsTrigger value="recent">Gambar Terbaru</TabsTrigger>
+          <TabsTrigger value="favorite">Favorit</TabsTrigger>
         </TabsList>
 
         <TabsContent value="recent">
@@ -98,7 +91,6 @@ export const Gallery = ({ userImages }: GalleryProps) => {
                         className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                       />
                     </PaginationItem>
-                    
                     {[...Array(totalPages)].map((_, i) => (
                       <PaginationItem key={i}>
                         <PaginationLink
@@ -110,7 +102,6 @@ export const Gallery = ({ userImages }: GalleryProps) => {
                         </PaginationLink>
                       </PaginationItem>
                     ))}
-                    
                     <PaginationItem>
                       <PaginationNext 
                         onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
@@ -123,13 +114,13 @@ export const Gallery = ({ userImages }: GalleryProps) => {
             </>
           ) : (
             <EmptyGalleryState 
-              message={searchQuery ? "No matching images found" : "No images yet"} 
+              message={searchQuery ? "Tidak ada gambar yang cocok" : "Belum ada gambar"} 
             />
           )}
         </TabsContent>
 
         <TabsContent value="favorite">
-          <EmptyGalleryState message="No favorite images yet" />
+          <EmptyGalleryState message="Belum ada gambar favorit" />
         </TabsContent>
       </Tabs>
     </section>

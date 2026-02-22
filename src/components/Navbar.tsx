@@ -20,23 +20,23 @@ export function Navbar({ showAuth = true }: NavbarProps) {
         <div className="hidden md:flex items-center gap-8">
           <nav className="flex items-center gap-6">
             <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
-              Home
+              Beranda
             </Link>
             <Link to="#features" className="text-sm font-medium hover:text-primary transition-colors">
-              Features
+              Fitur
             </Link>
             <Link to="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
-              Pricing
+              Harga
             </Link>
           </nav>
 
           {showAuth && (
             <div className="flex items-center gap-4">
               <Link to="/signin">
-                <CustomButton variant="outline">Sign In</CustomButton>
+                <CustomButton variant="outline">Masuk</CustomButton>
               </Link>
               <Link to="/signup">
-                <CustomButton variant="gradient">Sign Up</CustomButton>
+                <CustomButton variant="gradient">Daftar</CustomButton>
               </Link>
             </div>
           )}
@@ -45,46 +45,33 @@ export function Navbar({ showAuth = true }: NavbarProps) {
         <button 
           className="md:hidden"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
+          aria-label="Buka menu"
         >
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden py-4 px-6 border-t">
           <nav className="flex flex-col gap-4 mb-6">
-            <Link 
-              to="/" 
-              className="text-sm font-medium hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
+            <Link to="/" className="text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
+              Beranda
             </Link>
-            <Link 
-              to="#features" 
-              className="text-sm font-medium hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Features
+            <Link to="#features" className="text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
+              Fitur
             </Link>
-            <Link 
-              to="#pricing" 
-              className="text-sm font-medium hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Pricing
+            <Link to="#pricing" className="text-sm font-medium hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
+              Harga
             </Link>
           </nav>
 
           {showAuth && (
             <div className="flex flex-col gap-4">
               <Link to="/signin" onClick={() => setIsMenuOpen(false)}>
-                <CustomButton variant="outline" className="w-full">Sign In</CustomButton>
+                <CustomButton variant="outline" className="w-full">Masuk</CustomButton>
               </Link>
               <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
-                <CustomButton variant="gradient" className="w-full">Sign Up</CustomButton>
+                <CustomButton variant="gradient" className="w-full">Daftar</CustomButton>
               </Link>
             </div>
           )}

@@ -23,9 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Initialize auth state
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -33,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -43,59 +40,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Sign up function
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setIsLoading(true);
-      
       console.log('Attempting to sign up with Supabase URL:', SUPABASE_URL);
       
       const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            full_name: fullName,
-          },
+          data: { full_name: fullName },
           emailRedirectTo: `${window.location.origin}/`,
         },
       });
 
       if (error) {
         console.error('Supabase signup error:', error);
-        
         let errorMessage = error.message;
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Unable to connect to authentication service. Please check your internet connection and try again.';
+          errorMessage = 'Tidak dapat terhubung ke layanan autentikasi. Periksa koneksi internet Anda dan coba lagi.';
         } else if (error.message.includes('User already registered')) {
-          errorMessage = 'An account with this email already exists. Please sign in instead.';
+          errorMessage = 'Akun dengan email ini sudah ada. Silakan masuk.';
         }
-        
-        toast({
-          title: "Registration failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
+        toast({ title: "Pendaftaran gagal", description: errorMessage, variant: "destructive" });
         throw error;
       }
 
       console.log('Sign up successful:', data);
-
-      toast({
-        title: "Registration successful",
-        description: "Welcome to PembuatGambar! You are now logged in.",
-      });
-
-      // Navigate to dashboard after successful signup
+      toast({ title: "Pendaftaran berhasil", description: "Selamat datang di PembuatGambar! Anda sekarang sudah masuk." });
       navigate("/dashboard");
     } catch (error) {
       console.error("Error signing up:", error);
-      
-      // Handle network errors specifically
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         toast({
-          title: "Connection Error",
-          description: "Unable to connect to the authentication service. Please check your internet connection or try disabling browser extensions that might block requests.",
+          title: "Kesalahan Koneksi",
+          description: "Tidak dapat terhubung ke layanan autentikasi. Periksa koneksi internet Anda atau coba nonaktifkan ekstensi browser yang mungkin memblokir permintaan.",
           variant: "destructive",
         });
       }
@@ -104,58 +83,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Sign in function
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      
-      // Add debugging info
       console.log('Attempting to sign in with Supabase URL:', SUPABASE_URL);
-      console.log('Network connectivity check...');
       
-      const { error, data } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
         console.error('Supabase auth error:', error);
-        
-        // Provide more specific error handling
         let errorMessage = error.message;
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Unable to connect to authentication service. Please check your internet connection and try again.';
+          errorMessage = 'Tidak dapat terhubung ke layanan autentikasi. Periksa koneksi internet Anda dan coba lagi.';
         } else if (error.message.includes('Invalid login credentials')) {
-          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+          errorMessage = 'Email atau kata sandi salah. Periksa kredensial Anda dan coba lagi.';
         } else if (error.message.includes('Email not confirmed')) {
-          errorMessage = 'Please check your email and click the confirmation link before signing in.';
+          errorMessage = 'Silakan periksa email Anda dan klik tautan konfirmasi sebelum masuk.';
         }
-        
-        toast({
-          title: "Sign in failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
+        toast({ title: "Gagal masuk", description: errorMessage, variant: "destructive" });
         throw error;
       }
 
       console.log('Sign in successful:', data);
-      
-      toast({
-        title: "Sign in successful",
-        description: "Welcome back to PembuatGambar!",
-      });
-
-      // Navigate to dashboard after successful login
+      toast({ title: "Berhasil masuk", description: "Selamat datang kembali di PembuatGambar!" });
       navigate("/dashboard");
     } catch (error) {
       console.error("Error signing in:", error);
-      
-      // Handle network errors specifically
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         toast({
-          title: "Connection Error",
-          description: "Unable to connect to the authentication service. Please check your internet connection or try disabling browser extensions that might block requests.",
+          title: "Kesalahan Koneksi",
+          description: "Tidak dapat terhubung ke layanan autentikasi. Periksa koneksi internet Anda atau coba nonaktifkan ekstensi browser yang mungkin memblokir permintaan.",
           variant: "destructive",
         });
       }
@@ -164,23 +121,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Sign out function
   const signOut = async () => {
     try {
       setIsLoading(true);
       await supabase.auth.signOut();
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
-      });
+      toast({ title: "Berhasil keluar", description: "Anda telah berhasil keluar." });
       navigate("/");
     } catch (error) {
       console.error("Error signing out:", error);
-      toast({
-        title: "Error signing out",
-        description: "An error occurred while signing out.",
-        variant: "destructive",
-      });
+      toast({ title: "Kesalahan saat keluar", description: "Terjadi kesalahan saat keluar.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

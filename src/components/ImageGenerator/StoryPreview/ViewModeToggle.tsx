@@ -15,14 +15,14 @@ export const ViewModeToggle = ({
       <button 
         onClick={() => onViewModeChange('single')} 
         className={`p-1 rounded ${viewMode === 'single' ? 'bg-background' : ''}`}
-        title="Single view"
+        title="Tampilan tunggal"
       >
         <Bookmark className="h-4 w-4" />
       </button>
       <button 
         onClick={() => onViewModeChange('storyboard')} 
         className={`p-1 rounded ${viewMode === 'storyboard' ? 'bg-background' : ''}`}
-        title="Storyboard view"
+        title="Tampilan storyboard"
       >
         <BookOpen className="h-4 w-4" />
       </button>
