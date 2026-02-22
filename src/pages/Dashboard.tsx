@@ -10,6 +10,7 @@ import { Gallery } from "@/components/Gallery/Gallery";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoryGenerator } from "@/components/ImageGenerator/StoryGenerator";
 import { StoryImagesPreview } from "@/components/ImageGenerator/StoryImagesPreview";
+import { StoryboardAnalyzer } from "@/components/ImageGenerator/StoryboardAnalyzer";
 
 // Define supported languages to maintain consistency
 type SupportedLanguage = "english" | "indonesian";
@@ -24,6 +25,8 @@ const Dashboard = () => {
   // For story-based image generation
   const [storyImageUrls, setStoryImageUrls] = useState<string[]>([]);
   const [storyPrompts, setStoryPrompts] = useState<string[]>([]);
+  const [structuredData, setStructuredData] = useState<any>(null);
+  const [showAnalyzer, setShowAnalyzer] = useState(false);
 
   // Query to fetch user's generated images with optimized settings
   const { data: userImages, refetch: refetchImages } = useQuery({
@@ -56,16 +59,29 @@ const Dashboard = () => {
     setStoryPrompts(prompts);
   };
 
+  const handleStructuredDataGenerated = (data: any) => {
+    setStructuredData(data);
+    setShowAnalyzer(true);
+  };
+
   const handleImageSaved = () => {
     // Refetch the user's images to update the gallery
     refetchImages();
+    // Clear story data when images are saved
+    setStoryImageUrls([]);
+    setStoryPrompts([]);
+    setStructuredData(null);
+    setShowAnalyzer(false);
   };
 
   return (
     <DashboardLayout>
-      <h1 className="text-3xl font-bold mb-8">
-        {language === "indonesian" ? "Buat Gambar AI" : "Create AI Images"}
-      </h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold">
+          {language === "indonesian" ? "Buat Gambar AI" : "Create AI Images"}
+        </h1>
+      </div>
+
 
       <Tabs defaultValue="single" className="mb-8">
         <TabsList className="mb-6">
@@ -96,21 +112,31 @@ const Dashboard = () => {
         </TabsContent>
         
         <TabsContent value="story">
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Story-based Image Generation */}
-            <StoryGenerator
-              onImagesGenerated={handleStoryImagesGenerated}
-              isGenerating={isGenerating}
-              setIsGenerating={setIsGenerating}
-            />
-            <StoryImagesPreview
-              imageUrls={storyImageUrls}
-              prompts={storyPrompts}
-              isGenerating={isGenerating}
-              onSaved={handleImageSaved}
+          <div className="space-y-8">
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Story-based Image Generation */}
+              <StoryGenerator
+                onImagesGenerated={handleStoryImagesGenerated}
+                onStructuredDataGenerated={handleStructuredDataGenerated}
+                isGenerating={isGenerating}
+                setIsGenerating={setIsGenerating}
+              />
+              <StoryImagesPreview
+                imageUrls={storyImageUrls}
+                prompts={storyPrompts}
+                isGenerating={isGenerating}
+                onSaved={handleImageSaved}
+              />
+            </div>
+            
+            {/* Storyboard Analysis */}
+            <StoryboardAnalyzer
+              storyboardData={structuredData}
+              isVisible={showAnalyzer}
             />
           </div>
         </TabsContent>
+
       </Tabs>
 
       {/* Gallery Section */}

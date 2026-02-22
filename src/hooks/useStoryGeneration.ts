@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
 import { CharacterDescription } from "@/types/story";
+import { createStoryboardPrompts, createStructuredStoryboardPrompts } from "@/services/StoryboardService";
 
 // Define this type to be consistent with StoryGenerator component
 type SupportedLanguage = "english" | "indonesian";
@@ -19,6 +20,7 @@ interface UseStoryGenerationProps {
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
+  onStructuredDataGenerated?: (structuredData: any) => void;
   language: SupportedLanguage;
 }
 
@@ -31,6 +33,7 @@ export const useStoryGeneration = ({
   isGenerating,
   setIsGenerating,
   onImagesGenerated,
+  onStructuredDataGenerated,
   language
 }: UseStoryGenerationProps) => {
   const { user } = useAuth();
@@ -77,58 +80,32 @@ export const useStoryGeneration = ({
       setIsGenerating(true);
       
       toast.info(`Generating ${totalImages} images...`, {
-        description: "This may take a few moments"
+        description: language === "indonesian" 
+          ? "Menerjemahkan teks Indonesia ke bahasa Inggris untuk hasil yang lebih baik"
+          : "Translating Indonesian text to English for better results"
       });
       
       try {
-        // Generate images for each paragraph with consistent character descriptions
-        const enhancedPrompts = paragraphs.map(p => {
-          // Create a base prompt that focuses on the scene from the paragraph
-          let enhancedPrompt = p;
-          
-          // Add detailed style information
-          const styleMap: Record<string, string> = {
-            "photorealistic": "highly detailed photorealistic style with realistic lighting and textures",
-            "digital-art": "vibrant digital art style with rich colors",
-            "anime": "anime style with clean lines and expressive characters",
-            "3d-render": "3D rendered style with depth and realistic materials",
-            "oil-painting": "oil painting style with visible brush strokes and rich textures",
-            "watercolor": "delicate watercolor style with soft color blending",
-            "comic-book": "comic book style with bold outlines and flat colors",
-            "storyboard-sketch": "professional storyboard sketch style with clear scene composition"
-          };
-          
-          const styleDescription = styleMap[style] || styleMap["photorealistic"];
-          enhancedPrompt = `${enhancedPrompt}, ${styleDescription}`;
-          
-          // Build a comprehensive character description block for consistency
-          if (characters.length > 0) {
-            enhancedPrompt += ". Characters in scene: ";
-            
-            const characterPrompts = characters.map(char => {
-              // Make the character description more detailed for consistency
-              return `${char.name} (${char.appearance}, consistent appearance throughout all scenes)`;
-            }).join('; ');
-            
-            enhancedPrompt += characterPrompts;
-          }
-          
-          // Add additional image instructions if provided
-          if (characterDescriptions.trim()) {
-            enhancedPrompt += `. Scene details: ${characterDescriptions}`;
-          }
-          
-          // Add language-specific context
-          if (language === "indonesian") {
-            enhancedPrompt += ". Text is in Indonesian language (Bahasa Indonesia). Visual representation should match Indonesian cultural context where appropriate.";
-          }
-          
-          return enhancedPrompt;
-        });
+        // Generate enhanced storyboard prompts with visual continuity and structured data
+        console.log("Creating structured storyboard prompts with enhanced continuity...");
+        const structuredResult = await createStructuredStoryboardPrompts(
+          paragraphs,
+          characters,
+          style,
+          characterDescriptions,
+          language
+        );
         
-        console.log("Enhanced prompts for image generation:", enhancedPrompts);
+        const enhancedPrompts = structuredResult.prompts;
         
-        const imageUrls = await generateMultipleImages(enhancedPrompts);
+        // Pass structured data to callback if provided
+        if (onStructuredDataGenerated) {
+          onStructuredDataGenerated(structuredResult);
+        }
+        
+        console.log("Enhanced storyboard prompts generated:", enhancedPrompts);
+        
+        const imageUrls = await generateMultipleImages(enhancedPrompts, style);
         
         if (imageUrls.length > 0) {
           onImagesGenerated(imageUrls, paragraphs);

@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
+  onStructuredDataGenerated?: (structuredData: any) => void;
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
 }
@@ -29,6 +30,7 @@ type SupportedLanguage = "english" | "indonesian";
 
 export const StoryGenerator = ({ 
   onImagesGenerated, 
+  onStructuredDataGenerated,
   isGenerating,
   setIsGenerating
 }: StoryGeneratorProps) => {
@@ -49,6 +51,7 @@ export const StoryGenerator = ({
     isGenerating,
     setIsGenerating,
     onImagesGenerated,
+    onStructuredDataGenerated,
     language
   });
 

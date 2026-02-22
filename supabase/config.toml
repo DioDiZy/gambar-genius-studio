@@ -3,3 +3,6 @@ project_id = "kipclwwcfcpzinnuwhlj"
 
 [functions.save-image-to-storage]
 verify_jwt = false
+
+[functions.generate-image]
+verify_jwt = false

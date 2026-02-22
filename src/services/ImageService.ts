@@ -1,5 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
+import { translateForImageGeneration } from "./TranslationService";
 
 export interface GenerateImageParams {
   prompt: string;
@@ -9,11 +9,19 @@ export interface GenerateImageParams {
 
 export async function generateImage(params: GenerateImageParams): Promise<string | null> {
   try {
-    // Enhance prompt with language context if Indonesian is selected
-    let enhancedPrompt = params.prompt;
+    // Always translate text to English for better image generation accuracy
+    let enhancedPrompt = await translateForImageGeneration(params.prompt);
+
+    // Add language context if Indonesian was selected
     if (params.language === "indonesian") {
-      enhancedPrompt += ". Text is in Indonesian language (Bahasa Indonesia). Visual representation should match Indonesian cultural context where appropriate.";
+      enhancedPrompt += ". Visual representation should match Indonesian cultural context where appropriate.";
     }
+
+    console.log('Image generation prompt:', {
+      original: params.prompt,
+      enhanced: enhancedPrompt,
+      language: params.language
+    });
 
     // Create the initial generation request
     const { data: initialData, error: initialError } = await supabase.functions.invoke("generate-image", {
@@ -48,43 +56,75 @@ export async function generateImage(params: GenerateImageParams): Promise<string
   }
 }
 
-// Function to generate multiple images with improved consistency
-export async function generateMultipleImages(prompts: string[]): Promise<string[]> {
+// Model configuration per style
+interface StoryboardModelConfig {
+  model?: string;
+  seed?: number;
+  guidance_scale?: number;
+  num_inference_steps?: number;
+  negative_prompt?: string;
+}
+
+function getModelConfigForStyle(style: string, sessionSeed: number, frameIndex: number): StoryboardModelConfig {
+  if (style === "storyboard-sketch") {
+    return {
+      model: "flux-dev",
+      seed: sessionSeed, // Same seed for all frames for consistency
+      guidance_scale: 3.5,
+      num_inference_steps: 28,
+    };
+  }
+  // Default: flux-schnell
+  return {
+    seed: sessionSeed + (frameIndex * 10),
+    num_inference_steps: 4,
+  };
+}
+
+// Function to generate multiple images with storyboard continuity
+export async function generateMultipleImages(prompts: string[], style: string = "photorealistic"): Promise<string[]> {
   if (!prompts.length) return [];
 
   try {
     const imageUrls: string[] = [];
     
     // Generate a consistent seed for this story generation session
-    const sessionSeed = Math.floor(Math.random() * 1000000);
+    const sessionSeed = Math.floor(Math.random() * 4294967295);
     
-    // Generate images sequentially to avoid overwhelming the API
-    for (const prompt of prompts) {
-      console.log("Generating image with enhanced prompt:", prompt);
+    const isSketchStyle = style === "storyboard-sketch";
+    console.log(`Starting storyboard generation with ${isSketchStyle ? "Flux.1-dev (Storyboard Sketch)" : "Flux-schnell"}`);
+    console.log("Enhanced prompts for storyboard:", prompts);
+    
+    for (let i = 0; i < prompts.length; i++) {
+      const prompt = prompts[i];
+      console.log(`Generating storyboard frame ${i + 1}/${prompts.length}:`, prompt);
+      
+      const config = getModelConfigForStyle(style, sessionSeed, i);
       
       const { data: imageData, error: imageError } = await supabase.functions.invoke("generate-image", {
         body: {
           prompt: prompt,
           aspectRatio: "1:1",
-          seed: sessionSeed, // Use the same seed for all images in this batch
-          num_inference_steps: 4, // Keep at max value of 4 as required by the model
+          ...config,
         },
       });
 
       if (imageError) {
-        console.error("Error generating image:", imageError);
+        console.error(`Error generating storyboard frame ${i + 1}:`, imageError);
         continue;
       }
 
       const imageUrl = imageData?.output?.[0];
       if (imageUrl) {
         imageUrls.push(imageUrl);
+        console.log(`Successfully generated storyboard frame ${i + 1}`);
       }
     }
     
+    console.log(`Storyboard generation complete: ${imageUrls.length}/${prompts.length} frames generated`);
     return imageUrls;
   } catch (error) {
-    console.error("Error generating multiple images:", error);
+    console.error("Error generating storyboard images:", error);
     throw error;
   }
 }

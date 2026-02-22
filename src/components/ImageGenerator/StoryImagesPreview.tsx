@@ -6,6 +6,8 @@ import { SingleImageView } from "./StoryPreview/SingleImageView";
 import { StoryboardView } from "./StoryPreview/StoryboardView";
 import { StoryPreviewActions } from "./StoryPreview/StoryPreviewActions";
 import { ViewModeToggle } from "./StoryPreview/ViewModeToggle";
+import { StoryboardContinuity } from "./StoryboardContinuity";
+import { StoryboardAnalyzer } from "./StoryboardAnalyzer";
 
 interface StoryImagesPreviewProps {
   imageUrls: string[];
@@ -77,16 +79,24 @@ export const StoryImagesPreview = ({
         )}
 
         {imageUrls.length > 0 && (
-          <StoryPreviewActions
-            imageUrls={imageUrls}
-            currentImage={currentImage}
-            currentPrompt={currentPrompt}
-            saving={saving}
-            onSave={handleSave}
-            onDownload={handleDownload}
-            onDownloadAll={() => handleDownloadAll(imageUrls)}
-            viewMode={viewMode}
-          />
+          <>
+            <StoryPreviewActions
+              imageUrls={imageUrls}
+              currentImage={currentImage}
+              currentPrompt={currentPrompt}
+              saving={saving}
+              onSave={handleSave}
+              onDownload={handleDownload}
+              onDownloadAll={() => handleDownloadAll(imageUrls)}
+              viewMode={viewMode}
+            />
+            
+            <StoryboardContinuity
+              imageUrls={imageUrls}
+              prompts={prompts}
+              currentIndex={currentIndex}
+            />
+          </>
         )}
       </CardContent>
     </Card>
