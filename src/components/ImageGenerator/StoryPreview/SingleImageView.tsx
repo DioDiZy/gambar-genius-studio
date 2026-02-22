@@ -27,14 +27,14 @@ export const SingleImageView = ({
         <div className="text-center p-6">
           <div className="flex flex-col items-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            <p className="mt-4 text-muted-foreground">Creating your masterpieces...</p>
+            <p className="mt-4 text-muted-foreground">Membuat karya seni Anda...</p>
           </div>
         </div>
       ) : imageUrls.length > 0 ? (
         <div className="relative w-full h-full">
           <img 
             src={currentImage} 
-            alt={`Generated from: ${currentPrompt}`} 
+            alt={`Dihasilkan dari: ${currentPrompt}`} 
             className="w-full h-full object-cover"
           />
           {imageUrls.length > 1 && (
@@ -42,14 +42,14 @@ export const SingleImageView = ({
               <button 
                 onClick={onPrevious}
                 className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 shadow-md"
-                aria-label="Previous image"
+                aria-label="Gambar sebelumnya"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <button 
                 onClick={onNext}
                 className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 shadow-md"
-                aria-label="Next image"
+                aria-label="Gambar berikutnya"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
@@ -63,7 +63,7 @@ export const SingleImageView = ({
         <div className="text-center p-6">
           <div className="text-4xl mb-2">🖼️</div>
           <p className="text-muted-foreground text-sm">
-            Your generated images will appear here
+            Gambar yang dihasilkan akan muncul di sini
           </p>
         </div>
       )}

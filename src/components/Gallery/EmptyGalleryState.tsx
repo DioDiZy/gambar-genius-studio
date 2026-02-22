@@ -3,8 +3,8 @@ interface EmptyGalleryStateProps {
   message?: string;
 }
 
-export const EmptyGalleryState = ({ message = "No images yet" }: EmptyGalleryStateProps) => {
-  const isSearchResult = message.toLowerCase().includes("no matching");
+export const EmptyGalleryState = ({ message = "Belum ada gambar" }: EmptyGalleryStateProps) => {
+  const isSearchResult = message.toLowerCase().includes("tidak ada gambar yang cocok");
   
   return (
     <div className="text-center py-16 border border-dashed rounded-lg bg-muted/20">
@@ -14,11 +14,11 @@ export const EmptyGalleryState = ({ message = "No images yet" }: EmptyGallerySta
       <p className="text-xl text-muted-foreground font-medium">{message}</p>
       {isSearchResult ? (
         <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-          Try searching with different keywords or clear your search to see all images
+          Coba cari dengan kata kunci lain atau hapus pencarian untuk melihat semua gambar
         </p>
       ) : (
         <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-          Generate amazing AI images and they will appear in your gallery for easy access later
+          Buat gambar AI yang menakjubkan dan gambar akan muncul di galeri Anda
         </p>
       )}
     </div>

@@ -16,13 +16,11 @@ import { useAuth } from "@/contexts/AuthContext";
 export function UserMenu() {
   const { user, signOut } = useAuth();
   
-  // Get the user's initials for the avatar fallback
   const getUserInitials = () => {
     if (!user?.user_metadata?.full_name) return "PG";
-    
     return user.user_metadata.full_name
       .split(" ")
-      .map(name => name[0])
+      .map((name: string) => name[0])
       .join("")
       .toUpperCase()
       .substring(0, 2);
@@ -35,7 +33,7 @@ export function UserMenu() {
           <Avatar className="h-10 w-10">
             <AvatarImage 
               src={user?.user_metadata?.avatar_url || ""} 
-              alt={user?.user_metadata?.full_name || "User"} 
+              alt={user?.user_metadata?.full_name || "Pengguna"} 
             />
             <AvatarFallback className="bg-primary/10 text-primary">
               {getUserInitials()}
@@ -44,18 +42,18 @@ export function UserMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/profile" className="flex items-center cursor-pointer">
             <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
+            <span>Profil</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/settings" className="flex items-center cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
+            <span>Pengaturan</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -64,7 +62,7 @@ export function UserMenu() {
           onClick={() => signOut()}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Logout</span>
+          <span>Keluar</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

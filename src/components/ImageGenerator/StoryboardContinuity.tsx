@@ -16,7 +16,6 @@ export const StoryboardContinuity = ({
   if (imageUrls.length === 0) return null;
 
   const analyzePromptFeatures = (prompt: string) => {
-    // Extract visual elements from prompts for continuity display
     const features = {
       characters: [] as string[],
       location: '',
@@ -25,31 +24,22 @@ export const StoryboardContinuity = ({
       style: ''
     };
 
-    // Simple extraction logic (could be enhanced)
     const characterMatch = prompt.match(/Characters in scene: ([^.]+)/);
     if (characterMatch) {
       features.characters = characterMatch[1].split(';').map(c => c.trim().split(' ')[0]);
     }
 
-    const locationMatch = prompt.match(/\b(?:in|at|on|inside|outside|near|by)\s+(?:the\s+)?([a-zA-Z\s]+?)(?:\s|,|\.)/i);
-    if (locationMatch) {
-      features.location = locationMatch[1].trim();
-    }
+    const locationMatch = prompt.match(/\b(?:in|at|on|inside|outside|near|by|di|dalam|dekat)\s+(?:the\s+)?([a-zA-Z\s]+?)(?:\s|,|\.)/i);
+    if (locationMatch) features.location = locationMatch[1].trim();
 
-    const timeMatch = prompt.match(/\b(morning|afternoon|evening|night|dawn|dusk|daylight|darkness)\b/i);
-    if (timeMatch) {
-      features.timeOfDay = timeMatch[1];
-    }
+    const timeMatch = prompt.match(/\b(morning|afternoon|evening|night|dawn|dusk|pagi|siang|sore|malam)\b/i);
+    if (timeMatch) features.timeOfDay = timeMatch[1];
 
     const cameraMatch = prompt.match(/\b(wide shot|close-up|medium shot|establishing shot|medium-wide shot)\b/i);
-    if (cameraMatch) {
-      features.cameraAngle = cameraMatch[1];
-    }
+    if (cameraMatch) features.cameraAngle = cameraMatch[1];
 
     const styleMatch = prompt.match(/\b(photorealistic|digital art|anime|3d render|oil painting|watercolor|comic book|storyboard sketch)\b/i);
-    if (styleMatch) {
-      features.style = styleMatch[1];
-    }
+    if (styleMatch) features.style = styleMatch[1];
 
     return features;
   };
@@ -60,7 +50,6 @@ export const StoryboardContinuity = ({
 
   const getConnectionType = (current: any, other: any) => {
     if (!other) return null;
-    
     if (current.location === other.location) return 'same-location';
     if (current.characters.some((char: string) => other.characters.includes(char))) return 'character-continuity';
     if (current.timeOfDay === other.timeOfDay) return 'time-continuity';
@@ -70,21 +59,30 @@ export const StoryboardContinuity = ({
   const prevConnection = getConnectionType(currentFeatures, prevFeatures);
   const nextConnection = getConnectionType(currentFeatures, nextFeatures);
 
+  const getConnectionLabel = (type: string) => {
+    switch (type) {
+      case 'same-location': return 'Lokasi sama';
+      case 'character-continuity': return 'Karakter berlanjut';
+      case 'time-continuity': return 'Waktu konsisten';
+      case 'scene-transition': return 'Pergantian adegan';
+      default: return '';
+    }
+  };
+
   return (
     <Card className="mt-4">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-sm">
           <Camera className="h-4 w-4" />
-          Storyboard Continuity
+          Kontinuitas Storyboard
         </CardTitle>
         <CardDescription className="text-xs">
-          Visual connections between frames
+          Hubungan visual antar frame
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Current frame analysis */}
         <div className="space-y-2">
-          <h4 className="text-xs font-medium text-muted-foreground">Current Frame ({currentIndex + 1})</h4>
+          <h4 className="text-xs font-medium text-muted-foreground">Frame Saat Ini ({currentIndex + 1})</h4>
           <div className="flex flex-wrap gap-1">
             {currentFeatures.characters.length > 0 && (
               <Badge variant="secondary" className="text-xs flex items-center gap-1">
@@ -106,58 +104,36 @@ export const StoryboardContinuity = ({
               </Badge>
             )}
             {currentFeatures.cameraAngle && (
-              <Badge variant="secondary" className="text-xs">
-                {currentFeatures.cameraAngle}
-              </Badge>
+              <Badge variant="secondary" className="text-xs">{currentFeatures.cameraAngle}</Badge>
             )}
           </div>
         </div>
 
-        {/* Continuity connections */}
         <div className="flex items-center justify-between text-xs">
-          {/* Previous connection */}
           <div className="flex items-center gap-1 flex-1">
             {prevConnection && (
               <>
-                <Badge 
-                  variant={prevConnection === 'same-location' ? 'default' : 'outline'} 
-                  className="text-xs"
-                >
+                <Badge variant={prevConnection === 'same-location' ? 'default' : 'outline'} className="text-xs">
                   {currentIndex}
                 </Badge>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <ArrowRight className="h-3 w-3 rotate-180" />
-                  <span className="text-xs">
-                    {prevConnection === 'same-location' && 'Same location'}
-                    {prevConnection === 'character-continuity' && 'Character follows'}
-                    {prevConnection === 'time-continuity' && 'Time consistent'}
-                    {prevConnection === 'scene-transition' && 'Scene change'}
-                  </span>
+                  <span className="text-xs">{getConnectionLabel(prevConnection)}</span>
                 </div>
               </>
             )}
           </div>
 
-          {/* Current frame indicator */}
           <Badge variant="default" className="mx-2 text-xs">
             Frame {currentIndex + 1}
           </Badge>
 
-          {/* Next connection */}
           <div className="flex items-center gap-1 flex-1 justify-end">
             {nextConnection && (
               <>
-                <span className="text-xs text-muted-foreground">
-                  {nextConnection === 'same-location' && 'Same location'}
-                  {nextConnection === 'character-continuity' && 'Character follows'}
-                  {nextConnection === 'time-continuity' && 'Time consistent'}
-                  {nextConnection === 'scene-transition' && 'Scene change'}
-                </span>
+                <span className="text-xs text-muted-foreground">{getConnectionLabel(nextConnection)}</span>
                 <ArrowRight className="h-3 w-3" />
-                <Badge 
-                  variant={nextConnection === 'same-location' ? 'default' : 'outline'} 
-                  className="text-xs"
-                >
+                <Badge variant={nextConnection === 'same-location' ? 'default' : 'outline'} className="text-xs">
                   {currentIndex + 2}
                 </Badge>
               </>
@@ -165,14 +141,13 @@ export const StoryboardContinuity = ({
           </div>
         </div>
 
-        {/* Visual flow indicator */}
         <div className="bg-muted/50 p-2 rounded text-xs space-y-1">
-          <div className="font-medium text-muted-foreground">Visual Flow:</div>
+          <div className="font-medium text-muted-foreground">Alur Visual:</div>
           <div className="text-muted-foreground">
-            {imageUrls.length === 1 && "Single frame story"}
-            {imageUrls.length === 2 && "Two-part sequence"}
-            {imageUrls.length >= 3 && imageUrls.length <= 5 && `${imageUrls.length}-frame narrative sequence`}
-            {imageUrls.length > 5 && `Extended ${imageUrls.length}-frame storyboard`}
+            {imageUrls.length === 1 && "Cerita satu frame"}
+            {imageUrls.length === 2 && "Urutan dua bagian"}
+            {imageUrls.length >= 3 && imageUrls.length <= 5 && `Urutan naratif ${imageUrls.length} frame`}
+            {imageUrls.length > 5 && `Storyboard ${imageUrls.length} frame diperluas`}
           </div>
         </div>
       </CardContent>

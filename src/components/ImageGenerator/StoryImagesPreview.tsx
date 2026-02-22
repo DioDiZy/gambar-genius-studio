@@ -35,7 +35,6 @@ export const StoryImagesPreview = ({
     handleSelectImage
   } = useStoryImages({ onSaved });
 
-  // Getting the current image and prompt
   const currentImage = imageUrls[currentIndex];
   const currentPrompt = prompts[currentIndex];
 
@@ -45,17 +44,14 @@ export const StoryImagesPreview = ({
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2">
             <BookText className="h-5 w-5" />
-            Story Images {imageUrls.length > 0 ? `(${currentIndex + 1}/${imageUrls.length})` : ""}
+            Gambar Cerita {imageUrls.length > 0 ? `(${currentIndex + 1}/${imageUrls.length})` : ""}
           </CardTitle>
           {imageUrls.length > 0 && (
-            <ViewModeToggle 
-              viewMode={viewMode} 
-              onViewModeChange={setViewMode} 
-            />
+            <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
           )}
         </div>
         <CardDescription>
-          Storyboard images generated from your story paragraphs
+          Gambar storyboard yang dihasilkan dari paragraf cerita Anda
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -90,7 +86,6 @@ export const StoryImagesPreview = ({
               onDownloadAll={() => handleDownloadAll(imageUrls)}
               viewMode={viewMode}
             />
-            
             <StoryboardContinuity
               imageUrls={imageUrls}
               prompts={prompts}

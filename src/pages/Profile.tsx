@@ -8,7 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-
 const Profile = () => {
   const { user } = useAuth();
 
@@ -26,29 +25,24 @@ const Profile = () => {
     enabled: !!user?.id,
   });
 
-  const displayName = profile?.full_name || profile?.username || user?.email || "User";
+  const displayName = profile?.full_name || profile?.username || user?.email || "Pengguna";
   const joinDate = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+    ? new Date(profile.created_at).toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" })
     : "";
 
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Profile</h1>
+        <h1 className="text-3xl font-bold mb-8">Profil</h1>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {/* Profile Summary */}
           <Card className="md:col-span-1">
             <CardHeader className="text-center">
               <div className="mx-auto mb-4">
                 <Avatar className="h-24 w-24">
                   <AvatarImage src={profile?.avatar_url || ""} alt={displayName} />
                   <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                    {displayName
-                      .split(" ")
-                      .map(n => n[0])
-                      .join("")
-                      .toUpperCase()}
+                    {displayName.split(" ").map(n => n[0]).join("").toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </div>
@@ -57,16 +51,15 @@ const Profile = () => {
             </CardHeader>
             <CardContent className="text-center">
               <CustomButton variant="outline" size="sm">
-                Edit Profile
+                Edit Profil
               </CustomButton>
             </CardContent>
           </Card>
 
-          {/* User Stats */}
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-              <CardDescription>Your account details and statistics</CardDescription>
+              <CardTitle>Informasi Akun</CardTitle>
+              <CardDescription>Detail akun dan statistik Anda</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
@@ -75,7 +68,7 @@ const Profile = () => {
                     <Clock className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Member Since</p>
+                    <p className="text-sm text-muted-foreground">Bergabung Sejak</p>
                     <p className="font-medium">{joinDate}</p>
                   </div>
                 </div>
@@ -85,7 +78,7 @@ const Profile = () => {
                     <Image className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Images Created</p>
+                    <p className="text-sm text-muted-foreground">Gambar Dibuat</p>
                     <p className="font-medium">{profile?.images_generated ?? 0}</p>
                   </div>
                 </div>
@@ -95,15 +88,14 @@ const Profile = () => {
                     <Medal className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Subscription</p>
-                    <p className="font-medium">Free Plan</p>
+                    <p className="text-sm text-muted-foreground">Langganan</p>
+                    <p className="font-medium">Paket Gratis</p>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
-
       </div>
     </DashboardLayout>
   );
