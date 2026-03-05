@@ -5,8 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
+import { validateIndonesianSentence, validateIndonesianWords } from "@/utils/indonesianLanguageValidation";
 import { CharacterDescription } from "@/types/story";
-import { createStoryboardPrompts, createStructuredStoryboardPrompts } from "@/services/StoryboardService";
+import { createStructuredStoryboardPrompts } from "@/services/StoryboardService";
 
 // Define this type to be consistent with StoryGenerator component
 type SupportedLanguage = "english" | "indonesian";
@@ -49,6 +50,25 @@ export const useStoryGeneration = ({
     if (!story.trim()) {
       toast.error("Please enter a story");
       return;
+    }
+
+    if (language === "indonesian") {
+      const validation = validateIndonesianSentence(story);
+      const wordValidation = validateIndonesianWords(story);
+
+      if (wordValidation.unknownWords.length >= 3 && wordValidation.unknownWordRatio > 0.35) {
+        toast.error("Banyak kata yang belum dikenali sebagai kata Indonesia", {
+          description: `Coba periksa kata: ${wordValidation.unknownWords.slice(0, 5).join(", ")}`
+        });
+        return;
+      }
+
+      if (!validation.isLikelyIndonesianSentence) {
+        toast.error("Teks terdeteksi bukan kalimat Indonesia yang natural", {
+          description: validation.reasons[0] ?? "Silakan periksa kembali kata dan struktur kalimat Anda"
+        });
+        return;
+      }
     }
 
     try {

@@ -8,6 +8,7 @@ import { StoryInputOptions } from "./StoryInputOptions";
 import { StoryTextArea } from "./StoryTextArea";
 import { StoryGenerationButton } from "./StoryGenerationButton";
 import { CharacterDescription } from "@/types/story";
+import { validateIndonesianSentence, validateIndonesianWords } from "@/utils/indonesianLanguageValidation";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -46,6 +47,9 @@ export const StoryGenerator = ({
     setParagraphCount(paragraphs.length);
   }, [paragraphs]);
 
+  const indonesianValidation = validateIndonesianSentence(story);
+  const indonesianWordValidation = validateIndonesianWords(story);
+
   return (
     <Card>
       <CardHeader>
@@ -80,6 +84,8 @@ export const StoryGenerator = ({
             paragraphCount={paragraphCount}
             isGenerating={isGenerating}
             language="indonesian"
+            validation={indonesianValidation}
+            wordValidation={indonesianWordValidation}
           />
 
           <div className="flex items-center justify-end">
