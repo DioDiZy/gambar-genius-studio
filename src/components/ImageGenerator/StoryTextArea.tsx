@@ -1,6 +1,6 @@
-
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { IndonesianValidationResult } from "@/utils/indonesianLanguageValidation";
 
 interface StoryTextAreaProps {
   story: string;
@@ -8,6 +8,7 @@ interface StoryTextAreaProps {
   paragraphCount: number;
   isGenerating: boolean;
   language?: string;
+  validation?: IndonesianValidationResult;
 }
 
 export const StoryTextArea = ({
@@ -15,10 +16,11 @@ export const StoryTextArea = ({
   onStoryChange,
   paragraphCount,
   isGenerating,
-  language = "english"
+  language = "english",
+  validation,
 }: StoryTextAreaProps) => {
   const getPlaceholderByLanguage = () => {
-    switch(language) {
+    switch (language) {
       case "indonesian":
         return "Pada suatu hari di negeri yang jauh...\n\nSaat sang pahlawan melanjutkan perjalanannya ke dalam hutan yang dalam, dia menemukan sebuah pondok tua yang misterius. Sinar bulan menyinari atap jerami yang sudah lapuk.";
       case "english":
@@ -28,14 +30,20 @@ export const StoryTextArea = ({
   };
 
   const getCountLabel = () => {
-    return language === "indonesian" 
-      ? `${paragraphCount} paragraf terdeteksi` 
+    return language === "indonesian"
+      ? `${paragraphCount} paragraf terdeteksi`
       : `${paragraphCount} paragraphs detected`;
   };
 
   const getLabelText = () => {
     return language === "indonesian" ? "Cerita Anda" : "Your Story";
   };
+
+  const showValidationWarning =
+    language === "indonesian" &&
+    story.trim().length > 0 &&
+    validation &&
+    !validation.isLikelyIndonesianSentence;
 
   return (
     <div className="space-y-2">
@@ -44,12 +52,18 @@ export const StoryTextArea = ({
         placeholder={getPlaceholderByLanguage()}
         value={story}
         onChange={(e) => onStoryChange(e.target.value)}
-        className="min-h-64 mb-4"
+        className="min-h-64 mb-2"
         disabled={isGenerating}
       />
-      <p className="text-sm text-muted-foreground">
-        {getCountLabel()}
-      </p>
+
+      {showValidationWarning && (
+        <p className="text-sm text-amber-600">
+          Teks terdeteksi kurang natural dalam bahasa Indonesia.
+          {validation.reasons[0] ? ` ${validation.reasons[0]}.` : ""}
+        </p>
+      )}
+
+      <p className="text-sm text-muted-foreground">{getCountLabel()}</p>
     </div>
   );
 };
