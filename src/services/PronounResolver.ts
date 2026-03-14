@@ -209,4 +209,16 @@ export class PronounResolver {
   public getSceneMappings(sceneIndex: number): PronounMapping[] {
     return this.pronounMappings.get(`scene_${sceneIndex}`) || [];
   }
+
+  /**
+   * Get a character by name
+   */
+  public getCharacterByName(name: string): CharacterDescription | undefined {
+    for (const char of this.characterMap.values()) {
+      if (char.name.toLowerCase() === name.toLowerCase()) {
+        return char;
+      }
+    }
+    return undefined;
+  }
 }
