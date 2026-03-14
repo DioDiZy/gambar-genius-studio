@@ -393,9 +393,17 @@ export class EnhancedStoryboardService {
 
     // CHARACTER ANCHOR: primary character with full description
     let characterAnchor = "";
+    let referenceImageUrls: string[] = [];
     if (characterReferences.length > 0) {
       const primary = characterReferences.find(c => c.roleInScene === 'primary') || characterReferences[0];
       characterAnchor = `Core Character: ${primary.name}, ${primary.appearance}.`;
+      
+      // Collect reference images from the original character data
+      const originalChar = this.pronounResolver.getCharacterByName(primary.name);
+      if (originalChar?.referenceImages && originalChar.referenceImages.length > 0) {
+        referenceImageUrls = originalChar.referenceImages;
+        characterAnchor += ` [Character has ${referenceImageUrls.length} visual reference image(s) for consistency].`;
+      }
     }
 
     // SCENE ACTION: the paragraph content
