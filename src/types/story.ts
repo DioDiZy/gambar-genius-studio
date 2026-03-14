@@ -2,6 +2,7 @@
 export interface CharacterDescription {
   name: string;
   appearance: string;
+  referenceImages?: string[];
   pronouns?: string[];
   aliases?: string[];
 }
