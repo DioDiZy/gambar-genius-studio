@@ -433,11 +433,25 @@ export class EnhancedStoryboardService {
     }
     const environment = `Environment & Lighting: ${envParts.join(', ')}.`;
 
-    // SUFFIX: character consistency enforcement
-    let suffix = "High quality sketch.";
+    // Scene continuity from previous panels
+    let sceneContinuity = "";
+    if (sceneIndex > 0 && this.sceneHistory.length > 0) {
+      const prevScene = this.sceneHistory[sceneIndex - 1];
+      if (prevScene.sceneMetadata.location !== 'unspecified location') {
+        sceneContinuity = prevScene.sceneMetadata.location === sceneMetadata.location
+          ? `Same location as previous panel.`
+          : `New location, maintaining time continuity from previous panel.`;
+      }
+      if (prevScene.sceneMetadata.timeOfDay && sceneMetadata.timeOfDay) {
+        sceneContinuity += ` ${sceneMetadata.timeOfDay} lighting consistent with story progression.`;
+      }
+    }
+
+    // SUFFIX: character consistency enforcement + anti-artifact
+    let suffix = "High quality sketch. No text, no watermarks, no letters, no writing on the image.";
     if (characterReferences.length > 0) {
       const primary = characterReferences.find(c => c.roleInScene === 'primary') || characterReferences[0];
-      suffix = `Ensuring ${primary.name} looks exactly the same as previous panels. High quality sketch.`;
+      suffix = `Ensuring ${primary.name} looks exactly the same as previous panels. High quality sketch. No text, no watermarks, no letters, no writing on the image.`;
     }
 
     // Panel-specific weighting (re-enforce on panel 3+ to prevent drift)
