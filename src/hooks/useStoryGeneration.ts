@@ -118,9 +118,9 @@ export const useStoryGeneration = ({
         
         if (imageUrls.length > 0) {
           onImagesGenerated(imageUrls, paragraphs);
-          toast.success(`Generated ${imageUrls.length} images successfully!`);
+          toast.success(`Berhasil menghasilkan ${imageUrls.length} gambar!`);
         } else {
-          toast.error("Failed to generate images");
+          toast.error("Gagal menghasilkan gambar");
         }
       } catch (error) {
         console.error("Error generating images:", error);
