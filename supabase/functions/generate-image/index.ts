@@ -42,15 +42,13 @@ serve(async (req) => {
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
-        }
+        },
       );
     }
 
     // Determine which model to use
     const useDevModel = body.model === "flux-dev";
-    const modelId = useDevModel
-      ? "black-forest-labs/flux-dev"
-      : "black-forest-labs/flux-schnell";
+    const modelId = useDevModel ? "black-forest-labs/flux-dev" : "black-forest-labs/flux-schnell";
 
     console.log(`Generating image with model: ${modelId}, prompt:`, body.prompt);
 
@@ -68,6 +66,7 @@ serve(async (req) => {
           output_quality: 80,
           guidance: body.guidance_scale ?? 3.5,
           num_inference_steps: body.num_inference_steps ?? 28,
+          negative_prompt: "blurry, distorted face, extra limbs, ugly, scary, dark horror style",
         };
       } else {
         modelInputs = {
@@ -105,19 +104,16 @@ serve(async (req) => {
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 402,
-          }
+          },
         );
       }
       throw apiError;
     }
   } catch (error: unknown) {
     console.error("Error in replicate function:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
-    );
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
   }
 });

@@ -17,17 +17,17 @@ export async function generateImage(params: GenerateImageParams): Promise<string
       enhancedPrompt += ". Visual representation should match Indonesian cultural context where appropriate.";
     }
 
-    console.log('Image generation prompt:', {
+    console.log("Image generation prompt:", {
       original: params.prompt,
       enhanced: enhancedPrompt,
-      language: params.language
+      language: params.language,
     });
 
     // Create the initial generation request
     const { data: initialData, error: initialError } = await supabase.functions.invoke("generate-image", {
       body: {
         prompt: enhancedPrompt,
-        aspectRatio: params.aspectRatio || "1:1"
+        aspectRatio: params.aspectRatio || "1:1",
       },
     });
 
@@ -43,7 +43,7 @@ export async function generateImage(params: GenerateImageParams): Promise<string
 
     // Get the image URL from the Replicate response
     const imageUrl = initialData?.output?.[0];
-    
+
     if (!imageUrl) {
       console.error("No image URL returned");
       return null;
@@ -76,7 +76,8 @@ function getModelConfigForStyle(style: string, sessionSeed: number, frameIndex: 
   }
   // Default: flux-schnell
   return {
-    seed: sessionSeed + (frameIndex * 10),
+    // seed: sessionSeed + (frameIndex * 10),
+    seed: sessionSeed, // Use the same seed for all frames to maintain visual consistency
     num_inference_steps: 4,
   };
 }
@@ -87,20 +88,20 @@ export async function generateMultipleImages(prompts: string[], style: string = 
 
   try {
     const imageUrls: string[] = [];
-    
+
     // Generate a consistent seed for this story generation session
     const sessionSeed = Math.floor(Math.random() * 4294967295);
-    
+
     const isSketchStyle = style === "storyboard-sketch";
     console.log(`Starting storyboard generation with ${isSketchStyle ? "Flux.1-dev (Storyboard Sketch)" : "Flux-schnell"}`);
     console.log("Enhanced prompts for storyboard:", prompts);
-    
+
     for (let i = 0; i < prompts.length; i++) {
       const prompt = prompts[i];
       console.log(`Generating storyboard frame ${i + 1}/${prompts.length}:`, prompt);
-      
+
       const config = getModelConfigForStyle(style, sessionSeed, i);
-      
+
       const { data: imageData, error: imageError } = await supabase.functions.invoke("generate-image", {
         body: {
           prompt: prompt,
@@ -120,7 +121,7 @@ export async function generateMultipleImages(prompts: string[], style: string = 
         console.log(`Successfully generated storyboard frame ${i + 1}`);
       }
     }
-    
+
     console.log(`Storyboard generation complete: ${imageUrls.length}/${prompts.length} frames generated`);
     return imageUrls;
   } catch (error) {
@@ -129,36 +130,36 @@ export async function generateMultipleImages(prompts: string[], style: string = 
   }
 }
 
-export async function saveGeneratedImage(imageUrl: string, prompt: string, userId: string): Promise<{ id: string, image_url: string } | null> {
+export async function saveGeneratedImage(imageUrl: string, prompt: string, userId: string): Promise<{ id: string; image_url: string } | null> {
   try {
     // Don't use useAuth hook here as it's not a React component
     if (!userId) throw new Error("User not authenticated");
 
     console.log("Starting image save process for:", imageUrl);
     console.log("User ID:", userId);
-    
+
     // First save the image to Supabase Storage using our edge function
     console.log("Saving image to storage with prompt:", prompt);
     const { data: storageData, error: storageError } = await supabase.functions.invoke("save-image-to-storage", {
       body: {
         imageUrl,
-        fileName: `image-${Date.now()}`
+        fileName: `image-${Date.now()}`,
       },
     });
-    
+
     if (storageError) {
       console.error("Error saving image to storage:", storageError);
       throw storageError;
     }
-    
+
     if (!storageData?.imageUrl) {
       console.error("No storage URL returned");
       throw new Error("Failed to save image to storage");
     }
-    
+
     const permanentImageUrl = storageData.imageUrl;
     console.log("Image saved to storage:", permanentImageUrl);
-    
+
     // Then save the reference in the database
     const { data, error } = await supabase
       .from("images")
@@ -166,37 +167,37 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string, userI
         {
           user_id: userId,
           prompt: prompt || "AI generated image",
-          image_url: permanentImageUrl // Store the permanent URL from Storage
-        }
+          image_url: permanentImageUrl, // Store the permanent URL from Storage
+        },
       ])
       .select()
       .single();
-      
+
     if (error) {
       console.error("Error saving image to database:", error);
       throw error;
     }
-    
+
     console.log("Image saved successfully:", data);
-    
+
     // Decrement user credits
     try {
-      const { data: creditsData, error: creditsError } = await supabase.rpc('decrement_credits', {
-        amount: 1
+      const { data: creditsData, error: creditsError } = await supabase.rpc("decrement_credits", {
+        amount: 1,
       });
-      
+
       if (creditsError) {
         console.error("Error decremented credits:", creditsError);
         // Don't throw here, we still saved the image
       } else {
         console.log("Credits decremented. Remaining:", creditsData);
       }
-      
+
       // Increment images generated count
-      const { data: countData, error: countError } = await supabase.rpc('increment_count', {
-        amount: 1
+      const { data: countData, error: countError } = await supabase.rpc("increment_count", {
+        amount: 1,
       });
-      
+
       if (countError) {
         console.error("Error incrementing image count:", countError);
       } else {

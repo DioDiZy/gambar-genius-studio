@@ -3,9 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { 
-  FileText, Users, Link, Eye, Target, Camera, MapPin, Clock, Palette, ArrowRight
-} from "lucide-react";
+import { FileText, Users, Link, Eye, Target, Camera, MapPin, Clock, Palette, ArrowRight } from "lucide-react";
 import { StoryboardPrompt, CharacterReference, ContinuityLink } from "@/types/story";
 
 interface StoryboardAnalyzerProps {
@@ -30,25 +28,25 @@ export const StoryboardAnalyzer = ({ storyboardData, isVisible }: StoryboardAnal
     <div key={char.characterId} className="p-3 bg-secondary/50 rounded-lg">
       <div className="flex items-center justify-between mb-2">
         <h5 className="font-medium">{char.name}</h5>
-        <Badge variant={char.roleInScene === 'primary' ? 'default' : 'secondary'}>
-          {char.roleInScene}
-        </Badge>
+        <Badge variant={char.roleInScene === "primary" ? "default" : "secondary"}>{char.roleInScene}</Badge>
       </div>
       <p className="text-sm text-muted-foreground mb-2">{char.appearance}</p>
       <div className="flex flex-wrap gap-1 mb-2">
-        {char.pronouns.map(pronoun => (
-          <Badge key={pronoun} variant="outline" className="text-xs">{pronoun}</Badge>
+        {char.pronouns.map((pronoun) => (
+          <Badge key={pronoun} variant="outline" className="text-xs">
+            {pronoun}
+          </Badge>
         ))}
       </div>
-      <div className="text-xs text-muted-foreground">
-        Konsistensi: {Math.round(char.visualConsistencyWeight * 100)}%
-      </div>
+      <div className="text-xs text-muted-foreground">Konsistensi: {Math.round(char.visualConsistencyWeight * 100)}%</div>
     </div>
   );
 
   const renderContinuityLink = (link: ContinuityLink) => (
     <div key={`${link.sourceElementId}-${link.targetElementId}`} className="flex items-center gap-2 p-2 bg-accent/30 rounded">
-      <Badge variant="outline" className="text-xs capitalize">{link.linkType}</Badge>
+      <Badge variant="outline" className="text-xs capitalize">
+        {link.linkType}
+      </Badge>
       <ArrowRight className="h-3 w-3" />
       <span className="text-xs flex-1">{link.description}</span>
       <span className="text-xs font-mono">{Math.round(link.connectionStrength * 100)}%</span>
@@ -97,9 +95,7 @@ export const StoryboardAnalyzer = ({ storyboardData, isVisible }: StoryboardAnal
           <Eye className="h-5 w-5" />
           Analisis Storyboard
         </CardTitle>
-        <CardDescription>
-          Prompt terstruktur JSON dengan resolusi kata ganti dan analisis kontinuitas visual
-        </CardDescription>
+        <CardDescription>Prompt terstruktur JSON dengan resolusi kata ganti dan analisis kontinuitas visual</CardDescription>
         <div className="flex gap-2">
           <Badge variant="secondary">{metadata.totalScenes} adegan</Badge>
           <Badge variant="secondary">{metadata.charactersResolved} karakter</Badge>
@@ -117,13 +113,15 @@ export const StoryboardAnalyzer = ({ storyboardData, isVisible }: StoryboardAnal
 
           <TabsContent value="scenes" className="space-y-4">
             <ScrollArea className="h-[500px]">
-              {structuredData.map((scene) => (
+              {structuredData?.map((scene) => (
                 <div key={scene.sceneIndex} className="mb-6">
                   <Card>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg">Adegan {scene.sceneIndex + 1}</CardTitle>
-                        <Badge variant="outline" className="capitalize">{scene.sceneMetadata.sceneType}</Badge>
+                        <Badge variant="outline" className="capitalize">
+                          {scene.sceneMetadata.sceneType}
+                        </Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -150,8 +148,10 @@ export const StoryboardAnalyzer = ({ storyboardData, isVisible }: StoryboardAnal
                         <div>
                           <h5 className="font-medium mb-2">Fokus Visual</h5>
                           <div className="flex flex-wrap gap-1">
-                            {scene.sceneMetadata.visualFocus.map(focus => (
-                              <Badge key={focus} variant="outline" className="text-xs">{focus}</Badge>
+                            {scene.sceneMetadata.visualFocus.map((focus) => (
+                              <Badge key={focus} variant="outline" className="text-xs">
+                                {focus}
+                              </Badge>
                             ))}
                           </div>
                         </div>
@@ -165,7 +165,7 @@ export const StoryboardAnalyzer = ({ storyboardData, isVisible }: StoryboardAnal
 
           <TabsContent value="characters" className="space-y-4">
             <ScrollArea className="h-[500px]">
-              {structuredData.map((scene) => (
+              {structuredData?.map((scene) => (
                 <div key={scene.sceneIndex} className="mb-6">
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <Users className="h-4 w-4" />
@@ -184,7 +184,7 @@ export const StoryboardAnalyzer = ({ storyboardData, isVisible }: StoryboardAnal
 
           <TabsContent value="continuity" className="space-y-4">
             <ScrollArea className="h-[500px]">
-              {structuredData.map((scene, index) => (
+              {structuredData?.map((scene, index) => (
                 <div key={scene.sceneIndex} className="mb-6">
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <Link className="h-4 w-4" />
@@ -193,9 +193,7 @@ export const StoryboardAnalyzer = ({ storyboardData, isVisible }: StoryboardAnal
                   {scene.continuityLinks.length > 0 ? (
                     <div className="space-y-2">{scene.continuityLinks.map(renderContinuityLink)}</div>
                   ) : (
-                    <p className="text-sm text-muted-foreground italic">
-                      {index === 0 ? "Adegan pertama - tidak ada tautan kontinuitas" : "Tidak ada tautan kontinuitas yang teridentifikasi"}
-                    </p>
+                    <p className="text-sm text-muted-foreground italic">{index === 0 ? "Adegan pertama - tidak ada tautan kontinuitas" : "Tidak ada tautan kontinuitas yang teridentifikasi"}</p>
                   )}
                   <Separator className="my-4" />
                 </div>
@@ -205,9 +203,7 @@ export const StoryboardAnalyzer = ({ storyboardData, isVisible }: StoryboardAnal
 
           <TabsContent value="json" className="space-y-4">
             <ScrollArea className="h-[500px]">
-              <pre className="text-xs bg-muted p-4 rounded overflow-auto">
-                {JSON.stringify(storyboardData, null, 2)}
-              </pre>
+              <pre className="text-xs bg-muted p-4 rounded overflow-auto">{JSON.stringify(storyboardData, null, 2)}</pre>
             </ScrollArea>
           </TabsContent>
         </Tabs>
