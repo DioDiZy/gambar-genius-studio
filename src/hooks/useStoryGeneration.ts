@@ -127,16 +127,16 @@ export const useStoryGeneration = ({
         
         // Check for billing error
         if (error instanceof Error && error.message.includes("Billing required")) {
-          toast.error("Replicate API requires billing", {
-            description: "Please visit replicate.com/account/billing to set up billing for your account.",
+          toast.error("Replicate API memerlukan billing", {
+            description: "Silakan kunjungi replicate.com/account/billing untuk mengatur billing akun Anda.",
             action: {
-              label: "Visit Billing",
+              label: "Kunjungi Billing",
               onClick: () => window.open("https://replicate.com/account/billing", "_blank")
             }
           });
         } else {
-          toast.error("Error generating images", {
-            description: error instanceof Error ? error.message : "Please try again"
+          toast.error("Error menghasilkan gambar", {
+            description: error instanceof Error ? error.message : "Silakan coba lagi"
           });
         }
       }
