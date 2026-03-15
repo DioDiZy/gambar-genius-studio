@@ -474,7 +474,7 @@ export class EnhancedStoryboardService {
       secondaryChars = ` Also present: ${secondaries.map(c => `${c.name} (${c.appearance})`).join('; ')}.`;
     }
 
-    const fullPrompt = [prefix, characterAnchor, sceneAction, environment, panelWeighting, suffix, secondaryChars]
+    const fullPrompt = [prefix, characterAnchor, sceneAction, environment, sceneContinuity, panelWeighting, suffix, secondaryChars]
       .filter(Boolean)
       .join(' ')
       .replace(/\s+/g, ' ')
