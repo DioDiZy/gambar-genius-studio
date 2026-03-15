@@ -77,13 +77,13 @@ export const useStoryGeneration = ({
       const totalImages = paragraphs.length;
 
       if (totalImages === 0) {
-        toast.error("No valid paragraphs found");
+        toast.error("Tidak ada paragraf valid yang ditemukan");
         return;
       }
 
       if (!profile || profile.credits < totalImages) {
-        toast.error("Not enough credits", {
-          description: `You need ${totalImages} credits to generate images for all paragraphs`
+        toast.error("Kredit tidak cukup", {
+          description: `Anda membutuhkan ${totalImages} kredit untuk menghasilkan gambar untuk semua paragraf`
         });
         return;
       }
