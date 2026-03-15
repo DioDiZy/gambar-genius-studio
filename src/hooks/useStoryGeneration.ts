@@ -71,7 +71,7 @@ export const useStoryGeneration = ({
         .single();
 
       if (profileError) {
-        throw new Error("Could not check available credits");
+        throw new Error("Gagal memeriksa kredit yang tersedia");
       }
 
       const totalImages = paragraphs.length;
