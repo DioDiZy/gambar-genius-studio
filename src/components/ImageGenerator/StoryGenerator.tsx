@@ -7,6 +7,7 @@ import { useStoryGeneration } from "@/hooks/useStoryGeneration";
 import { StoryInputOptions } from "./StoryInputOptions";
 import { StoryTextArea } from "./StoryTextArea";
 import { StoryGenerationButton } from "./StoryGenerationButton";
+import { StoryTemplateSelector } from "./StoryTemplateSelector";
 import { CharacterDescription } from "@/types/story";
 import { validateIndonesianSentence } from "@/utils/indonesianLanguageValidation";
 
@@ -25,11 +26,13 @@ export const StoryGenerator = ({
 }: StoryGeneratorProps) => {
   const [story, setStory] = useState("");
   const [paragraphSeparator, setParagraphSeparator] = useState("\n\n");
-  const [style, setStyle] = useState("photorealistic");
   const [characterDescriptions, setCharacterDescriptions] = useState("");
   const [characters, setCharacters] = useState<CharacterDescription[]>([]);
   const [paragraphCount, setParagraphCount] = useState(0);
   
+  // Hardcode style to storyboard-sketch
+  const style = "storyboard-sketch";
+
   const { handleGenerateImages, paragraphs } = useStoryGeneration({
     story,
     paragraphSeparator,
@@ -49,6 +52,10 @@ export const StoryGenerator = ({
 
   const indonesianValidation = validateIndonesianSentence(story);
 
+  const handleTemplateStoryGenerated = (generatedStory: string) => {
+    setStory(generatedStory);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -66,7 +73,7 @@ export const StoryGenerator = ({
             paragraphSeparator={paragraphSeparator}
             onSeparatorChange={setParagraphSeparator}
             style={style}
-            onStyleChange={setStyle}
+            onStyleChange={() => {}}
             characterDescriptions={characterDescriptions}
             onCharacterDescriptionsChange={setCharacterDescriptions}
             isGenerating={isGenerating}
@@ -76,6 +83,14 @@ export const StoryGenerator = ({
           />
 
           <Separator className="my-4" />
+
+          <StoryTemplateSelector
+            characters={characters}
+            onStoryGenerated={handleTemplateStoryGenerated}
+            isGenerating={isGenerating}
+          />
+
+          <Separator className="my-2" />
 
           <StoryTextArea
             story={story}
