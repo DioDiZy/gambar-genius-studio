@@ -366,7 +366,18 @@ export class EnhancedStoryboardService {
       prompt += `. Additional details: ${translatedDescriptions}`;
     }
 
-    prompt += `. Professional storyboard frame, clear composition, cinematic quality`;
+    // Add scene continuity context from previous scenes
+    if (sceneIndex > 0 && this.sceneHistory.length > 0) {
+      const prevScene = this.sceneHistory[sceneIndex - 1];
+      if (prevScene.sceneMetadata.location !== 'unspecified location') {
+        prompt += `. Scene takes place ${prevScene.sceneMetadata.location === sceneMetadata.location ? 'in the same location as previous scene' : 'in a new location, maintaining time continuity'}`;
+      }
+      if (prevScene.sceneMetadata.timeOfDay && sceneMetadata.timeOfDay) {
+        prompt += `, ${sceneMetadata.timeOfDay} lighting consistent with story progression`;
+      }
+    }
+
+    prompt += `. Professional storyboard frame, clear composition, cinematic quality. No text, no watermarks, no letters, no writing on the image`;
 
     if (language === "indonesian") {
       prompt += ". Include Indonesian cultural context where appropriate";
