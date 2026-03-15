@@ -55,6 +55,8 @@ serve(async (req) => {
     try {
       let modelInputs: Record<string, unknown>;
 
+      const antiArtifactNegative = "blurry, distorted face, extra limbs, extra fingers, ugly, scary, dark horror style, text, watermark, signature, words, letters, writing, gibberish text, random characters, illegible text, caption, subtitle, label, banner text, logo, stamp, deformed hands, bad anatomy, disfigured, poorly drawn face, mutation, mutated, out of frame, duplicate";
+
       if (useDevModel) {
         modelInputs = {
           prompt: body.prompt,
@@ -63,10 +65,10 @@ serve(async (req) => {
           num_outputs: 1,
           aspect_ratio: body.aspectRatio || "1:1",
           output_format: "webp",
-          output_quality: 80,
+          output_quality: 90,
           guidance: body.guidance_scale ?? 3.5,
           num_inference_steps: body.num_inference_steps ?? 28,
-          negative_prompt: "blurry, distorted face, extra limbs, ugly, scary, dark horror style",
+          negative_prompt: antiArtifactNegative,
         };
       } else {
         modelInputs = {
@@ -76,8 +78,8 @@ serve(async (req) => {
           num_outputs: 1,
           aspect_ratio: body.aspectRatio || "1:1",
           output_format: "webp",
-          output_quality: 80,
-          num_inference_steps: Math.min(body.num_inference_steps || 3, 4),
+          output_quality: 90,
+          num_inference_steps: Math.min(body.num_inference_steps || 4, 4),
         };
       }
 

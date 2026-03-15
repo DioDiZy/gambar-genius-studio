@@ -48,7 +48,7 @@ export const useStoryGeneration = ({
 
   const handleGenerateImages = async () => {
     if (!story.trim()) {
-      toast.error("Please enter a story");
+      toast.error("Silakan masukkan cerita");
       return;
     }
 
@@ -71,29 +71,27 @@ export const useStoryGeneration = ({
         .single();
 
       if (profileError) {
-        throw new Error("Could not check available credits");
+        throw new Error("Gagal memeriksa kredit yang tersedia");
       }
 
       const totalImages = paragraphs.length;
 
       if (totalImages === 0) {
-        toast.error("No valid paragraphs found");
+        toast.error("Tidak ada paragraf valid yang ditemukan");
         return;
       }
 
       if (!profile || profile.credits < totalImages) {
-        toast.error("Not enough credits", {
-          description: `You need ${totalImages} credits to generate images for all paragraphs`
+        toast.error("Kredit tidak cukup", {
+          description: `Anda membutuhkan ${totalImages} kredit untuk menghasilkan gambar untuk semua paragraf`
         });
         return;
       }
 
       setIsGenerating(true);
       
-      toast.info(`Generating ${totalImages} images...`, {
-        description: language === "indonesian" 
-          ? "Menerjemahkan teks Indonesia ke bahasa Inggris untuk hasil yang lebih baik"
-          : "Translating Indonesian text to English for better results"
+      toast.info(`Menghasilkan ${totalImages} gambar...`, {
+        description: "Menerjemahkan teks Indonesia ke bahasa Inggris untuk hasil yang lebih baik"
       });
       
       try {
@@ -120,32 +118,32 @@ export const useStoryGeneration = ({
         
         if (imageUrls.length > 0) {
           onImagesGenerated(imageUrls, paragraphs);
-          toast.success(`Generated ${imageUrls.length} images successfully!`);
+          toast.success(`Berhasil menghasilkan ${imageUrls.length} gambar!`);
         } else {
-          toast.error("Failed to generate images");
+          toast.error("Gagal menghasilkan gambar");
         }
       } catch (error) {
         console.error("Error generating images:", error);
         
         // Check for billing error
         if (error instanceof Error && error.message.includes("Billing required")) {
-          toast.error("Replicate API requires billing", {
-            description: "Please visit replicate.com/account/billing to set up billing for your account.",
+          toast.error("Replicate API memerlukan billing", {
+            description: "Silakan kunjungi replicate.com/account/billing untuk mengatur billing akun Anda.",
             action: {
-              label: "Visit Billing",
+              label: "Kunjungi Billing",
               onClick: () => window.open("https://replicate.com/account/billing", "_blank")
             }
           });
         } else {
-          toast.error("Error generating images", {
-            description: error instanceof Error ? error.message : "Please try again"
+          toast.error("Error menghasilkan gambar", {
+            description: error instanceof Error ? error.message : "Silakan coba lagi"
           });
         }
       }
     } catch (error) {
       console.error("Error checking credits:", error);
-      toast.error("Error checking credits", {
-        description: error instanceof Error ? error.message : "Please try again"
+      toast.error("Error memeriksa kredit", {
+        description: error instanceof Error ? error.message : "Silakan coba lagi"
       });
     } finally {
       setIsGenerating(false);
