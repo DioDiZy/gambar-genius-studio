@@ -48,7 +48,7 @@ export const useStoryGeneration = ({
 
   const handleGenerateImages = async () => {
     if (!story.trim()) {
-      toast.error("Please enter a story");
+      toast.error("Silakan masukkan cerita");
       return;
     }
 
