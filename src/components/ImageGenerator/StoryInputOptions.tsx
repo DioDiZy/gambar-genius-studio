@@ -133,19 +133,6 @@ export const StoryInputOptions = ({
         <p className="text-xs text-muted-foreground">Default adalah jeda baris ganda. Masukkan pemisah kustom seperti "***" atau "###" jika diperlukan.</p>
       </div>
 
-      <div className="space-y-2">
-        <Label>Gaya</Label>
-        <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={style} onChange={(e) => onStyleChange(e.target.value)} disabled={isGenerating}>
-          <option value="photorealistic">Fotorealistis</option>
-          <option value="digital-art">Seni Digital</option>
-          <option value="anime">Anime</option>
-          <option value="3d-render">3D Render</option>
-          <option value="oil-painting">Lukisan Minyak</option>
-          <option value="watercolor">Cat Air</option>
-          <option value="comic-book">Komik</option>
-          <option value="storyboard-sketch">Sketsa Storyboard</option>
-        </select>
-      </div>
 
       <div className="space-y-4">
         <Label>Karakter</Label>
