@@ -90,10 +90,8 @@ export const useStoryGeneration = ({
 
       setIsGenerating(true);
       
-      toast.info(`Generating ${totalImages} images...`, {
-        description: language === "indonesian" 
-          ? "Menerjemahkan teks Indonesia ke bahasa Inggris untuk hasil yang lebih baik"
-          : "Translating Indonesian text to English for better results"
+      toast.info(`Menghasilkan ${totalImages} gambar...`, {
+        description: "Menerjemahkan teks Indonesia ke bahasa Inggris untuk hasil yang lebih baik"
       });
       
       try {
