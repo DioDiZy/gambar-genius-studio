@@ -142,8 +142,8 @@ export const useStoryGeneration = ({
       }
     } catch (error) {
       console.error("Error checking credits:", error);
-      toast.error("Error checking credits", {
-        description: error instanceof Error ? error.message : "Please try again"
+      toast.error("Error memeriksa kredit", {
+        description: error instanceof Error ? error.message : "Silakan coba lagi"
       });
     } finally {
       setIsGenerating(false);
