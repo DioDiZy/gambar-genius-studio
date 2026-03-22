@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import Replicate from "https://esm.sh/replicate@0.25.2";
 
 const corsHeaders = {
@@ -12,6 +13,20 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate the caller
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authHeader } } });
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const REPLICATE_API_KEY = Deno.env.get("REPLICATE_API_KEY");
     if (!REPLICATE_API_KEY) {
       throw new Error("REPLICATE_API_KEY is not set");
@@ -27,7 +42,6 @@ serve(async (req) => {
     if (body.predictionId) {
       console.log("Checking status for prediction:", body.predictionId);
       const prediction = await replicate.predictions.get(body.predictionId);
-      console.log("Status check response:", prediction);
       return new Response(JSON.stringify(prediction), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -36,21 +50,15 @@ serve(async (req) => {
     // If it's a generation request
     if (!body.prompt) {
       return new Response(
-        JSON.stringify({
-          error: "Missing required field: prompt is required",
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        },
+        JSON.stringify({ error: "Missing required field: prompt is required" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
       );
     }
 
-    // Determine which model to use
     const useDevModel = body.model === "flux-dev";
     const modelId = useDevModel ? "black-forest-labs/flux-dev" : "black-forest-labs/flux-schnell";
 
-    console.log(`Generating image with model: ${modelId}, prompt:`, body.prompt);
+    console.log(`Generating image with model: ${modelId}`);
 
     try {
       let modelInputs: Record<string, unknown>;
@@ -83,14 +91,12 @@ serve(async (req) => {
         };
       }
 
-      // Add seed parameter if provided for character consistency
       if (body.seed !== undefined) {
         modelInputs.seed = body.seed;
       }
 
       const output = await replicate.run(modelId, { input: modelInputs });
 
-      console.log("Generation response:", output);
       return new Response(JSON.stringify({ output }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -101,19 +107,16 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             error: "Billing required for Replicate API",
-            details: "You need to set up billing on your Replicate account to use this feature. Please visit https://replicate.com/account/billing to set up billing.",
+            details: "Please visit https://replicate.com/account/billing to set up billing.",
           }),
-          {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 402,
-          },
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 402 },
         );
       }
       throw apiError;
     }
   } catch (error: unknown) {
-    console.error("Error in replicate function:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+    console.error("Error in generate-image function:", error);
+    return new Response(JSON.stringify({ error: "An error occurred" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
