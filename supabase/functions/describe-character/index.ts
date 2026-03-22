@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,12 +12,34 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate the caller
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authHeader } } });
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const { imageUrls } = await req.json();
     if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) {
       return new Response(JSON.stringify({ error: "imageUrls array is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Limit number of images to prevent abuse
+    if (imageUrls.length > 10) {
+      return new Response(JSON.stringify({ error: "Maximum 10 images allowed" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -42,7 +65,6 @@ serve(async (req) => {
 Given reference image(s) of a character, provide a DETAILED and CONCISE physical description in English that can be used as a prompt for image generation. 
 Focus on: gender, approximate age, hair (color, style, length), skin tone, facial features, body build, clothing (colors, style, details), and any distinctive accessories or features.
 Format: Write a single paragraph, no bullet points. Be specific about colors and details.
-Example: "A young woman in her early 20s with long straight black hair, light brown skin, almond-shaped dark brown eyes, slim build, wearing a bright red hijab, white long-sleeved blouse, and dark blue ankle-length skirt with brown leather sandals."
 Do NOT include background or setting descriptions. Only describe the character's appearance.`
           },
           {
@@ -50,7 +72,7 @@ Do NOT include background or setting descriptions. Only describe the character's
             content: [
               {
                 type: "text",
-                text: `Analyze these ${imageUrls.length} reference image(s) of a character and provide a detailed physical appearance description for consistent storyboard generation. Be very specific about distinguishing features, clothing colors, and accessories.`,
+                text: `Analyze these ${imageUrls.length} reference image(s) of a character and provide a detailed physical appearance description for consistent storyboard generation.`,
               },
               ...imageContent,
             ],
@@ -62,21 +84,17 @@ Do NOT include background or setting descriptions. Only describe the character's
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded, coba lagi nanti." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Kredit tidak mencukupi. Tambahkan kredit di workspace Lovable." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Kredit tidak mencukupi." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
+      console.error("AI gateway error:", response.status);
       return new Response(JSON.stringify({ error: "Gagal menganalisis gambar" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -88,7 +106,7 @@ Do NOT include background or setting descriptions. Only describe the character's
     });
   } catch (e) {
     console.error("describe-character error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "An error occurred" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

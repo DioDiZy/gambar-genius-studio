@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,24 +12,39 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate the caller
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authHeader } } });
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const { template, characters } = await req.json();
 
-    if (!template) {
-      return new Response(JSON.stringify({ error: "template is required" }), {
+    if (!template || typeof template !== 'string' || template.length > 200) {
+      return new Response(JSON.stringify({ error: "Valid template is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Build character context if available
     let characterContext = "";
-    if (characters && Array.isArray(characters) && characters.length > 0) {
-      const charDescriptions = characters.map((c: any) => {
-        let desc = `- ${c.name}`;
-        if (c.appearance) desc += `: ${c.appearance}`;
+    if (characters && Array.isArray(characters) && characters.length > 0 && characters.length <= 20) {
+      const charDescriptions = characters.slice(0, 20).map((c: any) => {
+        const name = String(c.name || '').slice(0, 100);
+        const appearance = String(c.appearance || '').slice(0, 500);
+        let desc = `- ${name}`;
+        if (appearance) desc += `: ${appearance}`;
         return desc;
       }).join("\n");
       characterContext = `\n\nKarakter yang HARUS digunakan dalam cerita (gunakan nama persis seperti yang diberikan):\n${charDescriptions}\n\nPastikan semua karakter di atas muncul dalam cerita dan berperan aktif.`;
@@ -63,9 +79,9 @@ serve(async (req) => {
 Aturan:
 1. Tulis cerita dalam Bahasa Indonesia yang sederhana, mudah dipahami anak-anak
 2. Cerita harus terdiri dari 3-5 paragraf yang jelas terpisah (gunakan baris kosong antar paragraf)
-3. Setiap paragraf harus menggambarkan satu adegan visual yang jelas (cocok untuk dijadikan gambar storyboard)
+3. Setiap paragraf harus menggambarkan satu adegan visual yang jelas
 4. Cerita harus memiliki alur: pembukaan, konflik/tantangan, dan penyelesaian yang positif
-5. Gunakan bahasa yang hidup dan deskriptif agar mudah divisualisasikan
+5. Gunakan bahasa yang hidup dan deskriptif
 6. Hindari kekerasan, hal menyeramkan, atau konten yang tidak sesuai untuk anak-anak
 7. Setiap paragraf harus mendeskripsikan setting/lokasi, suasana, dan ekspresi karakter dengan jelas
 8. Jangan gunakan kata-kata sulit atau istilah asing
@@ -82,21 +98,17 @@ Aturan:
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Terlalu banyak permintaan, coba lagi nanti." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "Kredit tidak mencukupi." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
+      console.error("AI gateway error:", response.status);
       return new Response(JSON.stringify({ error: "Gagal membuat cerita" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -108,7 +120,7 @@ Aturan:
     });
   } catch (e) {
     console.error("generate-story-template error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "An error occurred" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
