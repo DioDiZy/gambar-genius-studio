@@ -4,7 +4,8 @@ import Replicate from "https://esm.sh/replicate@0.25.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -14,17 +15,26 @@ serve(async (req) => {
 
   try {
     // Authenticate the caller
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-    const anonClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authHeader } } });
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    // Use getUser instead of getClaims (getClaims doesn't exist in supabase-js 2.7.1)
+    const { data: userData, error: userError } = await anonClient.auth.getUser();
+    if (userError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const REPLICATE_API_KEY = Deno.env.get("REPLICATE_API_KEY");
@@ -38,7 +48,7 @@ serve(async (req) => {
 
     const body = await req.json();
 
-    // If it's a status check request
+    // If it's a status check request (polling)
     if (body.predictionId) {
       console.log("Checking status for prediction:", body.predictionId);
       const prediction = await replicate.predictions.get(body.predictionId);
@@ -51,19 +61,22 @@ serve(async (req) => {
     if (!body.prompt) {
       return new Response(
         JSON.stringify({ error: "Missing required field: prompt is required" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 },
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
 
     const useDevModel = body.model === "flux-dev";
-    const modelId = useDevModel ? "black-forest-labs/flux-dev" : "black-forest-labs/flux-schnell";
+    const modelId = useDevModel
+      ? "black-forest-labs/flux-dev"
+      : "black-forest-labs/flux-schnell";
 
-    console.log(`Generating image with model: ${modelId}`);
+    console.log(`Creating prediction with model: ${modelId}`);
 
     try {
       let modelInputs: Record<string, unknown>;
 
-      const antiArtifactNegative = "blurry, distorted face, extra limbs, extra fingers, ugly, scary, dark horror style, text, watermark, signature, words, letters, writing, gibberish text, random characters, illegible text, caption, subtitle, label, banner text, logo, stamp, deformed hands, bad anatomy, disfigured, poorly drawn face, mutation, mutated, out of frame, duplicate";
+      const antiArtifactNegative =
+        "blurry, distorted face, extra limbs, extra fingers, ugly, scary, dark horror style, text, watermark, signature, words, letters, writing, gibberish text, random characters, illegible text, caption, subtitle, label, banner text, logo, stamp, deformed hands, bad anatomy, disfigured, poorly drawn face, mutation, mutated, out of frame, duplicate";
 
       if (useDevModel) {
         modelInputs = {
@@ -95,30 +108,53 @@ serve(async (req) => {
         modelInputs.seed = body.seed;
       }
 
-      const output = await replicate.run(modelId, { input: modelInputs });
-
-      return new Response(JSON.stringify({ output }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+      // Use predictions.create instead of run to avoid timeout
+      // The client will poll for results
+      const prediction = await replicate.predictions.create({
+        model: modelId,
+        input: modelInputs,
       });
+
+      console.log("Prediction created:", prediction.id, "status:", prediction.status);
+
+      return new Response(
+        JSON.stringify({
+          predictionId: prediction.id,
+          status: prediction.status,
+          output: prediction.output,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     } catch (apiError: unknown) {
       const errMsg = apiError instanceof Error ? apiError.message : String(apiError);
       if (errMsg.includes("402 Payment Required")) {
         return new Response(
           JSON.stringify({
             error: "Billing required for Replicate API",
-            details: "Please visit https://replicate.com/account/billing to set up billing.",
+            details:
+              "Please visit https://replicate.com/account/billing to set up billing.",
           }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 402 },
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 402,
+          }
         );
       }
       throw apiError;
     }
   } catch (error: unknown) {
     console.error("Error in generate-image function:", error);
-    return new Response(JSON.stringify({ error: "An error occurred" }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "An error occurred",
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
   }
 });
