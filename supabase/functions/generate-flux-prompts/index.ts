@@ -68,10 +68,9 @@ serve(async (req) => {
     const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } =
-      await anonClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    // Use getUser instead of getClaims (getClaims doesn't exist in supabase-js 2.7.1)
+    const { data: userData, error: userError } = await anonClient.auth.getUser();
+    if (userError || !userData?.user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
