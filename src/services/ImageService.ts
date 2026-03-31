@@ -145,6 +145,18 @@ export async function generateMultipleImages(prompts: string[], style: string = 
 
         if (imageError) {
           console.error(`Error creating prediction for frame ${i + 1}:`, imageError);
+          // Check if it's an auth or function error vs network error
+          const errMsg = typeof imageError === 'object' && imageError.message ? imageError.message : String(imageError);
+          console.error(`Frame ${i + 1} error detail:`, errMsg);
+          continue;
+        }
+
+        // Check for error in response body
+        if (imageData?.error) {
+          console.error(`Frame ${i + 1} API error:`, imageData.error);
+          if (String(imageData.error).includes("Billing required")) {
+            throw new Error("Billing required for Replicate API");
+          }
           continue;
         }
 
@@ -158,7 +170,7 @@ export async function generateMultipleImages(prompts: string[], style: string = 
         // Poll for result
         const predictionId = imageData?.predictionId;
         if (!predictionId) {
-          console.error(`No prediction ID for frame ${i + 1}`);
+          console.error(`No prediction ID for frame ${i + 1}, response:`, JSON.stringify(imageData));
           continue;
         }
 
@@ -169,7 +181,11 @@ export async function generateMultipleImages(prompts: string[], style: string = 
         }
       } catch (frameError) {
         console.error(`Error generating frame ${i + 1}:`, frameError);
-        // Continue to next frame instead of failing entirely
+        // Re-throw billing errors to stop entirely
+        if (frameError instanceof Error && frameError.message.includes("Billing required")) {
+          throw frameError;
+        }
+        // Continue to next frame for other errors
       }
     }
 
