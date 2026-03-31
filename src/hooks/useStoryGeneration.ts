@@ -114,13 +114,24 @@ export const useStoryGeneration = ({
         
         console.log("Enhanced storyboard prompts generated:", enhancedPrompts);
         
+        if (!enhancedPrompts || enhancedPrompts.length === 0) {
+          toast.error("Gagal menghasilkan prompt", {
+            description: "AI tidak dapat memproses cerita. Silakan coba lagi."
+          });
+          return;
+        }
+        
+        toast.info(`Menghasilkan ${enhancedPrompts.length} gambar dari prompt...`);
+        
         const imageUrls = await generateMultipleImages(enhancedPrompts, style);
         
         if (imageUrls.length > 0) {
           onImagesGenerated(imageUrls, paragraphs);
           toast.success(`Berhasil menghasilkan ${imageUrls.length} gambar!`);
         } else {
-          toast.error("Gagal menghasilkan gambar");
+          toast.error("Gagal menghasilkan gambar", {
+            description: "Semua frame gagal diproses. Periksa koneksi internet atau coba lagi nanti."
+          });
         }
       } catch (error) {
         console.error("Error generating images:", error);
