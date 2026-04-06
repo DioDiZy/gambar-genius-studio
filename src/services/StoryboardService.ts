@@ -210,16 +210,51 @@ export async function createStoryboardPrompts(paragraphs: string[], characters: 
  * Create structured JSON prompts with pronoun resolution and enhanced continuity
  */
 export async function createStructuredStoryboardPrompts(paragraphs: string[], characters: CharacterDescription[], style: string, characterDescriptions: string, language: "english" | "indonesian") {
-  const prompts: string[] = [];
+  // Try AI-powered FLUX.1 prompt generation via edge function
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    
+    console.log("Calling generate-flux-prompts edge function for AI-powered prompt generation...");
+    
+    const { data, error } = await supabase.functions.invoke("generate-flux-prompts", {
+      body: {
+        paragraphs,
+        characters: characters.map(c => ({ name: c.name, appearance: c.appearance })),
+        characterDescriptions,
+      },
+    });
 
-  // Buat character memory sekali
+    if (error) {
+      console.error("Edge function error:", error);
+      throw new Error(error.message || "Edge function failed");
+    }
+
+    if (data?.prompts && Array.isArray(data.prompts) && data.prompts.length > 0) {
+      console.log("AI-generated FLUX.1 prompts:", data.prompts);
+      return {
+        prompts: data.prompts,
+        structuredData: data.scenes || [],
+        metadata: {
+          totalScenes: paragraphs.length,
+          charactersResolved: characters.length,
+          enhancedFormat: true,
+          characterProfiles: data.character_profiles || [],
+        },
+      };
+    }
+
+    throw new Error("No prompts returned from AI");
+  } catch (err) {
+    console.warn("AI prompt generation failed, falling back to local method:", err);
+  }
+
+  // Fallback: local translation + simple prompt building
   const memories = createCharacterMemory(characters);
+  const prompts: string[] = [];
 
   for (let i = 0; i < paragraphs.length; i++) {
     const translated = await translateForImageGeneration(paragraphs[i]);
-
     const prompt = buildScenePrompt(translated, memories, style);
-
     prompts.push(prompt);
   }
 
