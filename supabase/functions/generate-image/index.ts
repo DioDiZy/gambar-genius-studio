@@ -8,6 +8,20 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const antiArtifactPromptInstructions =
+  "No text, no watermarks, no letters, no writing, no captions, no logo, no signature, anatomically correct hands, normal fingers, clear face, no duplicate limbs.";
+
+function appendPromptInstructions(prompt: string, instructions: string) {
+  const trimmedPrompt = prompt.trim();
+  const trimmedInstructions = instructions.trim();
+
+  if (!trimmedPrompt) return trimmedInstructions;
+
+  return trimmedPrompt.endsWith(".")
+    ? `${trimmedPrompt} ${trimmedInstructions}`
+    : `${trimmedPrompt}. ${trimmedInstructions}`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -75,12 +89,9 @@ serve(async (req) => {
     try {
       let modelInputs: Record<string, unknown>;
 
-      const antiArtifactNegative =
-        "blurry, distorted face, extra limbs, extra fingers, ugly, scary, dark horror style, text, watermark, signature, words, letters, writing, gibberish text, random characters, illegible text, caption, subtitle, label, banner text, logo, stamp, deformed hands, bad anatomy, disfigured, poorly drawn face, mutation, mutated, out of frame, duplicate";
-
       if (useDevModel) {
         modelInputs = {
-          prompt: body.prompt,
+          prompt: appendPromptInstructions(body.prompt, antiArtifactPromptInstructions),
           go_fast: true,
           megapixels: "1",
           num_outputs: 1,
@@ -89,7 +100,6 @@ serve(async (req) => {
           output_quality: 90,
           guidance: body.guidance_scale ?? 3.5,
           num_inference_steps: body.num_inference_steps ?? 28,
-          negative_prompt: antiArtifactNegative,
         };
       } else {
         modelInputs = {
@@ -130,6 +140,8 @@ serve(async (req) => {
       );
     } catch (apiError: unknown) {
       const errMsg = apiError instanceof Error ? apiError.message : String(apiError);
+      console.error("Replicate API error:", errMsg);
+
       if (errMsg.includes("402 Payment Required")) {
         return new Response(
           JSON.stringify({
@@ -143,6 +155,20 @@ serve(async (req) => {
           }
         );
       }
+
+      if (errMsg.includes("422")) {
+        return new Response(
+          JSON.stringify({
+            error: "Invalid image generation request",
+            details: errMsg,
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 422,
+          }
+        );
+      }
+
       throw apiError;
     }
   } catch (error: unknown) {
