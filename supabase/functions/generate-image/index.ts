@@ -99,18 +99,19 @@ serve(async (req) => {
 
     console.log("Creating prediction:", modelVersion, "prompt:", String(body.prompt).substring(0, 100));
 
-    const createRes = await fetch("https://api.replicate.com/v1/predictions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${REPLICATE_API_KEY}`,
-        "Content-Type": "application/json",
-        Prefer: "respond-async",
-      },
-      body: JSON.stringify({
-        model: modelVersion,
-        input,
-      }),
-    });
+    // Use the models endpoint: /v1/models/{owner}/{name}/predictions
+    const createRes = await fetch(
+      `https://api.replicate.com/v1/models/${modelVersion}/predictions`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${REPLICATE_API_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "respond-async",
+        },
+        body: JSON.stringify({ input }),
+      }
+    );
 
     if (!createRes.ok) {
       const errText = await createRes.text();
