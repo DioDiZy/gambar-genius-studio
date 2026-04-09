@@ -24,9 +24,10 @@ interface GalleryProps {
     prompt: string;
     created_at?: string;
   }> | undefined;
+  onDeleteImage?: (id: string) => void;
 }
 
-export const Gallery = ({ userImages }: GalleryProps) => {
+export const Gallery = ({ userImages, onDeleteImage }: GalleryProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const imagesPerPage = 8;
@@ -76,10 +77,12 @@ export const Gallery = ({ userImages }: GalleryProps) => {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {paginatedImages.map((item, index) => (
                   <GalleryItem 
-                    key={item.id || index} 
+                    key={item.id || index}
+                    id={item.id}
                     imageUrl={item.image_url} 
                     prompt={item.prompt} 
                     createdAt={item.created_at}
+                    onDelete={onDeleteImage}
                   />
                 ))}
               </div>
