@@ -1,15 +1,28 @@
 
-import { Download, Heart } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface GalleryItemProps {
+  id?: string;
   imageUrl: string;
   prompt: string;
   createdAt?: string;
+  onDelete?: (id: string) => void;
 }
 
-export const GalleryItem = ({ imageUrl, prompt, createdAt }: GalleryItemProps) => {
+export const GalleryItem = ({ id, imageUrl, prompt, createdAt, onDelete }: GalleryItemProps) => {
   const [isHovering, setIsHovering] = useState(false);
 
   const handleDownload = () => {
@@ -29,8 +42,10 @@ export const GalleryItem = ({ imageUrl, prompt, createdAt }: GalleryItemProps) =
     }
   };
 
-  const handleAddToFavorites = () => {
-    toast.info("Fitur favorit segera hadir!");
+  const handleDelete = () => {
+    if (id && onDelete) {
+      onDelete(id);
+    }
   };
 
   return (
@@ -52,10 +67,30 @@ export const GalleryItem = ({ imageUrl, prompt, createdAt }: GalleryItemProps) =
             <Download className="h-3 w-3" />
             Unduh
           </button>
-          <button onClick={handleAddToFavorites} className="text-white text-xs hover:text-red-300 flex items-center gap-1 transition-colors">
-            <Heart className="h-3 w-3" />
-            Favorit
-          </button>
+          {id && onDelete && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="text-white text-xs hover:text-red-400 flex items-center gap-1 transition-colors">
+                  <Trash2 className="h-3 w-3" />
+                  Hapus
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Hapus Gambar?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Gambar ini akan dihapus permanen dari galeri Anda. Tindakan ini tidak dapat dibatalkan.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Hapus
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </div>
     </div>
