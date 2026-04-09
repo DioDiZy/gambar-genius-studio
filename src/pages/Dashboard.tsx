@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { GeneratorForm } from "@/components/ImageGenerator/GeneratorForm";
@@ -65,6 +66,18 @@ const Dashboard = () => {
     setShowAnalyzer(false);
   };
 
+  const handleDeleteImage = async (imageId: string) => {
+    try {
+      const { error } = await supabase.from("images").delete().eq("id", imageId);
+      if (error) throw error;
+      toast.success("Gambar berhasil dihapus");
+      refetchImages();
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Gagal menghapus gambar");
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-8">
@@ -117,7 +130,7 @@ const Dashboard = () => {
         </TabsContent>
       </Tabs>
 
-      <Gallery userImages={userImages} />
+      <Gallery userImages={userImages} onDeleteImage={handleDeleteImage} />
     </DashboardLayout>
   );
 };
