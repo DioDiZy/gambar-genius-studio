@@ -1,6 +1,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GalleryItem } from "./GalleryItem";
+import { EmptyGalleryState } from "./EmptyGalleryState";
 import {
   Pagination,
   PaginationContent,
