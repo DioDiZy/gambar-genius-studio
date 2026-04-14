@@ -9,6 +9,8 @@ import { toast } from "sonner";
 interface StoryTemplateSelectorProps {
   characters: CharacterDescription[];
   onStoryGenerated: (story: string) => void;
+  onCharactersGenerated?: (characters: CharacterDescription[]) => void;
+  onAdditionalInstructionsGenerated?: (instructions: string) => void;
   isGenerating: boolean;
   disabled?: boolean;
 }
@@ -27,6 +29,8 @@ const TEMPLATES = [
 export const StoryTemplateSelector = ({
   characters,
   onStoryGenerated,
+  onCharactersGenerated,
+  onAdditionalInstructionsGenerated,
   isGenerating,
   disabled,
 }: StoryTemplateSelectorProps) => {
@@ -56,11 +60,30 @@ export const StoryTemplateSelector = ({
 
       if (data?.story) {
         onStoryGenerated(data.story);
-        const hasChars = characters.length > 0;
+        
+        // Populate generated characters (merge with existing)
+        if (data.characters && Array.isArray(data.characters) && data.characters.length > 0 && onCharactersGenerated) {
+          const existingNames = new Set(characters.map(c => c.name.toLowerCase()));
+          const newChars: CharacterDescription[] = data.characters
+            .filter((c: any) => c.name && !existingNames.has(c.name.toLowerCase()))
+            .map((c: any) => ({
+              name: c.name,
+              appearance: c.appearance || "",
+              referenceImages: [],
+            }));
+          if (newChars.length > 0) {
+            onCharactersGenerated([...characters, ...newChars]);
+          }
+        }
+        
+        // Populate additional instructions
+        if (data.additionalInstructions && onAdditionalInstructionsGenerated) {
+          onAdditionalInstructionsGenerated(data.additionalInstructions);
+        }
+        
+        const charCount = data.characters?.length || 0;
         toast.success("Cerita berhasil dibuat dari template!", {
-          description: hasChars
-            ? `Cerita telah menyertakan ${characters.length} karakter yang kamu buat`
-            : "Kamu bisa mengedit ceritanya sesuai keinginanmu",
+          description: `${charCount} karakter dan instruksi visual otomatis ditambahkan. Kamu bisa mengedit semuanya.`,
         });
       }
     } catch (err) {
