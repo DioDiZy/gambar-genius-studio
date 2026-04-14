@@ -125,7 +125,8 @@ Aturan untuk additionalInstructions:
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      console.error("AI gateway error:", response.status);
+      const errorBody = await response.text();
+      console.error("AI gateway error:", response.status, errorBody);
       return new Response(JSON.stringify({ error: "Gagal membuat cerita" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

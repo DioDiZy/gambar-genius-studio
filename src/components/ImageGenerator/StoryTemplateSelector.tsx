@@ -54,7 +54,8 @@ export const StoryTemplateSelector = ({
 
       if (error) {
         console.error("Template generation error:", error);
-        toast.error("Gagal membuat cerita dari template");
+        const errorMsg = typeof error === 'object' && error?.message ? error.message : "Gagal membuat cerita dari template";
+        toast.error(errorMsg);
         return;
       }
 
