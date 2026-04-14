@@ -133,7 +133,9 @@ Aturan untuk additionalInstructions:
     }
 
     const data = await response.json();
+    console.log("AI response received, choices:", data.choices?.length);
     const rawContent = data.choices?.[0]?.message?.content || "";
+    console.log("Raw content length:", rawContent.length);
 
     // Try to parse as JSON
     let story = "";
