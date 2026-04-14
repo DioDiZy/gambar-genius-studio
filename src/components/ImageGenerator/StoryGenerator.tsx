@@ -87,6 +87,8 @@ export const StoryGenerator = ({
           <StoryTemplateSelector
             characters={characters}
             onStoryGenerated={handleTemplateStoryGenerated}
+            onCharactersGenerated={setCharacters}
+            onAdditionalInstructionsGenerated={setCharacterDescriptions}
             isGenerating={isGenerating}
           />
 

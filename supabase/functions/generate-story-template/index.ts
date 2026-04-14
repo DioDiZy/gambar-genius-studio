@@ -12,7 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate the caller
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -75,7 +74,19 @@ serve(async (req) => {
             role: "system",
             content: `Kamu adalah penulis cerita anak-anak Indonesia yang kreatif. Target pembaca: anak usia 10-11 tahun.
 
-Aturan:
+Kamu harus mengembalikan output dalam format JSON yang valid (tanpa markdown code block) dengan struktur berikut:
+{
+  "story": "cerita lengkap dengan paragraf dipisahkan baris kosong",
+  "characters": [
+    {
+      "name": "Nama Karakter",
+      "appearance": "Deskripsi fisik detail: gender, usia perkiraan, warna rambut, gaya rambut, warna kulit, pakaian yang dikenakan, ciri khas fisik"
+    }
+  ],
+  "additionalInstructions": "instruksi tambahan untuk konsistensi visual gambar: setting lokasi, suasana, gaya ilustrasi, pencahayaan, palet warna"
+}
+
+Aturan untuk cerita:
 1. Tulis cerita dalam Bahasa Indonesia yang sederhana, mudah dipahami anak-anak
 2. Cerita harus terdiri dari 3-5 paragraf yang jelas terpisah (gunakan baris kosong antar paragraf)
 3. Setiap paragraf harus menggambarkan satu adegan visual yang jelas
@@ -84,11 +95,20 @@ Aturan:
 6. Hindari kekerasan, hal menyeramkan, atau konten yang tidak sesuai untuk anak-anak
 7. Setiap paragraf harus mendeskripsikan setting/lokasi, suasana, dan ekspresi karakter dengan jelas
 8. Jangan gunakan kata-kata sulit atau istilah asing
-9. HANYA tulis ceritanya saja, tanpa judul, tanpa keterangan, tanpa penjelasan tambahan`
+
+Aturan untuk characters:
+1. Daftarkan SEMUA karakter yang muncul dalam cerita
+2. Beri deskripsi fisik yang sangat detail dan spesifik untuk setiap karakter
+3. Jika karakter sudah diberikan oleh pengguna, gunakan deskripsi mereka dan tambahkan detail jika perlu
+
+Aturan untuk additionalInstructions:
+1. Tuliskan instruksi visual yang konsisten untuk semua gambar
+2. Termasuk setting lokasi utama, suasana, waktu hari, gaya ilustrasi
+3. Tuliskan dalam bahasa Indonesia`
           },
           {
             role: "user",
-            content: `Buatkan cerita anak dengan tema: ${templateDesc}${characterContext}\n\nBuat cerita yang menarik dengan 3-5 paragraf, setiap paragraf menggambarkan adegan berbeda yang bisa divisualisasikan.`,
+            content: `Buatkan cerita anak dengan tema: ${templateDesc}${characterContext}\n\nBuat cerita yang menarik dengan 3-5 paragraf, setiap paragraf menggambarkan adegan berbeda yang bisa divisualisasikan. Kembalikan dalam format JSON sesuai instruksi.`,
           },
         ],
       }),
@@ -112,9 +132,31 @@ Aturan:
     }
 
     const data = await response.json();
-    const story = data.choices?.[0]?.message?.content || "";
+    const rawContent = data.choices?.[0]?.message?.content || "";
 
-    return new Response(JSON.stringify({ story }), {
+    // Try to parse as JSON
+    let story = "";
+    let generatedCharacters: any[] = [];
+    let additionalInstructions = "";
+
+    try {
+      // Remove markdown code blocks if present
+      const cleaned = rawContent.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+      story = parsed.story || "";
+      generatedCharacters = Array.isArray(parsed.characters) ? parsed.characters : [];
+      additionalInstructions = parsed.additionalInstructions || "";
+    } catch {
+      // Fallback: treat raw content as story text
+      console.warn("Failed to parse JSON response, using raw text as story");
+      story = rawContent;
+    }
+
+    return new Response(JSON.stringify({ 
+      story, 
+      characters: generatedCharacters,
+      additionalInstructions 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
