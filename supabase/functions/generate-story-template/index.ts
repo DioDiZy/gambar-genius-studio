@@ -14,28 +14,18 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-    const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: userData, error: userError } = await anonClient.auth.getUser();
     if (userError || !userData?.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const SUMOPOD_API_KEY = Deno.env.get("SUMOPOD_API_KEY");
-    if (!SUMOPOD_API_KEY) throw new Error("SUMOPOD_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const { template, characters } = await req.json();
 
@@ -58,7 +48,6 @@ serve(async (req) => {
           return desc;
         })
         .join("\n");
-
       characterContext = `\n\nKarakter yang HARUS digunakan dalam cerita (gunakan nama persis seperti yang diberikan):\n${charDescriptions}\n\nPastikan semua karakter di atas muncul dalam cerita dan berperan aktif.`;
     }
 
@@ -75,14 +64,14 @@ serve(async (req) => {
 
     const templateDesc = templateDescriptions[template] || template;
 
-    const response = await fetch("https://ai.sumopod.com/", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${SUMOPOD_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-4.1-mini",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
@@ -125,34 +114,42 @@ Aturan untuk additionalInstructions:
             content: `Buatkan cerita anak dengan tema: ${templateDesc}${characterContext}\n\nBuat cerita yang menarik dengan 3-5 paragraf, setiap paragraf menggambarkan adegan berbeda yang bisa divisualisasikan. Kembalikan dalam format JSON sesuai instruksi.`,
           },
         ],
-        temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error("Sumopod error:", response.status, errorBody);
-
-      return new Response(
-        JSON.stringify({
-          error: "Gagal membuat cerita",
-          details: errorBody,
-        }),
-        {
-          status: response.status,
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Terlalu banyak permintaan, coba lagi nanti." }), {
+          status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "Kredit tidak mencukupi." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const errorBody = await response.text();
+      console.error("AI gateway error:", response.status, errorBody);
+      return new Response(JSON.stringify({ error: "Gagal membuat cerita" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const data = await response.json();
+    console.log("AI response received, choices:", data.choices?.length);
     const rawContent = data.choices?.[0]?.message?.content || "";
+    console.log("Raw content length:", rawContent.length);
 
+    // Try to parse as JSON
     let story = "";
     let generatedCharacters: any[] = [];
     let additionalInstructions = "";
 
     try {
+      // Remove markdown code blocks if present
       const cleaned = rawContent
         .replace(/```json\s*/g, "")
         .replace(/```\s*/g, "")
@@ -162,6 +159,8 @@ Aturan untuk additionalInstructions:
       generatedCharacters = Array.isArray(parsed.characters) ? parsed.characters : [];
       additionalInstructions = parsed.additionalInstructions || "";
     } catch {
+      // Fallback: treat raw content as story text
+      console.warn("Failed to parse JSON response, using raw text as story");
       story = rawContent;
     }
 
