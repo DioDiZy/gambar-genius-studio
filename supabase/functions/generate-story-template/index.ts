@@ -130,7 +130,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-4.1-mini",
+        model: "gpt-4o-mini",
         temperature: 0.7,
         messages: [
           {
