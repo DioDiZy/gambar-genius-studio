@@ -1,56 +1,107 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+    },
+  });
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-    const anonClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authHeader } } });
-    const { data: userData, error: userError } = await anonClient.auth.getUser();
-    if (userError || !userData?.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // 1) Ambil bearer token dari request
+    const authHeader = req.headers.get("authorization") ?? req.headers.get("Authorization");
+
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+
+    if (!token) {
+      return jsonResponse({ error: "Unauthorized: missing bearer token" }, 401);
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    // 2) Validasi token user ke Supabase Auth
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
-    const { template, characters } = await req.json();
-
-    if (!template || typeof template !== "string" || template.length > 200) {
-      return new Response(JSON.stringify({ error: "Valid template is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Missing SUPABASE_URL or SUPABASE_ANON_KEY");
+      return jsonResponse({ error: "Server misconfigured" }, 500);
     }
 
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    });
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      console.error("Invalid user token:", userError);
+      return jsonResponse(
+        {
+          error: "Unauthorized: invalid user token",
+          details: userError?.message ?? null,
+        },
+        401,
+      );
+    }
+
+    // 3) Ambil body request
+    const body = await req.json().catch(() => ({}) as any);
+    const template = typeof body?.template === "string" ? body.template : "";
+    const characters = Array.isArray(body?.characters) ? body.characters : [];
+
+    if (!template || template.length > 200) {
+      return jsonResponse({ error: "Valid template is required" }, 400);
+    }
+
+    // 4) Susun konteks karakter
     let characterContext = "";
-    if (characters && Array.isArray(characters) && characters.length > 0 && characters.length <= 20) {
+    if (characters.length > 0 && characters.length <= 20) {
       const charDescriptions = characters
         .slice(0, 20)
-        .map((c: any) => {
-          const name = String(c.name || "").slice(0, 100);
-          const appearance = String(c.appearance || "").slice(0, 500);
-          let desc = `- ${name}`;
+        .map((raw: any) => {
+          const c = raw && typeof raw === "object" ? raw : {};
+          const name = String(c.name ?? "").slice(0, 100);
+          const appearance = String(c.appearance ?? "").slice(0, 500);
+
+          let desc = `- ${name || "Karakter"}`;
           if (appearance) desc += `: ${appearance}`;
           return desc;
         })
         .join("\n");
-      characterContext = `\n\nKarakter yang HARUS digunakan dalam cerita (gunakan nama persis seperti yang diberikan):\n${charDescriptions}\n\nPastikan semua karakter di atas muncul dalam cerita dan berperan aktif.`;
+
+      characterContext = `\n\nKarakter yang HARUS digunakan dalam cerita (gunakan nama persis seperti yang diberikan):\n` + `${charDescriptions}\n\n` + `Pastikan semua karakter di atas muncul dalam cerita dan berperan aktif.`;
     }
 
+    // 5) Template mapping
     const templateDescriptions: Record<string, string> = {
       "petualangan-hutan": "Petualangan seru di hutan ajaib yang penuh dengan tumbuhan unik, jembatan tali tua, dan gua tersembunyi",
       persahabatan: "Kisah persahabatan yang hangat antara anak-anak yang saling membantu menghadapi tantangan",
@@ -64,14 +115,23 @@ serve(async (req) => {
 
     const templateDesc = templateDescriptions[template] || template;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // 6) Ambil API key provider
+    const SUMOPOD_API_KEY = Deno.env.get("SUMOPOD_API_KEY");
+    if (!SUMOPOD_API_KEY) {
+      return jsonResponse({ error: "SUMOPOD_API_KEY is not configured" }, 500);
+    }
+
+    // 7) Call provider AI
+    // Ganti model jika akun Sumopod kamu memakai slug model lain.
+    const providerResponse = await fetch("https://ai.sumopod.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${SUMOPOD_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "openai/gpt-4.1-mini",
+        temperature: 0.7,
         messages: [
           {
             role: "system",
@@ -111,74 +171,94 @@ Aturan untuk additionalInstructions:
           },
           {
             role: "user",
-            content: `Buatkan cerita anak dengan tema: ${templateDesc}${characterContext}\n\nBuat cerita yang menarik dengan 3-5 paragraf, setiap paragraf menggambarkan adegan berbeda yang bisa divisualisasikan. Kembalikan dalam format JSON sesuai instruksi.`,
+            content:
+              `Buatkan cerita anak dengan tema: ${templateDesc}${characterContext}\n\n` +
+              `Buat cerita yang menarik dengan 3-5 paragraf, setiap paragraf menggambarkan adegan berbeda yang bisa divisualisasikan. ` +
+              `Kembalikan dalam format JSON sesuai instruksi.`,
           },
         ],
       }),
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Terlalu banyak permintaan, coba lagi nanti." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Kredit tidak mencukupi." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const errorBody = await response.text();
-      console.error("AI gateway error:", response.status, errorBody);
-      return new Response(JSON.stringify({ error: "Gagal membuat cerita" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const providerText = await providerResponse.text();
+
+    if (!providerResponse.ok) {
+      console.error("Sumopod error:", providerResponse.status, providerText);
+
+      return jsonResponse(
+        {
+          error: "AI provider request failed",
+          providerStatus: providerResponse.status,
+          providerBody: providerText,
+        },
+        502,
+      );
     }
 
-    const data = await response.json();
-    console.log("AI response received, choices:", data.choices?.length);
-    const rawContent = data.choices?.[0]?.message?.content || "";
-    console.log("Raw content length:", rawContent.length);
+    let providerData: any;
+    try {
+      providerData = JSON.parse(providerText);
+    } catch (_err) {
+      console.error("Provider returned non-JSON:", providerText);
+      return jsonResponse(
+        {
+          error: "Provider returned non-JSON response",
+          providerBody: providerText,
+        },
+        502,
+      );
+    }
 
-    // Try to parse as JSON
+    const rawContent = typeof providerData?.choices?.[0]?.message?.content === "string" ? providerData.choices[0].message.content : "";
+
+    if (!rawContent) {
+      return jsonResponse(
+        {
+          error: "Provider returned empty content",
+          providerBody: providerData,
+        },
+        502,
+      );
+    }
+
+    // 8) Parse output model
     let story = "";
     let generatedCharacters: any[] = [];
     let additionalInstructions = "";
 
     try {
-      // Remove markdown code blocks if present
       const cleaned = rawContent
-        .replace(/```json\s*/g, "")
-        .replace(/```\s*/g, "")
+        .replace(/```json\s*/gi, "")
+        .replace(/```/g, "")
         .trim();
+
       const parsed = JSON.parse(cleaned);
-      story = parsed.story || "";
+
+      story = typeof parsed.story === "string" ? parsed.story : "";
       generatedCharacters = Array.isArray(parsed.characters) ? parsed.characters : [];
-      additionalInstructions = parsed.additionalInstructions || "";
-    } catch {
-      // Fallback: treat raw content as story text
-      console.warn("Failed to parse JSON response, using raw text as story");
+      additionalInstructions = typeof parsed.additionalInstructions === "string" ? parsed.additionalInstructions : "";
+
+      if (!story) {
+        story = cleaned;
+      }
+    } catch (_err) {
+      // Fallback kalau model tidak balas JSON valid
       story = rawContent;
     }
 
-    return new Response(
-      JSON.stringify({
-        story,
-        characters: generatedCharacters,
-        additionalInstructions,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
-  } catch (e) {
-    console.error("generate-story-template error:", e);
-    return new Response(JSON.stringify({ error: "An error occurred" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return jsonResponse({
+      story,
+      characters: generatedCharacters,
+      additionalInstructions,
     });
+  } catch (error) {
+    console.error("generate-story-template error:", error);
+
+    return jsonResponse(
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      500,
+    );
   }
 });
