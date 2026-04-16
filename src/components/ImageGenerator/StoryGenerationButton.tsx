@@ -1,6 +1,5 @@
 
-import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 
 interface StoryGenerationButtonProps {
   onGenerate: () => void;
@@ -17,20 +16,38 @@ export const StoryGenerationButton = ({
 }: StoryGenerationButtonProps) => {
   const buttonText = () => {
     if (language === "indonesian") {
-      return isGenerating ? "Menghasilkan..." : "Hasilkan Gambar";
+      return isGenerating ? "Sedang Membuat Gambar..." : "🎨 Buat Gambar dari Ceritaku!";
     }
-    return isGenerating ? "Generating..." : "Generate Images";
+    return isGenerating ? "Creating..." : "🎨 Create My Picture!";
   };
 
   return (
-    <Button
+    <button
       onClick={onGenerate}
       disabled={disabled || isGenerating}
-      className="gap-2"
-      size="lg"
+      className="
+        relative overflow-hidden
+        inline-flex items-center justify-center gap-2.5
+        bg-gradient-to-r from-primary to-fun-teal
+        text-primary-foreground
+        text-kid-base font-bold
+        px-8 py-4
+        rounded-2xl
+        shadow-lg shadow-primary/20
+        hover:shadow-xl hover:shadow-primary/30
+        hover:scale-[1.02]
+        active:scale-[0.98]
+        transition-all duration-200
+        disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none
+        w-full sm:w-auto
+      "
     >
-      <Sparkles className="h-4 w-4" />
-      {buttonText()}
-    </Button>
+      {isGenerating ? (
+        <Loader2 className="h-5 w-5 animate-spin" />
+      ) : (
+        <Sparkles className="h-5 w-5" />
+      )}
+      <span>{buttonText()}</span>
+    </button>
   );
 };

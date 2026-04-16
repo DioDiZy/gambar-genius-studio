@@ -11,17 +11,17 @@ export const ViewModeToggle = ({
   onViewModeChange,
 }: ViewModeToggleProps) => {
   return (
-    <div className="flex space-x-1 bg-muted/30 p-1 rounded-md">
+    <div className="flex space-x-1 bg-muted/40 p-1 rounded-xl border border-border/50">
       <button 
         onClick={() => onViewModeChange('single')} 
-        className={`p-1 rounded ${viewMode === 'single' ? 'bg-background' : ''}`}
+        className={`p-1.5 rounded-lg transition-all ${viewMode === 'single' ? 'bg-card shadow-sm' : 'hover:bg-muted/60'}`}
         title="Tampilan tunggal"
       >
         <Bookmark className="h-4 w-4" />
       </button>
       <button 
         onClick={() => onViewModeChange('storyboard')} 
-        className={`p-1 rounded ${viewMode === 'storyboard' ? 'bg-background' : ''}`}
+        className={`p-1.5 rounded-lg transition-all ${viewMode === 'storyboard' ? 'bg-card shadow-sm' : 'hover:bg-muted/60'}`}
         title="Tampilan storyboard"
       >
         <BookOpen className="h-4 w-4" />
