@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoryGenerator } from "@/components/ImageGenerator/StoryGenerator";
 import { StoryImagesPreview } from "@/components/ImageGenerator/StoryImagesPreview";
 import { StoryboardAnalyzer } from "@/components/ImageGenerator/StoryboardAnalyzer";
+import { Sparkles, BookOpen } from "lucide-react";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -80,14 +81,32 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Buat Gambar AI</h1>
+      {/* Fun welcome header */}
+      <div className="mb-8 text-center">
+        <h1 className="text-kid-2xl font-bold gradient-text mb-2">
+          ✨ Buat Gambar dari Imajinasimu! ✨
+        </h1>
+        <p className="text-kid-base text-muted-foreground max-w-xl mx-auto">
+          Tulis cerita seru, lalu lihat ceritamu berubah jadi gambar keren!
+        </p>
       </div>
 
-      <Tabs defaultValue="single" className="mb-8">
-        <TabsList className="mb-6">
-          <TabsTrigger value="single">Gambar Tunggal</TabsTrigger>
-          <TabsTrigger value="story">Cerita ke Gambar</TabsTrigger>
+      <Tabs defaultValue="story" className="mb-8">
+        <TabsList className="mb-6 mx-auto flex w-fit gap-2 bg-muted/50 p-1.5 rounded-2xl">
+          <TabsTrigger 
+            value="single" 
+            className="rounded-xl px-5 py-2.5 text-kid-sm font-medium data-[state=active]:bg-card data-[state=active]:shadow-sm gap-2"
+          >
+            <Sparkles className="h-4 w-4" />
+            Gambar Tunggal
+          </TabsTrigger>
+          <TabsTrigger 
+            value="story" 
+            className="rounded-xl px-5 py-2.5 text-kid-sm font-medium data-[state=active]:bg-card data-[state=active]:shadow-sm gap-2"
+          >
+            <BookOpen className="h-4 w-4" />
+            Cerita ke Gambar
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="single">

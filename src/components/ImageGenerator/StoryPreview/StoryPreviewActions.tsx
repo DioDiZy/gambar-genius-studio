@@ -1,6 +1,6 @@
 
 import { Download, Save } from "lucide-react";
-import { CustomButton } from "@/components/ui/custom-button";
+import { Button } from "@/components/ui/button";
 
 interface StoryPreviewActionsProps {
   imageUrls: string[];
@@ -24,34 +24,44 @@ export const StoryPreviewActions = ({
   viewMode,
 }: StoryPreviewActionsProps) => {
   return (
-    <div className="mt-4 space-y-4">
+    <div className="mt-5 space-y-4">
       {viewMode === 'single' && (
-        <p className="text-sm text-muted-foreground line-clamp-3">
-          Prompt: {currentPrompt}
+        <p className="text-kid-xs text-muted-foreground line-clamp-3 bg-muted/30 rounded-xl px-3 py-2">
+          💡 Prompt: {currentPrompt}
         </p>
       )}
-      <div className="flex justify-between">
+      <div className="flex flex-wrap justify-between gap-2">
         <div className="flex gap-2">
-          <CustomButton variant="outline" size="sm" onClick={() => onDownload(currentImage)}>
-            <Download className="mr-2 h-4 w-4" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => onDownload(currentImage)}
+            className="rounded-xl text-kid-xs"
+          >
+            <Download className="mr-1.5 h-4 w-4" />
             Unduh
-          </CustomButton>
+          </Button>
           {imageUrls.length > 1 && (
-            <CustomButton variant="outline" size="sm" onClick={onDownloadAll}>
-              <Download className="mr-2 h-4 w-4" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onDownloadAll}
+              className="rounded-xl text-kid-xs"
+            >
+              <Download className="mr-1.5 h-4 w-4" />
               Unduh Semua
-            </CustomButton>
+            </Button>
           )}
         </div>
-        <CustomButton 
-          variant="gradient" 
+        <Button
           size="sm"
           onClick={() => onSave(currentImage, currentPrompt)}
           disabled={saving}
+          className="rounded-xl text-kid-xs bg-gradient-to-r from-primary to-fun-teal text-primary-foreground hover:opacity-90"
         >
-          <Save className="mr-2 h-4 w-4" />
-          {saving ? "Menyimpan..." : "Simpan ke Galeri"}
-        </CustomButton>
+          <Save className="mr-1.5 h-4 w-4" />
+          {saving ? "Menyimpan..." : "💾 Simpan ke Galeri"}
+        </Button>
       </div>
     </div>
   );

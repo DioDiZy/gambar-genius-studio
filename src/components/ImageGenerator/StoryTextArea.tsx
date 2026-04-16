@@ -1,5 +1,4 @@
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { IndonesianValidationResult } from "@/utils/indonesianLanguageValidation";
 
 interface StoryTextAreaProps {
@@ -30,13 +29,14 @@ export const StoryTextArea = ({
   };
 
   const getCountLabel = () => {
+    if (paragraphCount === 0) return "";
     return language === "indonesian"
-      ? `${paragraphCount} paragraf terdeteksi`
-      : `${paragraphCount} paragraphs detected`;
+      ? `📝 ${paragraphCount} paragraf terdeteksi — setiap paragraf jadi 1 gambar!`
+      : `📝 ${paragraphCount} paragraphs detected — each becomes 1 image!`;
   };
 
   const getLabelText = () => {
-    return language === "indonesian" ? "Cerita Anda" : "Your Story";
+    return language === "indonesian" ? "Ceritamu di Sini 👇" : "Your Story Here 👇";
   };
 
   const showValidationWarning =
@@ -47,23 +47,34 @@ export const StoryTextArea = ({
 
   return (
     <div className="space-y-2">
-      <Label>{getLabelText()}</Label>
-      <Textarea
-        placeholder={getPlaceholderByLanguage()}
-        value={story}
-        onChange={(e) => onStoryChange(e.target.value)}
-        className="min-h-64 mb-2"
-        disabled={isGenerating}
-      />
+      <label className="text-kid-base font-semibold text-foreground">{getLabelText()}</label>
+      <div className="relative">
+        <Textarea
+          placeholder={getPlaceholderByLanguage()}
+          value={story}
+          onChange={(e) => onStoryChange(e.target.value)}
+          className="min-h-[280px] text-kid-sm rounded-2xl border-2 border-input focus:border-primary/50 bg-card p-4 resize-y placeholder:text-muted-foreground/60"
+          disabled={isGenerating}
+        />
+        {story.trim().length === 0 && (
+          <div className="absolute bottom-4 right-4 text-2xl pointer-events-none animate-bounce-gentle">
+            ✏️
+          </div>
+        )}
+      </div>
 
       {showValidationWarning && (
-        <p className="text-sm text-amber-600">
-          Teks terdeteksi kurang natural dalam bahasa Indonesia.
+        <p className="text-kid-xs text-fun-coral bg-fun-coral-light rounded-xl px-3 py-2">
+          ⚠️ Teks terdeteksi kurang natural dalam bahasa Indonesia.
           {validation.reasons[0] ? ` ${validation.reasons[0]}.` : ""}
         </p>
       )}
 
-      <p className="text-sm text-muted-foreground">{getCountLabel()}</p>
+      {paragraphCount > 0 && (
+        <p className="text-kid-xs text-muted-foreground bg-muted/50 rounded-xl px-3 py-2">
+          {getCountLabel()}
+        </p>
+      )}
     </div>
   );
 };

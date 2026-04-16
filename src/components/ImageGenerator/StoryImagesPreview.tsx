@@ -1,5 +1,4 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookText } from "lucide-react";
 import { useStoryImages } from "@/hooks/useStoryImages";
 import { SingleImageView } from "./StoryPreview/SingleImageView";
@@ -39,22 +38,35 @@ export const StoryImagesPreview = ({
   const currentPrompt = prompts[currentIndex];
 
   return (
-    <Card>
-      <CardHeader>
+    <div className="fun-card overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-fun-teal-light to-fun-blue-light px-6 py-5">
         <div className="flex justify-between items-center">
-          <CardTitle className="flex items-center gap-2">
-            <BookText className="h-5 w-5" />
-            Gambar Cerita {imageUrls.length > 0 ? `(${currentIndex + 1}/${imageUrls.length})` : ""}
-          </CardTitle>
+          <div className="flex items-center gap-3">
+            <div className="bg-fun-teal/10 p-2 rounded-xl">
+              <BookText className="h-5 w-5 text-fun-teal" />
+            </div>
+            <div>
+              <h2 className="text-kid-lg font-bold text-foreground">
+                Hasil Gambarmu 🖼️
+                {imageUrls.length > 0 && (
+                  <span className="text-kid-sm font-normal text-muted-foreground ml-2">
+                    ({currentIndex + 1}/{imageUrls.length})
+                  </span>
+                )}
+              </h2>
+              <p className="text-kid-xs text-muted-foreground">
+                Gambar storyboard dari ceritamu muncul di sini!
+              </p>
+            </div>
+          </div>
           {imageUrls.length > 0 && (
             <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
           )}
         </div>
-        <CardDescription>
-          Gambar storyboard yang dihasilkan dari paragraf cerita Anda
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+      </div>
+
+      <div className="p-6">
         {viewMode === 'single' ? (
           <SingleImageView
             imageUrls={imageUrls}
@@ -93,7 +105,7 @@ export const StoryImagesPreview = ({
             />
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
