@@ -15,16 +15,12 @@ export const StoryTextArea = ({
   onStoryChange,
   paragraphCount,
   isGenerating,
-  language = "english",
   validation,
 }: StoryTextAreaProps) => {
   const placeholder =
-    language === "indonesian"
-      ? "Pada suatu hari di negeri yang jauh...\n\nSaat sang pahlawan melanjutkan perjalanannya ke dalam hutan, dia menemukan sebuah pondok tua. Sinar bulan menyinari atap jerami yang sudah lapuk."
-      : "Once upon a time in a distant land...\n\nAs the hero ventured deeper into the forest, they discovered an old mysterious cottage. Moonlight illuminated its thatched roof.";
+    "Pada suatu hari di sebuah desa kecil, hiduplah seorang anak yang sangat suka bertualang...\n\nSuatu pagi, ia berjalan masuk ke dalam hutan dan menemukan pondok tua yang sudah lama ditinggalkan. Sinar matahari menembus celah-celah atap jerami.";
 
   const showValidationWarning =
-    language === "indonesian" &&
     story.trim().length > 0 &&
     validation &&
     !validation.isLikelyIndonesianSentence;
@@ -35,12 +31,12 @@ export const StoryTextArea = ({
     <div className="space-y-3">
       <div className="flex items-baseline justify-between">
         <label className="text-sm font-medium text-foreground">
-          Your story
+          Ceritamu
         </label>
         <span className="text-xs text-muted-foreground tabular-nums">
           {paragraphCount > 0
-            ? `${paragraphCount} ${paragraphCount === 1 ? "page" : "pages"} · ${charCount} chars`
-            : `${charCount} chars`}
+            ? `${paragraphCount} ${paragraphCount === 1 ? "halaman" : "halaman"} · ${charCount} karakter`
+            : `${charCount} karakter`}
         </span>
       </div>
 
@@ -53,12 +49,12 @@ export const StoryTextArea = ({
       />
 
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Tip: separate paragraphs with a blank line. Each paragraph becomes one page in your book.
+        Tips: pisahkan setiap paragraf dengan baris kosong. Setiap paragraf akan menjadi satu halaman bergambar.
       </p>
 
       {showValidationWarning && (
         <p className="text-xs text-foreground bg-muted/60 border border-border/60 rounded-lg px-3 py-2">
-          The text doesn't look like natural Indonesian.
+          Tulisanmu sepertinya belum menggunakan Bahasa Indonesia yang alami.
           {validation.reasons[0] ? ` ${validation.reasons[0]}.` : ""}
         </p>
       )}

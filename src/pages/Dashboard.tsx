@@ -66,10 +66,10 @@ const Dashboard = () => {
     try {
       const { error } = await supabase.from("images").delete().eq("id", imageId);
       if (error) throw error;
-      toast.success("Image removed");
+      toast.success("Gambar berhasil dihapus");
       refetchImages();
     } catch (error) {
-      toast.error("Couldn't remove image");
+      toast.error("Gagal menghapus gambar");
     }
   };
 
@@ -78,13 +78,13 @@ const Dashboard = () => {
       {/* Editorial intro */}
       <header className="mb-10 max-w-2xl">
         <p className="font-heading text-xs uppercase tracking-[0.22em] text-muted-foreground mb-3">
-          Story Studio
+          Studio Cerita
         </p>
         <h1 className="font-heading text-3xl md:text-4xl text-foreground leading-tight">
-          Turn your story into a picture book.
+          Ubah ceritamu menjadi gambar.
         </h1>
         <p className="text-base text-muted-foreground mt-3 leading-relaxed">
-          Write a story, paragraph by paragraph. We'll illustrate each one as a page in your own storybook.
+          Tulis cerita paragraf demi paragraf. Setiap paragraf akan menjadi satu halaman bergambar di buku ceritamu.
         </p>
       </header>
 
@@ -94,13 +94,13 @@ const Dashboard = () => {
             value="story"
             className="rounded-md px-4 py-1.5 text-sm font-medium data-[state=active]:bg-card data-[state=active]:shadow-sm"
           >
-            Storybook
+            Buku Cerita
           </TabsTrigger>
           <TabsTrigger
             value="single"
             className="rounded-md px-4 py-1.5 text-sm font-medium data-[state=active]:bg-card data-[state=active]:shadow-sm"
           >
-            Single image
+            Satu Gambar
           </TabsTrigger>
         </TabsList>
 

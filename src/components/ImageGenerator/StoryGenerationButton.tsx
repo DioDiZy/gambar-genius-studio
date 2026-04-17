@@ -11,15 +11,10 @@ export const StoryGenerationButton = ({
   onGenerate,
   disabled = false,
   isGenerating = false,
-  language = "english",
 }: StoryGenerationButtonProps) => {
   const buttonText = isGenerating
-    ? language === "indonesian"
-      ? "Creating your storybook…"
-      : "Creating your storybook…"
-    : language === "indonesian"
-      ? "Create my storybook"
-      : "Create my storybook";
+    ? "Sedang membuat buku ceritamu…"
+    : "Buat Buku Ceritaku";
 
   return (
     <button

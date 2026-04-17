@@ -31,7 +31,7 @@ export const StoryPreviewActions = ({
           className="rounded-lg"
         >
           <Download className="mr-1.5 h-4 w-4" />
-          Download page
+          Unduh halaman
         </Button>
         {imageUrls.length > 1 && (
           <Button
@@ -41,7 +41,7 @@ export const StoryPreviewActions = ({
             className="rounded-lg"
           >
             <Download className="mr-1.5 h-4 w-4" />
-            Download all
+            Unduh semua
           </Button>
         )}
       </div>
@@ -52,7 +52,7 @@ export const StoryPreviewActions = ({
         className="rounded-lg"
       >
         <Save className="mr-1.5 h-4 w-4" />
-        {saving ? "Saving…" : "Save to gallery"}
+        {saving ? "Menyimpan…" : "Simpan ke galeri"}
       </Button>
     </div>
   );
