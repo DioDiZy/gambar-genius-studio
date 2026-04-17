@@ -1,12 +1,6 @@
-
-import { BookText } from "lucide-react";
 import { useStoryImages } from "@/hooks/useStoryImages";
-import { SingleImageView } from "./StoryPreview/SingleImageView";
-import { StoryboardView } from "./StoryPreview/StoryboardView";
+import { BookSpreadView } from "./StoryPreview/BookSpreadView";
 import { StoryPreviewActions } from "./StoryPreview/StoryPreviewActions";
-import { ViewModeToggle } from "./StoryPreview/ViewModeToggle";
-import { StoryboardContinuity } from "./StoryboardContinuity";
-import { StoryboardAnalyzer } from "./StoryboardAnalyzer";
 
 interface StoryImagesPreviewProps {
   imageUrls: string[];
@@ -15,97 +9,68 @@ interface StoryImagesPreviewProps {
   onSaved: () => void;
 }
 
-export const StoryImagesPreview = ({ 
-  imageUrls, 
-  prompts, 
-  isGenerating, 
-  onSaved 
+export const StoryImagesPreview = ({
+  imageUrls,
+  prompts,
+  isGenerating,
+  onSaved,
 }: StoryImagesPreviewProps) => {
   const {
     currentIndex,
     saving,
-    viewMode,
-    setViewMode,
     handleSave,
     handleDownload,
     handleDownloadAll,
-    handleNext,
-    handlePrevious,
-    handleSelectImage
+    handleSelectImage,
   } = useStoryImages({ onSaved });
 
   const currentImage = imageUrls[currentIndex];
   const currentPrompt = prompts[currentIndex];
+  const hasContent = imageUrls.length > 0;
 
   return (
-    <div className="fun-card overflow-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-fun-teal-light to-fun-blue-light px-6 py-5">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="bg-fun-teal/10 p-2 rounded-xl">
-              <BookText className="h-5 w-5 text-fun-teal" />
-            </div>
-            <div>
-              <h2 className="text-kid-lg font-bold text-foreground">
-                Hasil Gambarmu 🖼️
-                {imageUrls.length > 0 && (
-                  <span className="text-kid-sm font-normal text-muted-foreground ml-2">
-                    ({currentIndex + 1}/{imageUrls.length})
-                  </span>
-                )}
-              </h2>
-              <p className="text-kid-xs text-muted-foreground">
-                Gambar storyboard dari ceritamu muncul di sini!
-              </p>
-            </div>
-          </div>
-          {imageUrls.length > 0 && (
-            <ViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-          )}
+    <section className="space-y-6">
+      {/* Section header */}
+      <header className="flex items-end justify-between gap-4 pb-4 border-b border-border/60">
+        <div>
+          <p className="font-heading text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
+            Your Storybook
+          </p>
+          <h2 className="font-heading text-2xl md:text-3xl text-foreground">
+            {hasContent
+              ? `${imageUrls.length} ${imageUrls.length === 1 ? "page" : "pages"}`
+              : "Waiting for your story"}
+          </h2>
         </div>
-      </div>
-
-      <div className="p-6">
-        {viewMode === 'single' ? (
-          <SingleImageView
-            imageUrls={imageUrls}
-            prompts={prompts}
-            currentIndex={currentIndex}
-            isGenerating={isGenerating}
-            onPrevious={() => handlePrevious(imageUrls.length)}
-            onNext={() => handleNext(imageUrls.length)}
-          />
-        ) : (
-          <StoryboardView
-            imageUrls={imageUrls}
-            prompts={prompts}
-            currentIndex={currentIndex}
-            isGenerating={isGenerating}
-            onSelectImage={handleSelectImage}
-          />
+        {hasContent && (
+          <p className="text-sm text-muted-foreground hidden sm:block">
+            Page {currentIndex + 1} of {imageUrls.length}
+          </p>
         )}
+      </header>
 
-        {imageUrls.length > 0 && (
-          <>
-            <StoryPreviewActions
-              imageUrls={imageUrls}
-              currentImage={currentImage}
-              currentPrompt={currentPrompt}
-              saving={saving}
-              onSave={handleSave}
-              onDownload={handleDownload}
-              onDownloadAll={() => handleDownloadAll(imageUrls)}
-              viewMode={viewMode}
-            />
-            <StoryboardContinuity
-              imageUrls={imageUrls}
-              prompts={prompts}
-              currentIndex={currentIndex}
-            />
-          </>
-        )}
-      </div>
-    </div>
+      {/* Spreads */}
+      <BookSpreadView
+        imageUrls={imageUrls}
+        prompts={prompts}
+        currentIndex={currentIndex}
+        isGenerating={isGenerating}
+        onSelectImage={handleSelectImage}
+      />
+
+      {/* Actions */}
+      {hasContent && (
+        <StoryPreviewActions
+          imageUrls={imageUrls}
+          currentImage={currentImage}
+          currentPrompt={currentPrompt}
+          saving={saving}
+          onSave={handleSave}
+          onDownload={handleDownload}
+          onDownloadAll={() => handleDownloadAll(imageUrls)}
+          viewMode="storyboard"
+        />
+      )}
+    </section>
   );
 };

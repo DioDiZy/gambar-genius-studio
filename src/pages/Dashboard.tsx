@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -12,14 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoryGenerator } from "@/components/ImageGenerator/StoryGenerator";
 import { StoryImagesPreview } from "@/components/ImageGenerator/StoryImagesPreview";
 import { StoryboardAnalyzer } from "@/components/ImageGenerator/StoryboardAnalyzer";
-import { Sparkles, BookOpen } from "lucide-react";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState("");
   const [currentPrompt, setCurrentPrompt] = useState("");
-  
+
   const [storyImageUrls, setStoryImageUrls] = useState<string[]>([]);
   const [storyPrompts, setStoryPrompts] = useState<string[]>([]);
   const [structuredData, setStructuredData] = useState<any>(null);
@@ -33,10 +31,7 @@ const Dashboard = () => {
         .select("*")
         .eq("user_id", user?.id)
         .order("created_at", { ascending: false });
-      if (error) {
-        console.error("Error fetching images:", error);
-        throw error;
-      }
+      if (error) throw error;
       return data || [];
     },
     enabled: !!user?.id,
@@ -71,52 +66,52 @@ const Dashboard = () => {
     try {
       const { error } = await supabase.from("images").delete().eq("id", imageId);
       if (error) throw error;
-      toast.success("Gambar berhasil dihapus");
+      toast.success("Image removed");
       refetchImages();
     } catch (error) {
-      console.error("Delete error:", error);
-      toast.error("Gagal menghapus gambar");
+      toast.error("Couldn't remove image");
     }
   };
 
   return (
     <DashboardLayout>
-      {/* Fun welcome header */}
-      <div className="mb-8 text-center">
-        <h1 className="text-kid-2xl font-bold gradient-text mb-2">
-          ✨ Buat Gambar dari Imajinasimu! ✨
-        </h1>
-        <p className="text-kid-base text-muted-foreground max-w-xl mx-auto">
-          Tulis cerita seru, lalu lihat ceritamu berubah jadi gambar keren!
+      {/* Editorial intro */}
+      <header className="mb-10 max-w-2xl">
+        <p className="font-heading text-xs uppercase tracking-[0.22em] text-muted-foreground mb-3">
+          Story Studio
         </p>
-      </div>
+        <h1 className="font-heading text-3xl md:text-4xl text-foreground leading-tight">
+          Turn your story into a picture book.
+        </h1>
+        <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+          Write a story, paragraph by paragraph. We'll illustrate each one as a page in your own storybook.
+        </p>
+      </header>
 
-      <Tabs defaultValue="story" className="mb-8">
-        <TabsList className="mb-6 mx-auto flex w-fit gap-2 bg-muted/50 p-1.5 rounded-2xl">
-          <TabsTrigger 
-            value="single" 
-            className="rounded-xl px-5 py-2.5 text-kid-sm font-medium data-[state=active]:bg-card data-[state=active]:shadow-sm gap-2"
+      <Tabs defaultValue="story" className="mb-12">
+        <TabsList className="mb-8 inline-flex w-fit gap-1 bg-muted/50 p-1 rounded-lg">
+          <TabsTrigger
+            value="story"
+            className="rounded-md px-4 py-1.5 text-sm font-medium data-[state=active]:bg-card data-[state=active]:shadow-sm"
           >
-            <Sparkles className="h-4 w-4" />
-            Gambar Tunggal
+            Storybook
           </TabsTrigger>
-          <TabsTrigger 
-            value="story" 
-            className="rounded-xl px-5 py-2.5 text-kid-sm font-medium data-[state=active]:bg-card data-[state=active]:shadow-sm gap-2"
+          <TabsTrigger
+            value="single"
+            className="rounded-md px-4 py-1.5 text-sm font-medium data-[state=active]:bg-card data-[state=active]:shadow-sm"
           >
-            <BookOpen className="h-4 w-4" />
-            Cerita ke Gambar
+            Single image
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="single">
-          <div className="grid lg:grid-cols-2 gap-8">
-            <GeneratorForm 
+          <div className="grid lg:grid-cols-2 gap-10">
+            <GeneratorForm
               onImageGenerated={handleImageGenerated}
               isGenerating={isGenerating}
               setIsGenerating={setIsGenerating}
             />
-            <ImagePreview 
+            <ImagePreview
               imageUrl={generatedImageUrl}
               prompt={currentPrompt}
               isGenerating={isGenerating}
@@ -124,28 +119,30 @@ const Dashboard = () => {
             />
           </div>
         </TabsContent>
-        
+
         <TabsContent value="story">
-          <div className="space-y-8">
-            <div className="grid lg:grid-cols-2 gap-8">
-              <StoryGenerator
-                onImagesGenerated={handleStoryImagesGenerated}
-                onStructuredDataGenerated={handleStructuredDataGenerated}
-                isGenerating={isGenerating}
-                setIsGenerating={setIsGenerating}
-              />
-              <StoryImagesPreview
-                imageUrls={storyImageUrls}
-                prompts={storyPrompts}
-                isGenerating={isGenerating}
-                onSaved={handleImageSaved}
-              />
-            </div>
-            <StoryboardAnalyzer
-              storyboardData={structuredData}
-              isVisible={showAnalyzer}
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] gap-10 lg:gap-14">
+            <StoryGenerator
+              onImagesGenerated={handleStoryImagesGenerated}
+              onStructuredDataGenerated={handleStructuredDataGenerated}
+              isGenerating={isGenerating}
+              setIsGenerating={setIsGenerating}
+            />
+            <StoryImagesPreview
+              imageUrls={storyImageUrls}
+              prompts={storyPrompts}
+              isGenerating={isGenerating}
+              onSaved={handleImageSaved}
             />
           </div>
+          {showAnalyzer && (
+            <div className="mt-12">
+              <StoryboardAnalyzer
+                storyboardData={structuredData}
+                isVisible={showAnalyzer}
+              />
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
