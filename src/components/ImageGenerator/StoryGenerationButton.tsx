@@ -1,5 +1,4 @@
-
-import { Sparkles, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface StoryGenerationButtonProps {
   onGenerate: () => void;
@@ -12,42 +11,36 @@ export const StoryGenerationButton = ({
   onGenerate,
   disabled = false,
   isGenerating = false,
-  language = "english"
+  language = "english",
 }: StoryGenerationButtonProps) => {
-  const buttonText = () => {
-    if (language === "indonesian") {
-      return isGenerating ? "Sedang Membuat Gambar..." : "🎨 Buat Gambar dari Ceritaku!";
-    }
-    return isGenerating ? "Creating..." : "🎨 Create My Picture!";
-  };
+  const buttonText = isGenerating
+    ? language === "indonesian"
+      ? "Creating your storybook…"
+      : "Creating your storybook…"
+    : language === "indonesian"
+      ? "Create my storybook"
+      : "Create my storybook";
 
   return (
     <button
       onClick={onGenerate}
       disabled={disabled || isGenerating}
       className="
-        relative overflow-hidden
         inline-flex items-center justify-center gap-2.5
-        bg-gradient-to-r from-primary to-fun-teal
-        text-primary-foreground
-        text-kid-base font-bold
-        px-8 py-4
-        rounded-2xl
-        shadow-lg shadow-primary/20
-        hover:shadow-xl hover:shadow-primary/30
-        hover:scale-[1.02]
-        active:scale-[0.98]
-        transition-all duration-200
-        disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none
+        bg-primary text-primary-foreground
+        text-base font-medium
+        px-7 py-3.5
+        rounded-xl
+        shadow-sm
+        hover:bg-primary/90
+        active:scale-[0.99]
+        transition-all duration-150
+        disabled:opacity-50 disabled:pointer-events-none
         w-full sm:w-auto
       "
     >
-      {isGenerating ? (
-        <Loader2 className="h-5 w-5 animate-spin" />
-      ) : (
-        <Sparkles className="h-5 w-5" />
-      )}
-      <span>{buttonText()}</span>
+      {isGenerating && <Loader2 className="h-4 w-4 animate-spin" />}
+      <span>{buttonText}</span>
     </button>
   );
 };
