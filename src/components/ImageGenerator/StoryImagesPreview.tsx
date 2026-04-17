@@ -34,17 +34,17 @@ export const StoryImagesPreview = ({
       <header className="flex items-end justify-between gap-4 pb-4 border-b border-border/60">
         <div>
           <p className="font-heading text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
-            Your Storybook
+            Hasil Ceritamu
           </p>
           <h2 className="font-heading text-2xl md:text-3xl text-foreground">
             {hasContent
-              ? `${imageUrls.length} ${imageUrls.length === 1 ? "page" : "pages"}`
-              : "Waiting for your story"}
+              ? `${imageUrls.length} halaman`
+              : "Menanti ceritamu"}
           </h2>
         </div>
         {hasContent && (
           <p className="text-sm text-muted-foreground hidden sm:block">
-            Page {currentIndex + 1} of {imageUrls.length}
+            Halaman {currentIndex + 1} dari {imageUrls.length}
           </p>
         )}
       </header>

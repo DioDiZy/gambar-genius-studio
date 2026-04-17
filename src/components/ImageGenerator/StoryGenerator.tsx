@@ -62,13 +62,13 @@ export const StoryGenerator = ({
       {/* Section header */}
       <header className="pb-4 border-b border-border/60">
         <p className="font-heading text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
-          Step 1
+          Langkah 1
         </p>
         <h2 className="font-heading text-2xl md:text-3xl text-foreground">
-          Write your story
+          Tulis ceritamu
         </h2>
         <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-md">
-          Each paragraph you write becomes one page of your storybook.
+          Setiap paragraf yang kamu tulis akan menjadi satu halaman di buku ceritamu.
         </p>
       </header>
 
@@ -97,7 +97,7 @@ export const StoryGenerator = ({
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="options" className="border border-border/60 rounded-xl px-4 bg-card/40">
           <AccordionTrigger className="text-sm font-medium hover:no-underline py-3">
-            Characters & advanced settings
+            Karakter & pengaturan lanjutan
           </AccordionTrigger>
           <AccordionContent className="pt-2">
             <StoryInputOptions

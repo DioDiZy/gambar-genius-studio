@@ -14,14 +14,14 @@ interface StoryTemplateSelectorProps {
 }
 
 const TEMPLATES = [
-  { id: "petualangan-hutan", label: "Forest Adventure" },
-  { id: "persahabatan", label: "Friendship" },
-  { id: "hewan-ajaib", label: "Magical Animals" },
-  { id: "petualangan-laut", label: "Ocean Quest" },
-  { id: "petualangan-luar-angkasa", label: "Outer Space" },
-  { id: "pahlawan-kecil", label: "Little Hero" },
-  { id: "dunia-fantasi", label: "Fantasy World" },
-  { id: "misteri-sekolah", label: "School Mystery" },
+  { id: "petualangan-hutan", label: "Petualangan Hutan" },
+  { id: "persahabatan", label: "Persahabatan" },
+  { id: "hewan-ajaib", label: "Hewan Ajaib" },
+  { id: "petualangan-laut", label: "Petualangan Laut" },
+  { id: "petualangan-luar-angkasa", label: "Luar Angkasa" },
+  { id: "pahlawan-kecil", label: "Pahlawan Kecil" },
+  { id: "dunia-fantasi", label: "Dunia Fantasi" },
+  { id: "misteri-sekolah", label: "Misteri Sekolah" },
 ];
 
 export const StoryTemplateSelector = ({
@@ -54,7 +54,7 @@ export const StoryTemplateSelector = ({
         const errorMsg =
           typeof error === "object" && error?.message
             ? error.message
-            : "Couldn't generate a story from this theme";
+            : "Gagal membuat cerita dari tema ini";
         toast.error(errorMsg);
         return;
       }
@@ -85,10 +85,10 @@ export const StoryTemplateSelector = ({
           onAdditionalInstructionsGenerated(data.additionalInstructions);
         }
 
-        toast.success("Story added — feel free to edit it.");
+        toast.success("Cerita berhasil dibuat — kamu bisa mengeditnya.");
       }
     } catch (err) {
-      toast.error("Couldn't generate a story from this theme");
+      toast.error("Gagal membuat cerita dari tema ini");
     } finally {
       setIsLoadingTemplate(false);
       setSelectedTemplate(null);
@@ -98,15 +98,15 @@ export const StoryTemplateSelector = ({
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-sm font-medium text-foreground">Need inspiration?</p>
+        <p className="text-sm font-medium text-foreground">Butuh inspirasi?</p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Pick a theme and we'll start a story for you.
+          Pilih tema dan kami akan memulaikan cerita untukmu.
         </p>
       </div>
 
       {characters.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          Your characters ({characters.map((c) => c.name).join(", ")}) will appear automatically.
+          Karaktermu ({characters.map((c) => c.name).join(", ")}) akan otomatis muncul di cerita.
         </p>
       )}
 
