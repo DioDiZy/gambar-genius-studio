@@ -1,4 +1,4 @@
-import { Download, Save } from "lucide-react";
+import { Download, Save, BookOpen, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface StoryPreviewActionsProps {
@@ -9,6 +9,9 @@ interface StoryPreviewActionsProps {
   onSave: (imageUrl: string, prompt: string) => Promise<void>;
   onDownload: (imageUrl: string) => void;
   onDownloadAll: () => void;
+  onOpenReader: () => void;
+  onExportPdf: () => void;
+  exportingPdf?: boolean;
   viewMode: "single" | "storyboard";
 }
 
@@ -20,10 +23,31 @@ export const StoryPreviewActions = ({
   onSave,
   onDownload,
   onDownloadAll,
+  onOpenReader,
+  onExportPdf,
+  exportingPdf,
 }: StoryPreviewActionsProps) => {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 pt-6 border-t border-border/60">
       <div className="flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          onClick={onOpenReader}
+          className="rounded-lg"
+        >
+          <BookOpen className="mr-1.5 h-4 w-4" />
+          Mode baca
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onExportPdf}
+          disabled={exportingPdf}
+          className="rounded-lg"
+        >
+          <FileDown className="mr-1.5 h-4 w-4" />
+          {exportingPdf ? "Membuat PDF…" : "Ekspor PDF"}
+        </Button>
         <Button
           variant="outline"
           size="sm"
@@ -47,6 +71,7 @@ export const StoryPreviewActions = ({
       </div>
       <Button
         size="sm"
+        variant="secondary"
         onClick={() => onSave(currentImage, currentPrompt)}
         disabled={saving}
         className="rounded-lg"

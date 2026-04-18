@@ -7,6 +7,7 @@ interface BookSpreadViewProps {
   currentIndex: number;
   isGenerating: boolean;
   onSelectImage: (index: number) => void;
+  title?: string;
 }
 
 /**
@@ -19,6 +20,7 @@ export const BookSpreadView = ({
   currentIndex,
   isGenerating,
   onSelectImage,
+  title,
 }: BookSpreadViewProps) => {
   const activeRef = useRef<HTMLElement | null>(null);
 
