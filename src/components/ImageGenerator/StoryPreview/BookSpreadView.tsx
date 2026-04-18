@@ -7,6 +7,7 @@ interface BookSpreadViewProps {
   currentIndex: number;
   isGenerating: boolean;
   onSelectImage: (index: number) => void;
+  title?: string;
 }
 
 /**
@@ -19,6 +20,7 @@ export const BookSpreadView = ({
   currentIndex,
   isGenerating,
   onSelectImage,
+  title,
 }: BookSpreadViewProps) => {
   const activeRef = useRef<HTMLElement | null>(null);
 
@@ -61,6 +63,45 @@ export const BookSpreadView = ({
 
   return (
     <div className="space-y-10">
+      {/* Cover spread */}
+      {title && imageUrls.length > 0 && (
+        <article className="group">
+          <div className="flex items-center gap-3 mb-3 px-1">
+            <span className="font-heading text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Sampul
+            </span>
+            <div className="h-px flex-1 bg-border/60" />
+          </div>
+          <div className="relative grid md:grid-cols-2 rounded-2xl overflow-hidden bg-card border border-border/60 shadow-sm">
+            <div className="relative p-7 md:p-10 bg-[hsl(var(--background))] flex flex-col justify-center min-h-[280px] md:min-h-[360px]">
+              <p className="font-heading text-[11px] uppercase tracking-[0.22em] text-muted-foreground mb-4">
+                Sebuah buku cerita
+              </p>
+              <h3 className="font-heading text-2xl md:text-4xl text-foreground leading-tight">
+                {title}
+              </h3>
+              <p className="text-sm text-muted-foreground/80 mt-5 italic">
+                Dibuat khusus untukmu
+              </p>
+            </div>
+            <div className="relative bg-muted/30 min-h-[280px] md:min-h-[360px]">
+              <img
+                src={imageUrls[0]}
+                alt="Sampul buku cerita"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+          </div>
+          <div className="flex justify-center mt-10">
+            <div className="flex items-center gap-2 text-muted-foreground/60">
+              <span className="h-px w-10 bg-border" />
+              <span className="text-[10px] uppercase tracking-widest">Mulai membaca</span>
+              <span className="h-px w-10 bg-border" />
+            </div>
+          </div>
+        </article>
+      )}
+
       {imageUrls.map((url, idx) => {
         const isActive = idx === currentIndex;
         return (
