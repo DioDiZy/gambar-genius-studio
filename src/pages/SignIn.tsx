@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-
+import { ArrowLeft } from "lucide-react";
 const signInSchema = z.object({
   email: z.string().email({ message: "Masukkan alamat email yang valid" }),
   password: z.string().min(6, { message: "Kata sandi minimal 6 karakter" }),
@@ -100,7 +100,7 @@ const SignIn = () => {
             <section className="order-1 lg:order-2">
               <div className="relative mx-auto max-w-md">
                 <Link to="/" className="absolute -left-2 -top-2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-600 shadow-md transition-all hover:bg-orange-50 hover:text-orange-500 md:-left-4">
-                  ←
+                  <ArrowLeft size={20} />
                 </Link>
                 <div className="absolute -top-4 -right-3 rounded-full bg-yellow-300 px-3 py-1 text-xs font-bold text-slate-800 shadow-md">Halo lagi! 👋</div>
 
