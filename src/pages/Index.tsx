@@ -249,8 +249,8 @@ export default function Index() {
                 {label}
               </a>
             ))}
-            <a href="/signup" className="btn-kid btn-orange" style={{ fontSize: 15, padding: "10px 22px", marginLeft: 10 }}>
-              Daftar Yuk! 🚀
+            <a href="/signin" className="btn-kid btn-orange" style={{ fontSize: 15, padding: "10px 22px", marginLeft: 10 }}>
+              Masuk Yuk! 🚀
             </a>
           </div>
 
@@ -269,8 +269,8 @@ export default function Index() {
               {label}
             </a>
           ))}
-          <a href="/signup" className="btn-kid btn-orange mobile-cta" onClick={closeMenu}>
-            Daftar Yuk! 🚀
+          <a href="/signin" className="btn-kid btn-orange mobile-cta" onClick={closeMenu}>
+            Masuk Yuk! 🚀
           </a>
         </div>
       </nav>
