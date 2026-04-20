@@ -61,7 +61,6 @@ const SignUp = () => {
 
           <div className="absolute left-[8%] top-40 text-2xl opacity-70">🎨</div>
           <div className="absolute left-[14%] bottom-24 text-2xl opacity-70">🚀</div>
-          <div className="absolute right-[18%] bottom-20 text-2xl opacity-70">🌈</div>
         </div>
 
         <div className="container relative z-10 mx-auto px-4">
