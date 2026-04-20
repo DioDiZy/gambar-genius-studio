@@ -318,9 +318,7 @@ export default function Index() {
           </span>
         ))}
 
-        <div className="float" style={{ position: "absolute", top: "15%", right: "8%", fontSize: 58, zIndex: 1 }}>
-          🌈
-        </div>
+        <div className="float" style={{ position: "absolute", top: "15%", right: "8%", fontSize: 58, zIndex: 1 }}></div>
         <div className="float-2" style={{ position: "absolute", bottom: "22%", left: "6%", fontSize: 46, zIndex: 1 }}>
           🎭
         </div>
