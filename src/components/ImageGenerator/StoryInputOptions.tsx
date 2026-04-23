@@ -44,22 +44,18 @@ export const StoryInputOptions = ({
     try {
       const uploadedUrls: string[] = [...(newCharacter.referenceImages || [])];
       for (const file of Array.from(files)) {
-        const ext = file.name.split('.').pop();
+        const ext = file.name.split(".").pop();
         const fileName = `ref-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { data, error } = await supabase.storage
-          .from('character_references')
-          .upload(fileName, file, { contentType: file.type, upsert: false });
+        const { data, error } = await supabase.storage.from("character_references").upload(fileName, file, { contentType: file.type, upsert: false });
         if (error) {
           console.error("Upload error:", error);
           toast.error(`Gagal mengupload ${file.name}`);
           continue;
         }
-        const { data: urlData } = supabase.storage
-          .from('character_references')
-          .getPublicUrl(data.path);
+        const { data: urlData } = supabase.storage.from("character_references").getPublicUrl(data.path);
         uploadedUrls.push(urlData.publicUrl);
       }
-      setNewCharacter(prev => ({ ...prev, referenceImages: uploadedUrls }));
+      setNewCharacter((prev) => ({ ...prev, referenceImages: uploadedUrls }));
       toast.success(`${files.length} gambar referensi berhasil diupload`);
 
       // Auto-generate description from uploaded images
@@ -89,7 +85,7 @@ export const StoryInputOptions = ({
       }
 
       if (data?.description) {
-        setNewCharacter(prev => ({ ...prev, appearance: data.description }));
+        setNewCharacter((prev) => ({ ...prev, appearance: data.description }));
         toast.success("Deskripsi karakter berhasil digenerate dari gambar referensi");
       }
     } catch (err) {
@@ -101,9 +97,9 @@ export const StoryInputOptions = ({
   };
 
   const handleRemoveRefImage = (index: number) => {
-    setNewCharacter(prev => ({
+    setNewCharacter((prev) => ({
       ...prev,
-      referenceImages: (prev.referenceImages || []).filter((_, i) => i !== index)
+      referenceImages: (prev.referenceImages || []).filter((_, i) => i !== index),
     }));
   };
 
@@ -133,7 +129,6 @@ export const StoryInputOptions = ({
         <p className="text-xs text-muted-foreground">Default adalah jeda baris ganda. Masukkan pemisah kustom seperti "***" atau "###" jika diperlukan.</p>
       </div>
 
-
       <div className="space-y-4">
         <Label>Karakter</Label>
         <div className="space-y-4 rounded-md border border-input p-3 bg-muted/20">
@@ -143,17 +138,13 @@ export const StoryInputOptions = ({
                 <div key={index} className="flex items-start space-x-2 p-2 rounded-md bg-background">
                   <div className="flex-grow">
                     <p className="font-medium">{character.name}</p>
-                    {character.appearance && (
-                      <p className="text-xs text-muted-foreground">{character.appearance}</p>
-                    )}
+                    {character.appearance && <p className="text-xs text-muted-foreground">{character.appearance}</p>}
                     {character.referenceImages && character.referenceImages.length > 0 && (
                       <div className="flex gap-1 mt-1 flex-wrap">
                         {character.referenceImages.map((img, imgIdx) => (
                           <img key={imgIdx} src={img} alt={`Ref ${character.name} ${imgIdx + 1}`} className="w-10 h-10 rounded object-cover border border-border" />
                         ))}
-                        <span className="text-xs text-muted-foreground self-center ml-1">
-                          {character.referenceImages.length} gambar referensi
-                        </span>
+                        <span className="text-xs text-muted-foreground self-center ml-1">{character.referenceImages.length} gambar referensi</span>
                       </div>
                     )}
                   </div>
@@ -164,19 +155,12 @@ export const StoryInputOptions = ({
               ))}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground italic text-center py-2">
-              Belum ada karakter. Tambahkan karakter untuk konsistensi antar gambar.
-            </p>
+            <p className="text-xs text-muted-foreground italic text-center py-2">Belum ada karakter. Tambahkan karakter untuk konsistensi antar gambar.</p>
           )}
 
           <div className="space-y-3 border-t border-border pt-3">
             <div className="grid grid-cols-1 gap-2">
-              <Input
-                placeholder="Nama karakter (untuk pemanggilan dalam cerita)"
-                value={newCharacter.name}
-                onChange={(e) => setNewCharacter({ ...newCharacter, name: e.target.value })}
-                disabled={isGenerating}
-              />
+              <Input placeholder="Nama karakter (untuk pemanggilan dalam cerita)" value={newCharacter.name} onChange={(e) => setNewCharacter({ ...newCharacter, name: e.target.value })} disabled={isGenerating} />
 
               {/* Reference Image Upload - placed before description */}
               <div className="space-y-2">
@@ -202,33 +186,20 @@ export const StoryInputOptions = ({
                 )}
 
                 <div className="flex gap-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => handleUploadReferenceImage(e.target.files)}
-                    disabled={isGenerating || isUploading}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isGenerating || isUploading || isDescribing}
-                    className="text-xs"
-                  >
+                  <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleUploadReferenceImage(e.target.files)} disabled={isGenerating || isUploading} />
+                  <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isGenerating || isUploading || isDescribing} className="text-xs">
                     {isUploading ? (
-                      <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Mengupload...</>
+                      <>
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" /> Mengupload...
+                      </>
                     ) : (
-                      <><Upload className="h-3 w-3 mr-1" /> Upload Gambar Referensi</>
+                      <>
+                        <Upload className="h-3 w-3 mr-1" /> Upload Gambar Referensi
+                      </>
                     )}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Upload gambar karakter dari berbagai sudut pandang. Deskripsi akan otomatis digenerate dari gambar.
-                </p>
+                <p className="text-xs text-muted-foreground">Upload gambar karakter dari berbagai sudut pandang. Deskripsi akan otomatis digenerate dari gambar.</p>
               </div>
 
               {/* Description textarea with auto-generation indicator */}
@@ -252,14 +223,7 @@ export const StoryInputOptions = ({
 
               {/* Re-generate description button */}
               {newCharacter.referenceImages && newCharacter.referenceImages.length > 0 && !isDescribing && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRegenDescription}
-                  disabled={isGenerating}
-                  className="text-xs w-fit"
-                >
+                <Button type="button" variant="ghost" size="sm" onClick={handleRegenDescription} disabled={isGenerating} className="text-xs w-fit">
                   <Sparkles className="h-3 w-3 mr-1" /> Generate Ulang Deskripsi dari Gambar
                 </Button>
               )}
@@ -279,7 +243,13 @@ export const StoryInputOptions = ({
 
         <div className="space-y-2">
           <Label>Instruksi Gambar Tambahan</Label>
-          <Textarea placeholder="Tambahkan instruksi tambahan untuk pembuatan gambar (latar belakang, setting, suasana, pencahayaan, dll.)" value={characterDescriptions} onChange={(e) => onCharacterDescriptionsChange(e.target.value)} className="min-h-20" disabled={isGenerating} />
+          <Textarea
+            placeholder="Tambahkan instruksi tambahan untuk pembuatan gambar (latar belakang, setting, suasana, pencahayaan, dll.)"
+            value={characterDescriptions}
+            onChange={(e) => onCharacterDescriptionsChange(e.target.value)}
+            className="min-h-20"
+            disabled={isGenerating}
+          />
           <p className="text-xs text-muted-foreground">Instruksi ini akan diterapkan pada semua gambar yang dihasilkan untuk konsistensi.</p>
         </div>
       </div>

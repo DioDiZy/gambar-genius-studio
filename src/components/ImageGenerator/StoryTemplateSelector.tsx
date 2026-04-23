@@ -24,14 +24,7 @@ const TEMPLATES = [
   { id: "misteri-sekolah", label: "Misteri Sekolah" },
 ];
 
-export const StoryTemplateSelector = ({
-  characters,
-  onStoryGenerated,
-  onCharactersGenerated,
-  onAdditionalInstructionsGenerated,
-  isGenerating,
-  disabled,
-}: StoryTemplateSelectorProps) => {
+export const StoryTemplateSelector = ({ characters, onStoryGenerated, onCharactersGenerated, onAdditionalInstructionsGenerated, isGenerating, disabled }: StoryTemplateSelectorProps) => {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
 
@@ -51,10 +44,7 @@ export const StoryTemplateSelector = ({
       });
 
       if (error) {
-        const errorMsg =
-          typeof error === "object" && error?.message
-            ? error.message
-            : "Gagal membuat cerita dari tema ini";
+        const errorMsg = typeof error === "object" && error?.message ? error.message : "Gagal membuat cerita dari tema ini";
         toast.error(errorMsg);
         return;
       }
@@ -62,12 +52,7 @@ export const StoryTemplateSelector = ({
       if (data?.story) {
         onStoryGenerated(data.story);
 
-        if (
-          data.characters &&
-          Array.isArray(data.characters) &&
-          data.characters.length > 0 &&
-          onCharactersGenerated
-        ) {
+        if (data.characters && Array.isArray(data.characters) && data.characters.length > 0 && onCharactersGenerated) {
           const existingNames = new Set(characters.map((c) => c.name.toLowerCase()));
           const newChars: CharacterDescription[] = data.characters
             .filter((c: any) => c.name && !existingNames.has(c.name.toLowerCase()))
@@ -99,16 +84,10 @@ export const StoryTemplateSelector = ({
     <div className="space-y-3">
       <div>
         <p className="text-sm font-medium text-foreground">Butuh inspirasi?</p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Pilih tema dan kami akan memulaikan cerita untukmu.
-        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">Pilih tema dan kami akan memulaikan cerita untukmu.</p>
       </div>
 
-      {characters.length > 0 && (
-        <p className="text-xs text-muted-foreground">
-          Karaktermu ({characters.map((c) => c.name).join(", ")}) akan otomatis muncul di cerita.
-        </p>
-      )}
+      {characters.length > 0 && <p className="text-xs text-muted-foreground">Karaktermu ({characters.map((c) => c.name).join(", ")}) akan otomatis muncul di cerita.</p>}
 
       <div className="flex flex-wrap gap-2">
         {TEMPLATES.map((tmpl) => {

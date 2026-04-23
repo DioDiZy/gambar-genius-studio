@@ -130,7 +130,7 @@ const Dashboard = () => {
               <StoryImagesPreview imageUrls={storyImageUrls} prompts={storyPrompts} isGenerating={isGenerating} onSaved={handleImageSaved} />
             </div>
 
-            {showAnalyzer && (
+            {/* {showAnalyzer && (
               <div className="mt-16 animate-in fade-in slide-in-from-bottom-5 duration-700">
                 <div className="mb-6 flex items-center gap-3 px-4">
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-200" />
@@ -139,7 +139,7 @@ const Dashboard = () => {
                 </div>
                 <StoryboardAnalyzer storyboardData={structuredData} isVisible={showAnalyzer} />
               </div>
-            )}
+            )} */}
           </TabsContent>
         </Tabs>
 

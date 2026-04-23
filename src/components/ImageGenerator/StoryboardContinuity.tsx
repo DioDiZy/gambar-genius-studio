@@ -8,25 +8,21 @@ interface StoryboardContinuityProps {
   currentIndex: number;
 }
 
-export const StoryboardContinuity = ({ 
-  imageUrls, 
-  prompts, 
-  currentIndex 
-}: StoryboardContinuityProps) => {
+export const StoryboardContinuity = ({ imageUrls, prompts, currentIndex }: StoryboardContinuityProps) => {
   if (imageUrls.length === 0) return null;
 
   const analyzePromptFeatures = (prompt: string) => {
     const features = {
       characters: [] as string[],
-      location: '',
-      timeOfDay: '',
-      cameraAngle: '',
-      style: ''
+      location: "",
+      timeOfDay: "",
+      cameraAngle: "",
+      style: "",
     };
 
     const characterMatch = prompt.match(/Characters in scene: ([^.]+)/);
     if (characterMatch) {
-      features.characters = characterMatch[1].split(';').map(c => c.trim().split(' ')[0]);
+      features.characters = characterMatch[1].split(";").map((c) => c.trim().split(" ")[0]);
     }
 
     const locationMatch = prompt.match(/\b(?:in|at|on|inside|outside|near|by|di|dalam|dekat)\s+(?:the\s+)?([a-zA-Z\s]+?)(?:\s|,|\.)/i);
@@ -44,16 +40,16 @@ export const StoryboardContinuity = ({
     return features;
   };
 
-  const currentFeatures = analyzePromptFeatures(prompts[currentIndex] || '');
-  const prevFeatures = currentIndex > 0 ? analyzePromptFeatures(prompts[currentIndex - 1] || '') : null;
-  const nextFeatures = currentIndex < prompts.length - 1 ? analyzePromptFeatures(prompts[currentIndex + 1] || '') : null;
+  const currentFeatures = analyzePromptFeatures(prompts[currentIndex] || "");
+  const prevFeatures = currentIndex > 0 ? analyzePromptFeatures(prompts[currentIndex - 1] || "") : null;
+  const nextFeatures = currentIndex < prompts.length - 1 ? analyzePromptFeatures(prompts[currentIndex + 1] || "") : null;
 
   const getConnectionType = (current: any, other: any) => {
     if (!other) return null;
-    if (current.location === other.location) return 'same-location';
-    if (current.characters.some((char: string) => other.characters.includes(char))) return 'character-continuity';
-    if (current.timeOfDay === other.timeOfDay) return 'time-continuity';
-    return 'scene-transition';
+    if (current.location === other.location) return "same-location";
+    if (current.characters.some((char: string) => other.characters.includes(char))) return "character-continuity";
+    if (current.timeOfDay === other.timeOfDay) return "time-continuity";
+    return "scene-transition";
   };
 
   const prevConnection = getConnectionType(currentFeatures, prevFeatures);
@@ -61,11 +57,16 @@ export const StoryboardContinuity = ({
 
   const getConnectionLabel = (type: string) => {
     switch (type) {
-      case 'same-location': return 'Lokasi sama';
-      case 'character-continuity': return 'Karakter berlanjut';
-      case 'time-continuity': return 'Waktu konsisten';
-      case 'scene-transition': return 'Pergantian adegan';
-      default: return '';
+      case "same-location":
+        return "Lokasi sama";
+      case "character-continuity":
+        return "Karakter berlanjut";
+      case "time-continuity":
+        return "Waktu konsisten";
+      case "scene-transition":
+        return "Pergantian adegan";
+      default:
+        return "";
     }
   };
 
@@ -76,9 +77,7 @@ export const StoryboardContinuity = ({
           <Camera className="h-4 w-4" />
           Kontinuitas Storyboard
         </CardTitle>
-        <CardDescription className="text-xs">
-          Hubungan visual antar frame
-        </CardDescription>
+        <CardDescription className="text-xs">Hubungan visual antar frame</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -87,8 +86,8 @@ export const StoryboardContinuity = ({
             {currentFeatures.characters.length > 0 && (
               <Badge variant="secondary" className="text-xs flex items-center gap-1">
                 <Users className="h-3 w-3" />
-                {currentFeatures.characters.slice(0, 2).join(', ')}
-                {currentFeatures.characters.length > 2 && '...'}
+                {currentFeatures.characters.slice(0, 2).join(", ")}
+                {currentFeatures.characters.length > 2 && "..."}
               </Badge>
             )}
             {currentFeatures.location && (
@@ -104,7 +103,9 @@ export const StoryboardContinuity = ({
               </Badge>
             )}
             {currentFeatures.cameraAngle && (
-              <Badge variant="secondary" className="text-xs">{currentFeatures.cameraAngle}</Badge>
+              <Badge variant="secondary" className="text-xs">
+                {currentFeatures.cameraAngle}
+              </Badge>
             )}
           </div>
         </div>
@@ -113,7 +114,7 @@ export const StoryboardContinuity = ({
           <div className="flex items-center gap-1 flex-1">
             {prevConnection && (
               <>
-                <Badge variant={prevConnection === 'same-location' ? 'default' : 'outline'} className="text-xs">
+                <Badge variant={prevConnection === "same-location" ? "default" : "outline"} className="text-xs">
                   {currentIndex}
                 </Badge>
                 <div className="flex items-center gap-1 text-muted-foreground">
@@ -133,7 +134,7 @@ export const StoryboardContinuity = ({
               <>
                 <span className="text-xs text-muted-foreground">{getConnectionLabel(nextConnection)}</span>
                 <ArrowRight className="h-3 w-3" />
-                <Badge variant={nextConnection === 'same-location' ? 'default' : 'outline'} className="text-xs">
+                <Badge variant={nextConnection === "same-location" ? "default" : "outline"} className="text-xs">
                   {currentIndex + 2}
                 </Badge>
               </>

@@ -10,34 +10,19 @@ interface StoryTextAreaProps {
   validation?: IndonesianValidationResult;
 }
 
-export const StoryTextArea = ({
-  story,
-  onStoryChange,
-  paragraphCount,
-  isGenerating,
-  validation,
-}: StoryTextAreaProps) => {
+export const StoryTextArea = ({ story, onStoryChange, paragraphCount, isGenerating, validation }: StoryTextAreaProps) => {
   const placeholder =
     "Pada suatu hari di sebuah desa kecil, hiduplah seorang anak yang sangat suka bertualang...\n\nSuatu pagi, ia berjalan masuk ke dalam hutan dan menemukan pondok tua yang sudah lama ditinggalkan. Sinar matahari menembus celah-celah atap jerami.";
 
-  const showValidationWarning =
-    story.trim().length > 0 &&
-    validation &&
-    !validation.isLikelyIndonesianSentence;
+  const showValidationWarning = story.trim().length > 0 && validation && !validation.isLikelyIndonesianSentence;
 
   const charCount = story.length;
 
   return (
     <div className="space-y-3">
       <div className="flex items-baseline justify-between">
-        <label className="text-sm font-medium text-foreground">
-          Ceritamu
-        </label>
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {paragraphCount > 0
-            ? `${paragraphCount} ${paragraphCount === 1 ? "halaman" : "halaman"} · ${charCount} karakter`
-            : `${charCount} karakter`}
-        </span>
+        <label className="text-sm font-medium text-foreground">Ceritamu</label>
+        <span className="text-xs text-muted-foreground tabular-nums">{paragraphCount > 0 ? `${paragraphCount} ${paragraphCount === 1 ? "halaman" : "halaman"} · ${charCount} karakter` : `${charCount} karakter`}</span>
       </div>
 
       <Textarea
@@ -48,9 +33,7 @@ export const StoryTextArea = ({
         disabled={isGenerating}
       />
 
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Tips: pisahkan setiap paragraf dengan baris kosong. Setiap paragraf akan menjadi satu halaman bergambar.
-      </p>
+      <p className="text-xs text-muted-foreground leading-relaxed">Tips: pisahkan setiap paragraf dengan baris kosong. Setiap paragraf akan menjadi satu halaman bergambar.</p>
 
       {showValidationWarning && (
         <p className="text-xs text-foreground bg-muted/60 border border-border/60 rounded-lg px-3 py-2">

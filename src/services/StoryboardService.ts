@@ -213,13 +213,17 @@ export async function createStructuredStoryboardPrompts(paragraphs: string[], ch
   // Try AI-powered FLUX.1 prompt generation via edge function
   try {
     const { supabase } = await import("@/integrations/supabase/client");
-    
+
     console.log("Calling generate-flux-prompts edge function for AI-powered prompt generation...");
-    
+
     const { data, error } = await supabase.functions.invoke("generate-flux-prompts", {
       body: {
         paragraphs,
-        characters: characters.map(c => ({ name: c.name, appearance: c.appearance })),
+        characters: characters.map((c) => ({
+          name: c.name,
+          appearance: c.appearance,
+          referenceImages: c.referenceImages ?? [],
+        })),
         characterDescriptions,
       },
     });
