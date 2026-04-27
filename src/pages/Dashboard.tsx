@@ -104,13 +104,13 @@ const Dashboard = () => {
               <BookOpen size={18} />
               Buku Cerita
             </TabsTrigger>
-            <TabsTrigger
+            {/* <TabsTrigger
               value="single"
               className="flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md"
             >
               <ImageIcon size={18} />
               Satu Gambar
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="single" className="mt-0 focus-visible:outline-none">
