@@ -15,9 +15,6 @@ const signUpSchema = z.object({
   name: z.string().min(2, { message: "Nama minimal 2 karakter" }),
   email: z.string().email({ message: "Masukkan alamat email yang valid" }),
   password: z.string().min(8, { message: "Kata sandi minimal 8 karakter" }),
-  agreedToTerms: z.boolean().refine((val) => val === true, {
-    message: "Anda harus menyetujui syarat dan kebijakan privasi",
-  }),
 });
 
 type SignUpValues = z.infer<typeof signUpSchema>;
@@ -32,7 +29,6 @@ const SignUp = () => {
       name: "",
       email: "",
       password: "",
-      agreedToTerms: false,
     },
   });
 
@@ -170,31 +166,6 @@ const SignUp = () => {
                               />
                             </FormControl>
                             <FormMessage className="text-[10px] opacity-70" />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="agreedToTerms"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-2">
-                            <FormControl>
-                              <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={isSubmitting} className="mt-1 rounded-md border-slate-300 data-[state=checked]:bg-pink-500 data-[state=checked]:border-pink-500" />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel className="text-xs font-medium text-slate-500">
-                                Saya menyetujui{" "}
-                                <Link to="/terms" className="text-pink-500 hover:underline">
-                                  Syarat
-                                </Link>{" "}
-                                &{" "}
-                                <Link to="/privacy" className="text-pink-500 hover:underline">
-                                  Privasi
-                                </Link>
-                              </FormLabel>
-                              <FormMessage />
-                            </div>
                           </FormItem>
                         )}
                       />
