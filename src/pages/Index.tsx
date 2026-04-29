@@ -185,12 +185,12 @@ const features = [
 ];
 
 const examples = [
-  { label: "Kota masa depan penuh cahaya warna-warni", emoji: "🏙️", bg: "linear-gradient(135deg,#1a1a4e,#4a0080,#00aaff)" },
-  { label: "Naga mini lucu duduk di puncak gunung", emoji: "🐉", bg: "linear-gradient(135deg,#2ecc71,#27ae60,#1a5c30)" },
-  { label: "Robot bersahabat yang suka memasak", emoji: "🤖", bg: "linear-gradient(135deg,#3498db,#2980b9,#1a5276)" },
-  { label: "Petualangan bawah laut penuh ikan lucu", emoji: "🐠", bg: "linear-gradient(135deg,#00c6ff,#0072ff,#003380)" },
-  { label: "Kucing astronot di planet bintang", emoji: "🐱", bg: "linear-gradient(135deg,#8e44ad,#6c3483,#2c1654)" },
-  { label: "Peri hutan menjaga bunga ajaib", emoji: "🧚", bg: "linear-gradient(135deg,#ff6b9d,#c0392b,#7d1010)" },
+  { label: "Kota masa depan penuh cahaya warna-warni", image: "/DashboardAssets/kota.webp", bg: "linear-gradient(135deg,#1a1a4e,#4a0080,#00aaff)" },
+  { label: "Naga mini lucu duduk di puncak gunung", image: "/DashboardAssets/naga.webp", bg: "linear-gradient(135deg,#2ecc71,#27ae60,#1a5c30)" },
+  { label: "Robot bersahabat yang suka memasak", image: "/DashboardAssets/robot.webp", bg: "linear-gradient(135deg,#3498db,#2980b9,#1a5276)" },
+  { label: "Petualangan bawah laut penuh ikan lucu", image: "/DashboardAssets/ikan.webp", bg: "linear-gradient(135deg,#00c6ff,#0072ff,#003380)" },
+  { label: "Kucing astronot di planet bintang", image: "/DashboardAssets/kucing.webp", bg: "linear-gradient(135deg,#8e44ad,#6c3483,#2c1654)" },
+  { label: "Peri hutan menjaga bunga ajaib", image: "/DashboardAssets/bunga.webp", bg: "linear-gradient(135deg,#ff6b9d,#c0392b,#7d1010)" },
 ];
 
 const NAV_LINKS = [
@@ -453,9 +453,47 @@ export default function Index() {
                   background: "white",
                   border: "3px solid #D0E8FF",
                   boxShadow: "0 6px 0 #A0C8F0, 0 10px 25px rgba(0,0,0,0.08)",
+                  borderRadius: "12px", // Tambahan agar lebih smooth
+                  overflow: "hidden",
                 }}
               >
-                <div style={{ height: 190, background: ex.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 76 }}>{ex.emoji}</div>
+                {/* Container Gambar dengan Overlay */}
+                <div
+                  style={{
+                    height: 190,
+                    background: ex.bg,
+                    position: "relative", // Wajib agar overlay & teks bisa diposisikan absolute
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden",
+                  }}
+                >
+                  {/* Gambar Utama */}
+                  <img
+                    src={ex.image}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover", // Supaya gambar tidak gepeng
+                    }}
+                  />
+
+                  {/* Lapisan Gelap (Overlay) */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      background: "linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6))", // Gradasi dari agak terang ke gelap
+                      zIndex: 1,
+                    }}
+                  />
+                </div>
+
+                {/* Bagian Deskripsi Bawah */}
                 <div style={{ padding: "14px 18px" }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: "#2C4A6E", lineHeight: 1.5, textAlign: "center" }}>"{ex.label}"</p>
                 </div>

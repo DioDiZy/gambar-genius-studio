@@ -63,7 +63,6 @@ const SignIn = () => {
             <section className="order-2 lg:order-1 hidden md:flex">
               <div className="max-w-xl">
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-sm font-semibold text-orange-500 shadow-sm backdrop-blur">
-                  <span>✨</span>
                   <span>Masuk dan lanjutkan petualanganmu</span>
                 </div>
 
