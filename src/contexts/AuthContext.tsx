@@ -112,6 +112,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
+      // Block unverified email users
+      if (data.user && !data.user.email_confirmed_at) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Email belum diverifikasi",
+          description: "Silakan cek email kamu dan klik tautan verifikasi sebelum masuk.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       console.log('Sign in successful:', data);
       toast({ title: "Berhasil masuk", description: "Selamat datang kembali di PembuatGambar!" });
       navigate("/dashboard");
