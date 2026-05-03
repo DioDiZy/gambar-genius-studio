@@ -3,7 +3,7 @@ import { CustomButton } from "@/components/ui/custom-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,7 +22,7 @@ type SignUpValues = z.infer<typeof signUpSchema>;
 const SignUp = () => {
   const { signUp, user, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
@@ -37,7 +37,8 @@ const SignUp = () => {
     setIsSubmitting(true);
     try {
       await signUp(data.email, data.password, data.name);
-      setRegistrationSuccess(true);
+      // Redirect to OTP page for email verification
+      navigate(`/verify-otp?email=${encodeURIComponent(data.email)}&type=signup`);
     } finally {
       setIsSubmitting(false);
     }
@@ -118,20 +119,6 @@ const SignUp = () => {
 
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                      {registrationSuccess ? (
-                        <div className="text-center space-y-4 py-4">
-                          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">✉️</div>
-                          <h3 className="text-lg font-bold text-slate-800">Cek Email Kamu!</h3>
-                          <p className="text-sm text-slate-600 leading-relaxed">
-                            Akun berhasil dibuat! Silakan cek email kamu untuk verifikasi akun sebelum login.
-                          </p>
-                          <Link to="/signin">
-                            <CustomButton variant="gradient" className="h-12 w-full rounded-2xl text-sm font-bold shadow-lg mt-2">
-                              Ke Halaman Login
-                            </CustomButton>
-                          </Link>
-                        </div>
-                      ) : (
                       <>
                       <FormField
                         control={form.control}
@@ -191,7 +178,6 @@ const SignUp = () => {
                         {isSubmitting ? "Mendaftarkan..." : "Mulai Petualangan"}
                       </CustomButton>
                       </>
-                      )}
                     </form>
                   </Form>
 
