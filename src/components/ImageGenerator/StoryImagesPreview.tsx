@@ -10,16 +10,12 @@ interface StoryImagesPreviewProps {
   prompts: string[];
   isGenerating: boolean;
   onSaved: () => void;
+  externalTitle?: string;
 }
 
-/**
- * Derive a short, friendly title from the first paragraph.
- * Falls back to a default if no usable text is found.
- */
 const deriveTitle = (prompts: string[]): string => {
   const first = (prompts[0] ?? "").trim();
   if (!first) return "Buku Ceritaku";
-  // Take first sentence
   const sentence = first.split(/[.!?\n]/)[0].trim();
   const words = sentence.split(/\s+/).slice(0, 8).join(" ");
   return words.length > 0 ? words : "Buku Ceritaku";
@@ -30,6 +26,7 @@ export const StoryImagesPreview = ({
   prompts,
   isGenerating,
   onSaved,
+  externalTitle,
 }: StoryImagesPreviewProps) => {
   const {
     currentIndex,
@@ -46,7 +43,7 @@ export const StoryImagesPreview = ({
   const currentImage = imageUrls[currentIndex];
   const currentPrompt = prompts[currentIndex];
   const hasContent = imageUrls.length > 0;
-  const title = useMemo(() => deriveTitle(prompts), [prompts]);
+  const title = externalTitle?.trim() || deriveTitle(prompts);
 
   const handleExportPdf = async () => {
     setExportingPdf(true);
