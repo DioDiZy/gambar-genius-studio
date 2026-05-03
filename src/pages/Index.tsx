@@ -206,7 +206,7 @@ export default function Index() {
     link.rel = "stylesheet";
     link.href = "https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap";
     document.head.appendChild(link);
-    return () => document.head.removeChild(link);
+    return () => { document.head.removeChild(link); };
   }, []);
 
   // Close mobile menu on outside click
@@ -583,8 +583,8 @@ export default function Index() {
                 key={label}
                 href="#"
                 style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: 600, textDecoration: "none", transition: "color 0.2s" }}
-                onMouseEnter={(e) => (e.target.style.color = "#FF5A1F")}
-                onMouseLeave={(e) => (e.target.style.color = "rgba(255,255,255,0.6)")}
+                onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#FF5A1F")}
+                onMouseLeave={(e) => ((e.target as HTMLElement).style.color = "rgba(255,255,255,0.6)")}
               >
                 {label}
               </a>
