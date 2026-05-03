@@ -79,6 +79,39 @@ export type Database = {
         }
         Relationships: []
       }
+      storybooks: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          id: string
+          page_count: number
+          pages: Json
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          page_count?: number
+          pages?: Json
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          page_count?: number
+          pages?: Json
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
