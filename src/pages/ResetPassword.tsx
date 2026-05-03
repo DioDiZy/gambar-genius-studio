@@ -9,13 +9,15 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-const resetSchema = z.object({
-  password: z.string().min(8, { message: "Password minimal 8 karakter" }),
-  confirmPassword: z.string().min(8, { message: "Konfirmasi password minimal 8 karakter" }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Password tidak cocok",
-  path: ["confirmPassword"],
-});
+const resetSchema = z
+  .object({
+    password: z.string().min(8, { message: "Password minimal 8 karakter" }),
+    confirmPassword: z.string().min(8, { message: "Konfirmasi password minimal 8 karakter" }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Password tidak cocok",
+    path: ["confirmPassword"],
+  });
 
 type ResetValues = z.infer<typeof resetSchema>;
 
@@ -35,11 +37,11 @@ const ResetPassword = () => {
     // Check for recovery session from URL hash
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get("type");
-    
+
     if (type === "recovery") {
       setIsValidSession(true);
     }
-    
+
     // Also check if user has a valid session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {

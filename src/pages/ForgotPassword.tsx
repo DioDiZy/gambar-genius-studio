@@ -30,8 +30,13 @@ const ForgotPassword = () => {
   const onSubmit = async (data: ForgotValues) => {
     setIsSubmitting(true);
     try {
+      // const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+      //   redirectTo: `${window.location.origin}/verify-otp?email=${encodeURIComponent(data.email)}&type=recovery`,
+      // });
+      const siteUrl = import.meta.env.VITE_SITE_URL;
+
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/verify-otp?email=${encodeURIComponent(data.email)}&type=recovery`,
+        redirectTo: `${siteUrl}/reset-password`,
       });
       if (error) {
         toast({ title: "Gagal", description: error.message, variant: "destructive" });
@@ -63,7 +68,6 @@ const ForgotPassword = () => {
 
             <div className="rounded-[32px] border border-white/70 bg-white/90 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.10)] backdrop-blur md:p-8">
               <div className="mb-8 text-center">
-                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-[24px] bg-gradient-to-br from-pink-400 via-orange-400 to-yellow-400 text-3xl shadow-lg">🔑</div>
                 <h2 className="text-2xl font-extrabold text-slate-800 md:text-3xl">Lupa Password?</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-500">Masukkan email akunmu, kami akan mengirimkan link untuk reset password.</p>
               </div>
@@ -91,7 +95,13 @@ const ForgotPassword = () => {
                         <FormItem>
                           <FormLabel className="text-sm font-semibold text-slate-700">Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="email@anda.com" {...field} type="email" disabled={isSubmitting} className="h-12 rounded-2xl border-slate-200 bg-white/90 px-4 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-orange-300" />
+                            <Input
+                              placeholder="email@anda.com"
+                              {...field}
+                              type="email"
+                              disabled={isSubmitting}
+                              className="h-12 rounded-2xl border-slate-200 bg-white/90 px-4 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-orange-300"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -103,12 +113,6 @@ const ForgotPassword = () => {
                   </form>
                 </Form>
               )}
-
-              <div className="mt-6 text-center">
-                <Link to="/signin" className="text-sm font-semibold text-orange-500 transition hover:text-orange-600 hover:underline">
-                  Kembali ke halaman login
-                </Link>
-              </div>
             </div>
           </div>
         </div>
