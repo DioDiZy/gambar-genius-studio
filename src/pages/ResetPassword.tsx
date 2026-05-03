@@ -44,11 +44,14 @@ const ResetPassword = () => {
 
     // Also check if user has a valid session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setIsValidSession(true);
-      }
+      if (session) setIsValidSession(true);
+      // Also check URL hash for direct recovery links
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      if (hashParams.get("type") === "recovery") setIsValidSession(true);
       setIsChecking(false);
     });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const onSubmit = async (data: ResetValues) => {

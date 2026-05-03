@@ -71,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // If email confirmation is required, user won't have a session yet
       if (data.user && !data.session) {
         toast({ title: "Pendaftaran berhasil!", description: "Silakan cek email kamu untuk verifikasi akun sebelum login." });
-        navigate("/signin");
         return;
       }
       
