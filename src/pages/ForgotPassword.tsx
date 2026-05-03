@@ -31,7 +31,7 @@ const ForgotPassword = () => {
     setIsSubmitting(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}/verify-otp?email=${encodeURIComponent(data.email)}&type=recovery`,
       });
       if (error) {
         toast({ title: "Gagal", description: error.message, variant: "destructive" });
