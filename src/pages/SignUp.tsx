@@ -22,6 +22,7 @@ type SignUpValues = z.infer<typeof signUpSchema>;
 const SignUp = () => {
   const { signUp, user, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
@@ -36,6 +37,7 @@ const SignUp = () => {
     setIsSubmitting(true);
     try {
       await signUp(data.email, data.password, data.name);
+      setRegistrationSuccess(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -116,6 +118,21 @@ const SignUp = () => {
 
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      {registrationSuccess ? (
+                        <div className="text-center space-y-4 py-4">
+                          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">✉️</div>
+                          <h3 className="text-lg font-bold text-slate-800">Cek Email Kamu!</h3>
+                          <p className="text-sm text-slate-600 leading-relaxed">
+                            Akun berhasil dibuat! Silakan cek email kamu untuk verifikasi akun sebelum login.
+                          </p>
+                          <Link to="/signin">
+                            <CustomButton variant="gradient" className="h-12 w-full rounded-2xl text-sm font-bold shadow-lg mt-2">
+                              Ke Halaman Login
+                            </CustomButton>
+                          </Link>
+                        </div>
+                      ) : (
+                      <>
                       <FormField
                         control={form.control}
                         name="name"
@@ -173,6 +190,8 @@ const SignUp = () => {
                       <CustomButton type="submit" variant="gradient" className="h-12 w-full rounded-2xl text-sm font-bold shadow-lg transition-transform active:scale-95" disabled={isSubmitting}>
                         {isSubmitting ? "Mendaftarkan..." : "Mulai Petualangan"}
                       </CustomButton>
+                      </>
+                      )}
                     </form>
                   </Form>
 

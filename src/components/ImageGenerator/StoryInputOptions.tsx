@@ -158,7 +158,7 @@ export const StoryInputOptions = ({
             <p className="text-xs text-muted-foreground italic text-center py-2">Belum ada karakter. Tambahkan karakter untuk konsistensi antar gambar.</p>
           )}
 
-          <div className="space-y-3 border-t border-border pt-3">
+          <div className="space-y-3">
             <div className="grid grid-cols-1 gap-2">
               <Input placeholder="Nama karakter (untuk pemanggilan dalam cerita)" value={newCharacter.name} onChange={(e) => setNewCharacter({ ...newCharacter, name: e.target.value })} disabled={isGenerating} />
 

@@ -67,7 +67,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       console.log('Sign up successful:', data);
-      toast({ title: "Pendaftaran berhasil", description: "Selamat datang di PembuatGambar! Anda sekarang sudah masuk." });
+      
+      // If email confirmation is required, user won't have a session yet
+      if (data.user && !data.session) {
+        toast({ title: "Pendaftaran berhasil!", description: "Silakan cek email kamu untuk verifikasi akun sebelum login." });
+        navigate("/signin");
+        return;
+      }
+      
+      toast({ title: "Pendaftaran berhasil", description: "Selamat datang di PembuatGambar!" });
       navigate("/dashboard");
     } catch (error) {
       console.error("Error signing up:", error);
