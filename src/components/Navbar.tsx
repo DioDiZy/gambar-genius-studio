@@ -1,9 +1,10 @@
-
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { CustomButton } from "@/components/ui/custom-button";
+import { UserMenu } from "@/components/UserMenu";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
   showAuth?: boolean;
@@ -11,6 +12,7 @@ interface NavbarProps {
 
 export function Navbar({ showAuth = true }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-md z-50 border-b">
@@ -32,17 +34,28 @@ export function Navbar({ showAuth = true }: NavbarProps) {
 
           {showAuth && (
             <div className="flex items-center gap-4">
-              <Link to="/signin">
-                <CustomButton variant="outline">Masuk</CustomButton>
-              </Link>
-              <Link to="/signup">
-                <CustomButton variant="gradient">Daftar</CustomButton>
-              </Link>
+              {user ? (
+                <>
+                  <Link to="/dashboard">
+                    <CustomButton variant="gradient">Dashboard</CustomButton>
+                  </Link>
+                  <UserMenu />
+                </>
+              ) : (
+                <>
+                  <Link to="/signin">
+                    <CustomButton variant="outline">Masuk Yuk</CustomButton>
+                  </Link>
+                  <Link to="/signup">
+                    <CustomButton variant="gradient">Daftar</CustomButton>
+                  </Link>
+                </>
+              )}
             </div>
           )}
         </div>
 
-        <button 
+        <button
           className="md:hidden"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Buka menu"
@@ -67,12 +80,20 @@ export function Navbar({ showAuth = true }: NavbarProps) {
 
           {showAuth && (
             <div className="flex flex-col gap-4">
-              <Link to="/signin" onClick={() => setIsMenuOpen(false)}>
-                <CustomButton variant="outline" className="w-full">Masuk</CustomButton>
-              </Link>
-              <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
-                <CustomButton variant="gradient" className="w-full">Daftar</CustomButton>
-              </Link>
+              {user ? (
+                <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                  <CustomButton variant="gradient" className="w-full">Dashboard</CustomButton>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/signin" onClick={() => setIsMenuOpen(false)}>
+                    <CustomButton variant="outline" className="w-full">Masuk Yuk</CustomButton>
+                  </Link>
+                  <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
+                    <CustomButton variant="gradient" className="w-full">Daftar</CustomButton>
+                  </Link>
+                </>
+              )}
             </div>
           )}
         </div>

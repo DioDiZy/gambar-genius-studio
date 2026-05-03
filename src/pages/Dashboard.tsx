@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [storyPrompts, setStoryPrompts] = useState<string[]>([]);
   const [structuredData, setStructuredData] = useState<any>(null);
   const [showAnalyzer, setShowAnalyzer] = useState(false);
+  const [storyTitle, setStoryTitle] = useState("");
 
   const { data: userImages, refetch: refetchImages } = useQuery({
     queryKey: ["userImages", user?.id],
@@ -57,6 +58,7 @@ const Dashboard = () => {
     setStoryPrompts([]);
     setStructuredData(null);
     setShowAnalyzer(false);
+    setStoryTitle("");
   };
 
   const handleDeleteImage = async (imageId: string) => {
@@ -104,13 +106,6 @@ const Dashboard = () => {
               <BookOpen size={18} />
               Buku Cerita
             </TabsTrigger>
-            {/* <TabsTrigger
-              value="single"
-              className="flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-            >
-              <ImageIcon size={18} />
-              Satu Gambar
-            </TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="single" className="mt-0 focus-visible:outline-none">
@@ -125,21 +120,23 @@ const Dashboard = () => {
           <TabsContent value="story" className="mt-0 focus-visible:outline-none">
             <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-14">
               <div className="rounded-[32px] border border-white/70 bg-white/60 p-1 shadow-xl backdrop-blur-md">
-                <StoryGenerator onImagesGenerated={handleStoryImagesGenerated} onStructuredDataGenerated={handleStructuredDataGenerated} isGenerating={isGenerating} setIsGenerating={setIsGenerating} />
+                <StoryGenerator
+                  onImagesGenerated={handleStoryImagesGenerated}
+                  onStructuredDataGenerated={handleStructuredDataGenerated}
+                  isGenerating={isGenerating}
+                  setIsGenerating={setIsGenerating}
+                  storyTitle={storyTitle}
+                  onStoryTitleChange={setStoryTitle}
+                />
               </div>
-              <StoryImagesPreview imageUrls={storyImageUrls} prompts={storyPrompts} isGenerating={isGenerating} onSaved={handleImageSaved} />
+              <StoryImagesPreview
+                imageUrls={storyImageUrls}
+                prompts={storyPrompts}
+                isGenerating={isGenerating}
+                onSaved={handleImageSaved}
+                externalTitle={storyTitle}
+              />
             </div>
-
-            {/* {showAnalyzer && (
-              <div className="mt-16 animate-in fade-in slide-in-from-bottom-5 duration-700">
-                <div className="mb-6 flex items-center gap-3 px-4">
-                  <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-200" />
-                  <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Analisis Storyboard</span>
-                  <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-200" />
-                </div>
-                <StoryboardAnalyzer storyboardData={structuredData} isVisible={showAnalyzer} />
-              </div>
-            )} */}
           </TabsContent>
         </Tabs>
 
