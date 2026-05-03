@@ -32,21 +32,22 @@ const ResetPassword = () => {
   });
 
   useEffect(() => {
-    // Check for recovery session from URL hash
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get("type");
-    
-    if (type === "recovery") {
-      setIsValidSession(true);
-    }
-    
-    // Also check if user has a valid session
+    // Listen for auth state changes (recovery session from OTP verify or magic link)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) setIsValidSession(true);
+      if (event === "PASSWORD_RECOVERY") setIsValidSession(true);
+    });
+
+    // Check for existing session (set by verifyOtp on the previous page)
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setIsValidSession(true);
-      }
+      if (session) setIsValidSession(true);
+      // Also check URL hash for direct recovery links
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      if (hashParams.get("type") === "recovery") setIsValidSession(true);
       setIsChecking(false);
     });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const onSubmit = async (data: ResetValues) => {
