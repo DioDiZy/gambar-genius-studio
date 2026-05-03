@@ -6,6 +6,7 @@ import { StoryGenerationButton } from "./StoryGenerationButton";
 import { StoryTemplateSelector } from "./StoryTemplateSelector";
 import { CharacterDescription } from "@/types/story";
 import { validateIndonesianSentence } from "@/utils/indonesianLanguageValidation";
+import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface StoryGeneratorProps {
@@ -13,10 +14,20 @@ interface StoryGeneratorProps {
   onStructuredDataGenerated?: (structuredData: any) => void;
   isGenerating: boolean;
   setIsGenerating: (value: boolean) => void;
+  storyTitle: string;
+  onStoryTitleChange: (title: string) => void;
 }
 
-export const StoryGenerator = ({ onImagesGenerated, onStructuredDataGenerated, isGenerating, setIsGenerating }: StoryGeneratorProps) => {
+export const StoryGenerator = ({
+  onImagesGenerated,
+  onStructuredDataGenerated,
+  isGenerating,
+  setIsGenerating,
+  storyTitle,
+  onStoryTitleChange,
+}: StoryGeneratorProps) => {
   const [story, setStory] = useState("");
+  const [paragraphSeparator, setParagraphSeparator] = useState("\n\n");
   const [characterDescriptions, setCharacterDescriptions] = useState("");
   const [characters, setCharacters] = useState<CharacterDescription[]>([]);
   const [paragraphCount, setParagraphCount] = useState(0);
@@ -25,6 +36,7 @@ export const StoryGenerator = ({ onImagesGenerated, onStructuredDataGenerated, i
 
   const { handleGenerateImages, paragraphs } = useStoryGeneration({
     story,
+    paragraphSeparator,
     style,
     characterDescriptions,
     characters,
@@ -54,6 +66,20 @@ export const StoryGenerator = ({ onImagesGenerated, onStructuredDataGenerated, i
         <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-md">Setiap paragraf yang kamu tulis akan menjadi satu halaman di buku ceritamu.</p>
       </header>
 
+      {/* Title input */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground">
+          Judul buku <span className="text-muted-foreground font-normal">(opsional)</span>
+        </label>
+        <Input
+          placeholder="Contoh: Petualangan di Hutan Ajaib"
+          value={storyTitle}
+          onChange={(e) => onStoryTitleChange(e.target.value)}
+          disabled={isGenerating}
+          className="rounded-xl border-input focus-visible:border-primary/50 focus-visible:ring-1 focus-visible:ring-primary/20 bg-card"
+        />
+      </div>
+
       {/* Story input — the centerpiece */}
       <StoryTextArea story={story} onStoryChange={setStory} paragraphCount={paragraphCount} isGenerating={isGenerating} language="indonesian" validation={indonesianValidation} />
 
@@ -68,6 +94,8 @@ export const StoryGenerator = ({ onImagesGenerated, onStructuredDataGenerated, i
           <AccordionTrigger className="text-sm font-medium hover:no-underline py-3">Karakter & pengaturan lanjutan</AccordionTrigger>
           <AccordionContent className="pt-2">
             <StoryInputOptions
+              paragraphSeparator={paragraphSeparator}
+              onSeparatorChange={setParagraphSeparator}
               style={style}
               onStyleChange={() => {}}
               characterDescriptions={characterDescriptions}
