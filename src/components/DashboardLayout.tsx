@@ -1,6 +1,5 @@
-
 import { ReactNode } from "react";
-import { Logo } from "./Logo";
+import { Navbar } from "./Navbar";
 import { UserMenu } from "./UserMenu";
 
 interface DashboardLayoutProps {
@@ -12,7 +11,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen flex flex-col">
       <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-30">
         <div className="container flex items-center justify-between h-16">
-          <Logo />
+          <Navbar showAuth={false} inline />
           <UserMenu />
         </div>
       </header>
