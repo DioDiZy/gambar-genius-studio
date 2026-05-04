@@ -8,6 +8,10 @@ import { CharacterDescription } from "@/types/story";
 import { validateIndonesianSentence } from "@/utils/indonesianLanguageValidation";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { DetailedCharacter, generateCharacterPromptBlock } from "@/types/character";
+import { useLocalStorageState } from "@/hooks/useLocalStorageState";
+import { Badge } from "@/components/ui/badge";
+import { Users } from "lucide-react";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -32,14 +36,34 @@ export const StoryGenerator = ({
   const [characters, setCharacters] = useState<CharacterDescription[]>([]);
   const [paragraphCount, setParagraphCount] = useState(0);
 
+  // Read detailed characters from localStorage for prompt injection
+  const [detailedCharacters] = useLocalStorageState<DetailedCharacter[]>('story_ai_characters', []);
+
   const style = "storyboard-sketch";
+
+  // Merge detailed characters into legacy format for prompt generation
+  const mergedCharacters: CharacterDescription[] = [
+    ...characters,
+    ...detailedCharacters.filter(dc => dc.name).map(dc => ({
+      name: dc.name,
+      appearance: generateCharacterPromptBlock(dc),
+      referenceImages: dc.referenceImages,
+    })),
+  ];
+
+  // Build extra character descriptions from detailed profiles
+  const detailedCharDescriptions = detailedCharacters
+    .filter(dc => dc.name)
+    .map(dc => generateCharacterPromptBlock(dc))
+    .join('. ');
+  const mergedDescriptions = [characterDescriptions, detailedCharDescriptions].filter(Boolean).join('. ');
 
   const { handleGenerateImages, paragraphs } = useStoryGeneration({
     story,
     paragraphSeparator,
     style,
-    characterDescriptions,
-    characters,
+    characterDescriptions: mergedDescriptions,
+    characters: mergedCharacters,
     isGenerating,
     setIsGenerating,
     onImagesGenerated,
@@ -82,6 +106,19 @@ export const StoryGenerator = ({
 
       {/* Story input — the centerpiece */}
       <StoryTextArea story={story} onStoryChange={setStory} paragraphCount={paragraphCount} isGenerating={isGenerating} language="indonesian" validation={indonesianValidation} />
+
+      {/* Injected characters indicator */}
+      {detailedCharacters.length > 0 && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-card/60 rounded-lg p-3 border border-border/40">
+          <Users size={14} className="text-orange-500" />
+          <span>{detailedCharacters.length} karakter dari profil akan otomatis disertakan dalam prompt.</span>
+          <div className="flex gap-1 flex-wrap">
+            {detailedCharacters.filter(c => c.name).map(c => (
+              <Badge key={c.id} variant="secondary" className="text-xs">{c.name}</Badge>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Templates — quiet, secondary */}
       <div className="rounded-xl border border-border/60 bg-card/40 p-5">

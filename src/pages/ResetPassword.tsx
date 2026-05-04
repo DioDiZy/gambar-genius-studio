@@ -42,12 +42,15 @@ const ResetPassword = () => {
       setIsValidSession(true);
     }
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || session) {
+        setIsValidSession(true);
+      }
+    });
+
     // Also check if user has a valid session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setIsValidSession(true);
-      // Also check URL hash for direct recovery links
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      if (hashParams.get("type") === "recovery") setIsValidSession(true);
       setIsChecking(false);
     });
 

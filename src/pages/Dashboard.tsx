@@ -11,7 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoryGenerator } from "@/components/ImageGenerator/StoryGenerator";
 import { StoryImagesPreview } from "@/components/ImageGenerator/StoryImagesPreview";
 import { StoryboardAnalyzer } from "@/components/ImageGenerator/StoryboardAnalyzer";
-import { Sparkles, BookOpen, Image as ImageIcon } from "lucide-react";
+import { Sparkles, BookOpen, Users, GitBranch, ShieldCheck } from "lucide-react";
+import { useLocalStorageState } from "@/hooks/useLocalStorageState";
+import { DetailedCharacter, StoryScene } from "@/types/character";
+import { CharacterManager } from "@/components/CharacterManager/CharacterManager";
+import { StoryFlowManager } from "@/components/StoryFlowManager/StoryFlowManager";
+import { ConsistencyChecker } from "@/components/ConsistencyChecker/ConsistencyChecker";
+
+const tabTriggerClass = "flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -24,6 +31,10 @@ const Dashboard = () => {
   const [structuredData, setStructuredData] = useState<any>(null);
   const [showAnalyzer, setShowAnalyzer] = useState(false);
   const [storyTitle, setStoryTitle] = useState("");
+
+  // localStorage-backed Character & Flow state
+  const [detailedCharacters, setDetailedCharacters] = useLocalStorageState<DetailedCharacter[]>('story_ai_characters', []);
+  const [storyScenes, setStoryScenes] = useLocalStorageState<StoryScene[]>('story_ai_flow', []);
 
   const { data: userImages, refetch: refetchImages } = useQuery({
     queryKey: ["userImages", user?.id],
@@ -98,24 +109,20 @@ const Dashboard = () => {
 
         {/* Action Section with Tabs */}
         <Tabs defaultValue="story" className="mb-16">
-          <TabsList className="mb-10 inline-flex w-fit gap-2 rounded-2xl bg-white/50 p-1.5 shadow-sm backdrop-blur border border-white/50">
-            <TabsTrigger
-              value="story"
-              className="flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-            >
-              <BookOpen size={18} />
-              Buku Cerita
+          <TabsList className="mb-10 inline-flex w-fit gap-2 rounded-2xl bg-white/50 p-1.5 shadow-sm backdrop-blur border border-white/50 flex-wrap">
+            <TabsTrigger value="story" className={tabTriggerClass}>
+              <BookOpen size={18} /> Buku Cerita
+            </TabsTrigger>
+            <TabsTrigger value="characters" className={tabTriggerClass}>
+              <Users size={18} /> Karakter
+            </TabsTrigger>
+            <TabsTrigger value="flow" className={tabTriggerClass}>
+              <GitBranch size={18} /> Alur
+            </TabsTrigger>
+            <TabsTrigger value="consistency" className={tabTriggerClass}>
+              <ShieldCheck size={18} /> Konsistensi
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="single" className="mt-0 focus-visible:outline-none">
-            <div className="grid gap-10 lg:grid-cols-2">
-              <div className="rounded-[32px] border border-white/70 bg-white/60 p-1 shadow-xl backdrop-blur-md">
-                <GeneratorForm onImageGenerated={handleImageGenerated} isGenerating={isGenerating} setIsGenerating={setIsGenerating} />
-              </div>
-              <ImagePreview imageUrl={generatedImageUrl} prompt={currentPrompt} isGenerating={isGenerating} onSaved={handleImageSaved} />
-            </div>
-          </TabsContent>
 
           <TabsContent value="story" className="mt-0 focus-visible:outline-none">
             <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-14">
@@ -135,6 +142,29 @@ const Dashboard = () => {
                 isGenerating={isGenerating}
                 onSaved={handleImageSaved}
                 externalTitle={storyTitle}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="characters" className="mt-0 focus-visible:outline-none">
+            <div className="rounded-[32px] border border-white/70 bg-white/60 p-6 shadow-xl backdrop-blur-md">
+              <CharacterManager characters={detailedCharacters} onChange={setDetailedCharacters} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="flow" className="mt-0 focus-visible:outline-none">
+            <div className="rounded-[32px] border border-white/70 bg-white/60 p-6 shadow-xl backdrop-blur-md">
+              <StoryFlowManager scenes={storyScenes} characters={detailedCharacters} onChange={setStoryScenes} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="consistency" className="mt-0 focus-visible:outline-none">
+            <div className="rounded-[32px] border border-white/70 bg-white/60 p-6 shadow-xl backdrop-blur-md">
+              <ConsistencyChecker
+                characters={detailedCharacters}
+                scenes={storyScenes}
+                onImport={(chars, scenes) => { setDetailedCharacters(chars); setStoryScenes(scenes); }}
+                onReset={() => { setDetailedCharacters([]); setStoryScenes([]); }}
               />
             </div>
           </TabsContent>
