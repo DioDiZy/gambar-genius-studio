@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      characters: {
+        Row: {
+          aliases: string[] | null
+          appearance: string
+          created_at: string | null
+          id: string
+          name: string
+          pronouns: string[] | null
+          reference_images: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          aliases?: string[] | null
+          appearance: string
+          created_at?: string | null
+          id?: string
+          name: string
+          pronouns?: string[] | null
+          reference_images?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          aliases?: string[] | null
+          appearance?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          pronouns?: string[] | null
+          reference_images?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       images: {
         Row: {
           created_at: string
