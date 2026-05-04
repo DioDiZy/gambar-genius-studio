@@ -7,11 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { GeneratorForm } from "@/components/ImageGenerator/GeneratorForm";
 import { ImagePreview } from "@/components/ImageGenerator/ImagePreview";
 import { Gallery } from "@/components/Gallery/Gallery";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoryGenerator } from "@/components/ImageGenerator/StoryGenerator";
 import { StoryImagesPreview } from "@/components/ImageGenerator/StoryImagesPreview";
 import { StoryboardAnalyzer } from "@/components/ImageGenerator/StoryboardAnalyzer";
-import { Sparkles, BookOpen } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 const Dashboard = () => {
   const { user } = useAuth();
