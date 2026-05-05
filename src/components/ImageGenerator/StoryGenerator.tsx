@@ -8,13 +8,7 @@ import { CharacterDescription } from "@/types/story";
 import { validateIndonesianSentence } from "@/utils/indonesianLanguageValidation";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { DetailedCharacter, StoryScene, generateCharacterPromptBlock } from "@/types/character";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
-import { Badge } from "@/components/ui/badge";
-import { Users, GitBranch, ShieldCheck } from "lucide-react";
-import { CharacterManager } from "@/components/CharacterManager/CharacterManager";
-import { StoryFlowManager } from "@/components/StoryFlowManager/StoryFlowManager";
-import { ConsistencyChecker } from "@/components/ConsistencyChecker/ConsistencyChecker";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -36,40 +30,17 @@ export const StoryGenerator = ({
   const [story, setStory] = useState("");
   const [paragraphSeparator, setParagraphSeparator] = useState("\n\n");
   const [characterDescriptions, setCharacterDescriptions] = useState("");
-  const [characters, setCharacters] = useState<CharacterDescription[]>([]);
+  const [characters, setCharacters] = useLocalStorageState<CharacterDescription[]>('story_ai_characters', []);
   const [paragraphCount, setParagraphCount] = useState(0);
 
-  // localStorage-backed Character & Flow
-  const [detailedCharacters, setDetailedCharacters] = useLocalStorageState<DetailedCharacter[]>('story_ai_characters', []);
-  const [storyScenes, setStoryScenes] = useLocalStorageState<StoryScene[]>('story_ai_flow', []);
-
   const style = "storyboard-sketch";
-
-  // Merge detailed characters into legacy format for prompt generation
-  const mergedCharacters: CharacterDescription[] = [
-    ...characters,
-    ...detailedCharacters.filter(dc => dc.name).map(dc => ({
-      name: dc.name,
-      appearance: generateCharacterPromptBlock(dc),
-      referenceImages: dc.referenceImages,
-    })),
-  ];
-
-  const detailedCharDescriptions = detailedCharacters
-    .filter(dc => dc.name)
-    .map(dc => generateCharacterPromptBlock(dc))
-    .join('. ');
-  const mergedDescriptions = [characterDescriptions, detailedCharDescriptions].filter(Boolean).join('. ');
-
-  const hasValidCharacters = detailedCharacters.some(c => c.name.trim());
-  const canGenerate = story.trim() && hasValidCharacters;
 
   const { handleGenerateImages, paragraphs } = useStoryGeneration({
     story,
     paragraphSeparator,
     style,
-    characterDescriptions: mergedDescriptions,
-    characters: mergedCharacters,
+    characterDescriptions,
+    characters,
     isGenerating,
     setIsGenerating,
     onImagesGenerated,
@@ -120,45 +91,7 @@ export const StoryGenerator = ({
         <AccordionItem value="options" className="border border-border/60 rounded-xl px-4 bg-card/40">
           <AccordionTrigger className="text-sm font-medium hover:no-underline py-3">Pengaturan lanjutan</AccordionTrigger>
           <AccordionContent className="pt-2">
-            <div className="space-y-6">
-              {/* Karakter */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold flex items-center gap-2"><Users size={14} /> Karakter</h3>
-                <CharacterManager characters={detailedCharacters} onChange={setDetailedCharacters} />
-                {hasValidCharacters && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground bg-card/60 rounded-lg p-3 border border-border/40">
-                    <Users size={14} className="text-orange-500" />
-                    <span>{detailedCharacters.filter(c => c.name).length} karakter akan disertakan dalam prompt.</span>
-                    <div className="flex gap-1 flex-wrap">
-                      {detailedCharacters.filter(c => c.name).map(c => (
-                        <Badge key={c.id} variant="secondary" className="text-xs">{c.name}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Alur Cerita */}
-              <div className="space-y-3 border-t border-border/40 pt-4">
-                <h3 className="text-sm font-semibold flex items-center gap-2"><GitBranch size={14} /> Alur Cerita <Badge variant="secondary" className="text-xs">{storyScenes.length} scene</Badge></h3>
-                <StoryFlowManager scenes={storyScenes} characters={detailedCharacters} onChange={setStoryScenes} />
-              </div>
-
-              {/* Konsistensi & Backup */}
-              <div className="space-y-3 border-t border-border/40 pt-4">
-                <h3 className="text-sm font-semibold flex items-center gap-2"><ShieldCheck size={14} /> Konsistensi & Backup</h3>
-                <ConsistencyChecker
-                  characters={detailedCharacters}
-                  scenes={storyScenes}
-                  onImport={(chars, scenes) => { setDetailedCharacters(chars); setStoryScenes(scenes); }}
-                  onReset={() => { setDetailedCharacters([]); setStoryScenes([]); }}
-                />
-              </div>
-
-              {/* Pengaturan Lainnya */}
-              <div className="space-y-3 border-t border-border/40 pt-4">
-                <h3 className="text-sm font-semibold">Pengaturan Lainnya</h3>
-                <StoryInputOptions
+            <StoryInputOptions
               paragraphSeparator={paragraphSeparator}
               onSeparatorChange={setParagraphSeparator}
               style={style}
@@ -169,9 +102,7 @@ export const StoryGenerator = ({
                   characters={characters}
                   onCharactersChange={setCharacters}
                   language="indonesian"
-                />
-              </div>
-            </div>
+            />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
