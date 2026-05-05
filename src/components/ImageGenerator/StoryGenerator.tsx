@@ -11,7 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { DetailedCharacter, StoryScene, generateCharacterPromptBlock } from "@/types/character";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { Badge } from "@/components/ui/badge";
-import { Users, AlertTriangle, GitBranch, ShieldCheck } from "lucide-react";
+import { Users, GitBranch, ShieldCheck } from "lucide-react";
 import { CharacterManager } from "@/components/CharacterManager/CharacterManager";
 import { StoryFlowManager } from "@/components/StoryFlowManager/StoryFlowManager";
 import { ConsistencyChecker } from "@/components/ConsistencyChecker/ConsistencyChecker";
