@@ -56,13 +56,15 @@ export interface BadwordResult {
   count: number;
   /** Pesan feedback (tidak menampilkan ulang kata kasar) */
   message: string;
+  /** Indeks posisi [start, end] dari setiap badword di teks asli */
+  positions: Array<[number, number]>;
 }
 
 /**
  * Deteksi badword dalam teks menggunakan rule-based matching.
  */
 export const detectBadwords = (text: string): BadwordResult => {
-  if (!text.trim()) return { hasBadwords: false, count: 0, message: "" };
+  if (!text.trim()) return { hasBadwords: false, count: 0, message: "", positions: [] };
 
   const tokens = text
     .toLowerCase()
@@ -73,11 +75,24 @@ export const detectBadwords = (text: string): BadwordResult => {
     .filter(Boolean);
 
   let count = 0;
+  const positions: Array<[number, number]> = [];
+
+  // Build positions by scanning original text
+  const lowerText = text.toLowerCase();
+  let searchFrom = 0;
   for (const token of tokens) {
     const normalized = normalizeBadwordToken(token);
     if (NORMALIZED_BADWORDS.has(normalized)) {
       count++;
+      // Find this token's position in original text
+      const idx = lowerText.indexOf(token, searchFrom);
+      if (idx !== -1) {
+        positions.push([idx, idx + token.length]);
+      }
     }
+    // Advance search cursor
+    const idx = lowerText.indexOf(token, searchFrom);
+    if (idx !== -1) searchFrom = idx + token.length;
   }
 
   if (count > 0) {
@@ -85,8 +100,9 @@ export const detectBadwords = (text: string): BadwordResult => {
       hasBadwords: true,
       count,
       message: `Ceritamu mengandung ${count} kata yang tidak pantas. Mohon perbaiki dengan bahasa yang lebih sopan agar cerita dapat diproses.`,
+      positions,
     };
   }
 
-  return { hasBadwords: false, count: 0, message: "" };
+  return { hasBadwords: false, count: 0, message: "", positions: [] };
 };
