@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { generateMultipleImages } from "@/services/ImageService";
 import { handleParagraphSplit } from "@/utils/storyUtils";
-import { validateIndonesianSentence } from "@/utils/indonesianLanguageValidation";
+import { validateStoryInput } from "@/utils/storyValidationPipeline";
 import { CharacterDescription } from "@/types/story";
 import { createStructuredStoryboardPrompts } from "@/services/StoryboardService";
 
@@ -52,14 +52,13 @@ export const useStoryGeneration = ({
       return;
     }
 
-    if (language === "indonesian") {
-      const validation = validateIndonesianSentence(story);
-      if (!validation.isLikelyIndonesianSentence) {
-        toast.error("Teks terdeteksi bukan kalimat Indonesia yang natural", {
-          description: validation.reasons[0] ?? "Silakan periksa kembali kata dan struktur kalimat Anda"
-        });
-        return;
-      }
+    // Run full validation pipeline
+    const validation = validateStoryInput(story);
+    if (!validation.canProceed) {
+      toast.error(validation.message, {
+        description: validation.suggestions[0] ?? undefined
+      });
+      return;
     }
 
     try {
