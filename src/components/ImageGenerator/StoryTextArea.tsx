@@ -1,5 +1,4 @@
 import { Textarea } from "@/components/ui/textarea";
-import { IndonesianValidationResult } from "@/utils/indonesianLanguageValidation";
 
 interface StoryTextAreaProps {
   story: string;
@@ -7,10 +6,9 @@ interface StoryTextAreaProps {
   paragraphCount: number;
   isGenerating: boolean;
   language?: string;
-  validation?: IndonesianValidationResult;
 }
 
-export const StoryTextArea = ({ story, onStoryChange, paragraphCount, isGenerating, validation }: StoryTextAreaProps) => {
+export const StoryTextArea = ({ story, onStoryChange, paragraphCount, isGenerating }: StoryTextAreaProps) => {
   const placeholder =
     "Pada suatu hari di sebuah desa kecil, hiduplah seorang anak yang sangat suka bertualang...\n\nSuatu pagi, ia berjalan masuk ke dalam hutan dan menemukan pondok tua yang sudah lama ditinggalkan. Sinar matahari menembus celah-celah atap jerami.";
 
@@ -34,13 +32,6 @@ export const StoryTextArea = ({ story, onStoryChange, paragraphCount, isGenerati
       />
 
       <p className="text-xs text-muted-foreground leading-relaxed">Tips: pisahkan setiap paragraf dengan baris kosong. Setiap paragraf akan menjadi satu halaman bergambar.</p>
-
-      {showValidationWarning && (
-        <p className="text-xs text-foreground bg-muted/60 border border-border/60 rounded-lg px-3 py-2">
-          Tulisanmu sepertinya belum menggunakan Bahasa Indonesia yang alami.
-          {validation.reasons[0] ? ` ${validation.reasons[0]}.` : ""}
-        </p>
-      )}
     </div>
   );
 };
