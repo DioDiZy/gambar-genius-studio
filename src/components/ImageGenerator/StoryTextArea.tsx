@@ -12,8 +12,6 @@ export const StoryTextArea = ({ story, onStoryChange, paragraphCount, isGenerati
   const placeholder =
     "Pada suatu hari di sebuah desa kecil, hiduplah seorang anak yang sangat suka bertualang...\n\nSuatu pagi, ia berjalan masuk ke dalam hutan dan menemukan pondok tua yang sudah lama ditinggalkan. Sinar matahari menembus celah-celah atap jerami.";
 
-  const showValidationWarning = story.trim().length > 0 && validation && !validation.isLikelyIndonesianSentence;
-
   const charCount = story.length;
 
   return (
