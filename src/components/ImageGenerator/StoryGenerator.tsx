@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useStoryGeneration } from "@/hooks/useStoryGeneration";
 import { StoryInputOptions } from "./StoryInputOptions";
 import { StoryTextArea } from "./StoryTextArea";
 import { StoryGenerationButton } from "./StoryGenerationButton";
 import { StoryTemplateSelector } from "./StoryTemplateSelector";
 import { CharacterDescription } from "@/types/story";
-import { validateIndonesianSentence } from "@/utils/indonesianLanguageValidation";
+import { validateStoryInput, type StoryValidationResult } from "@/utils/storyValidationPipeline";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
+import { AlertTriangle, CheckCircle2, Info, ShieldAlert } from "lucide-react";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -52,7 +53,7 @@ export const StoryGenerator = ({
     setParagraphCount(paragraphs.length);
   }, [paragraphs]);
 
-  const indonesianValidation = validateIndonesianSentence(story);
+  const validation: StoryValidationResult = useMemo(() => validateStoryInput(story), [story]);
 
   const handleTemplateStoryGenerated = (generatedStory: string) => {
     setStory(generatedStory);
@@ -79,7 +80,51 @@ export const StoryGenerator = ({
         />
       </div>
 
-      <StoryTextArea story={story} onStoryChange={setStory} paragraphCount={paragraphCount} isGenerating={isGenerating} language="indonesian" validation={indonesianValidation} />
+      <StoryTextArea story={story} onStoryChange={setStory} paragraphCount={paragraphCount} isGenerating={isGenerating} language="indonesian" />
+
+      {/* === Validation Feedback === */}
+      {story.trim().length > 0 && validation.status !== "valid" && (
+        <div
+          className={`rounded-xl border px-4 py-3 text-sm space-y-1 ${
+            validation.status === "invalid"
+              ? "border-destructive/40 bg-destructive/5 text-destructive"
+              : "border-orange-300/60 bg-orange-50/60 text-orange-700"
+          }`}
+        >
+          <div className="flex items-start gap-2">
+            {validation.status === "invalid" ? (
+              validation.details.badwords.hasBadwords ? (
+                <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+              )
+            ) : (
+              <Info className="h-4 w-4 mt-0.5 shrink-0" />
+            )}
+            <p className="font-medium">{validation.message}</p>
+          </div>
+          {validation.suggestions.length > 0 && (
+            <ul className="ml-6 list-disc text-xs space-y-0.5 opacity-80">
+              {validation.suggestions.map((s, i) => (
+                <li key={i}>{s}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {story.trim().length > 0 && validation.status === "valid" && (
+        <div className="rounded-xl border border-green-300/60 bg-green-50/60 text-green-700 px-4 py-3 text-sm flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <p>{validation.message}</p>
+          {validation.details.context.tokoh.length > 0 && (
+            <span className="ml-auto text-xs opacity-70">
+              Tokoh: {validation.details.context.tokoh.slice(0, 3).join(", ")}
+              {validation.details.context.tokoh.length > 3 ? "..." : ""}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Templates */}
       <div className="rounded-xl border border-border/60 bg-card/40 p-5">
@@ -109,7 +154,7 @@ export const StoryGenerator = ({
 
       {/* Generate - no longer requires characters */}
       <div className="pt-2">
-        <StoryGenerationButton onGenerate={handleGenerateImages} disabled={!story.trim()} isGenerating={isGenerating} language="indonesian" />
+        <StoryGenerationButton onGenerate={handleGenerateImages} disabled={!story.trim() || !validation.canProceed} isGenerating={isGenerating} language="indonesian" />
       </div>
     </section>
   );
