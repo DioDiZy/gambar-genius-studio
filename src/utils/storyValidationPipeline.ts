@@ -43,7 +43,7 @@ export const validateStoryInput = (text: string): StoryValidationResult => {
         empty: true,
         tooShort: false,
         indonesian: { isLikelyIndonesianSentence: false, score: 0, reasons: [] },
-        badwords: { hasBadwords: false, count: 0, message: "" },
+        badwords: { hasBadwords: false, count: 0, message: "", positions: [] },
         context: { tokoh: [], tempat: [], aksi: [], suasana: [], isContextClear: false, suggestions: [] },
       },
     };
