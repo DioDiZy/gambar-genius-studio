@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { AlertTriangle, CheckCircle2, Info, ShieldAlert } from "lucide-react";
+import { XCircle, Check } from "lucide-react";
 
 interface StoryGeneratorProps {
   onImagesGenerated: (urls: string[], prompts: string[]) => void;
@@ -80,51 +81,77 @@ export const StoryGenerator = ({
         />
       </div>
 
-      <StoryTextArea story={story} onStoryChange={setStory} paragraphCount={paragraphCount} isGenerating={isGenerating} language="indonesian" />
+      <StoryTextArea story={story} onStoryChange={setStory} paragraphCount={paragraphCount} isGenerating={isGenerating} language="indonesian" badwordPositions={validation.details.badwords.positions} />
 
-      {/* === Validation Feedback === */}
-      {story.trim().length > 0 && validation.status !== "valid" && (
-        <div
-          className={`rounded-xl border px-4 py-3 text-sm space-y-1 ${
-            validation.status === "invalid"
-              ? "border-destructive/40 bg-destructive/5 text-destructive"
-              : "border-orange-300/60 bg-orange-50/60 text-orange-700"
-          }`}
-        >
-          <div className="flex items-start gap-2">
-            {validation.status === "invalid" ? (
-              validation.details.badwords.hasBadwords ? (
-                <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
+      {/* === Validation Feedback with Rule Checklist === */}
+      {story.trim().length > 0 && (() => {
+        const d = validation.details;
+        const rules: Array<{ label: string; passed: boolean; active: boolean }> = [
+          { label: "Tidak kosong", passed: !d.empty, active: true },
+          { label: `Panjang cukup (≥10 kata)`, passed: !d.tooShort, active: !d.empty },
+          { label: "Bahasa Indonesia", passed: d.indonesian.isLikelyIndonesianSentence, active: !d.empty && !d.tooShort },
+          { label: "Tanpa kata tidak pantas", passed: !d.badwords.hasBadwords, active: !d.empty },
+          { label: "Konteks cerita jelas", passed: d.context.isContextClear, active: !d.empty && !d.tooShort },
+        ];
+
+        const borderColor =
+          validation.status === "valid"
+            ? "border-green-300/60 bg-green-50/60"
+            : validation.status === "warning"
+              ? "border-orange-300/60 bg-orange-50/60"
+              : "border-destructive/40 bg-destructive/5";
+
+        return (
+          <div className={`rounded-xl border px-4 py-3 text-sm space-y-3 ${borderColor}`}>
+            {/* Main message */}
+            <div className="flex items-start gap-2">
+              {validation.status === "valid" ? (
+                <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-green-600" />
+              ) : validation.status === "warning" ? (
+                <Info className="h-4 w-4 mt-0.5 shrink-0 text-orange-600" />
+              ) : validation.details.badwords.hasBadwords ? (
+                <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0 text-destructive" />
               ) : (
-                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-              )
-            ) : (
-              <Info className="h-4 w-4 mt-0.5 shrink-0" />
-            )}
-            <p className="font-medium">{validation.message}</p>
-          </div>
-          {validation.suggestions.length > 0 && (
-            <ul className="ml-6 list-disc text-xs space-y-0.5 opacity-80">
-              {validation.suggestions.map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-destructive" />
+              )}
+              <p className={`font-medium ${validation.status === "valid" ? "text-green-700" : validation.status === "warning" ? "text-orange-700" : "text-destructive"}`}>
+                {validation.message}
+              </p>
+              {validation.status === "valid" && validation.details.context.tokoh.length > 0 && (
+                <span className="ml-auto text-xs text-green-600/70">
+                  Tokoh: {validation.details.context.tokoh.slice(0, 3).join(", ")}
+                  {validation.details.context.tokoh.length > 3 ? "..." : ""}
+                </span>
+              )}
+            </div>
 
-      {story.trim().length > 0 && validation.status === "valid" && (
-        <div className="rounded-xl border border-green-300/60 bg-green-50/60 text-green-700 px-4 py-3 text-sm flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <p>{validation.message}</p>
-          {validation.details.context.tokoh.length > 0 && (
-            <span className="ml-auto text-xs opacity-70">
-              Tokoh: {validation.details.context.tokoh.slice(0, 3).join(", ")}
-              {validation.details.context.tokoh.length > 3 ? "..." : ""}
-            </span>
-          )}
-        </div>
-      )}
+            {/* Suggestions */}
+            {validation.suggestions.length > 0 && (
+              <ul className="ml-6 list-disc text-xs space-y-0.5 opacity-80">
+                {validation.suggestions.map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            )}
+
+            {/* Rule checklist */}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 border-t border-border/40">
+              {rules.map((rule) => (
+                <span key={rule.label} className={`inline-flex items-center gap-1 text-xs ${!rule.active ? "text-muted-foreground/50" : rule.passed ? "text-green-600" : "text-destructive"}`}>
+                  {!rule.active ? (
+                    <span className="h-3 w-3 rounded-full border border-muted-foreground/30 inline-block" />
+                  ) : rule.passed ? (
+                    <Check className="h-3 w-3" />
+                  ) : (
+                    <XCircle className="h-3 w-3" />
+                  )}
+                  {rule.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Templates */}
       <div className="rounded-xl border border-border/60 bg-card/40 p-5">
