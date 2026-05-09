@@ -56,6 +56,11 @@ export const StoryGenerator = ({
 
   const validation: StoryValidationResult = useMemo(() => validateStoryInput(story), [story]);
 
+  const MIN_PARAGRAPHS = 3;
+  const hasCharacters = characters.length > 0;
+  const hasEnoughParagraphs = paragraphCount >= MIN_PARAGRAPHS;
+  const canGenerate = !!story.trim() && validation.canProceed && hasCharacters && hasEnoughParagraphs;
+
   const handleTemplateStoryGenerated = (generatedStory: string) => {
     setStory(generatedStory);
   };
@@ -92,6 +97,8 @@ export const StoryGenerator = ({
           { label: "Bahasa Indonesia", passed: d.indonesian.isLikelyIndonesianSentence, active: !d.empty && !d.tooShort },
           { label: "Tanpa kata tidak pantas", passed: !d.badwords.hasBadwords, active: !d.empty },
           { label: "Konteks cerita jelas", passed: d.context.isContextClear, active: !d.empty && !d.tooShort },
+          { label: `Minimal ${MIN_PARAGRAPHS} paragraf (saat ini ${paragraphCount})`, passed: hasEnoughParagraphs, active: !d.empty },
+          { label: `Minimal 1 karakter (saat ini ${characters.length})`, passed: hasCharacters, active: true },
         ];
 
         const borderColor =
@@ -179,9 +186,22 @@ export const StoryGenerator = ({
         </AccordionItem>
       </Accordion>
 
-      {/* Generate - no longer requires characters */}
+      {/* Validation banner: characters & paragraphs */}
+      {(!hasCharacters || !hasEnoughParagraphs) && (
+        <div className="rounded-xl border border-orange-300/60 bg-orange-50/60 px-4 py-3 text-sm text-orange-700 space-y-1">
+          <p className="font-medium flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" /> Lengkapi syarat berikut sebelum membuat gambar:
+          </p>
+          <ul className="ml-6 list-disc text-xs space-y-0.5">
+            {!hasCharacters && <li>Tambahkan minimal 1 karakter di "Pengaturan lanjutan".</li>}
+            {!hasEnoughParagraphs && <li>Cerita harus terdiri dari minimal {MIN_PARAGRAPHS} paragraf (saat ini {paragraphCount}). Pisahkan paragraf dengan baris kosong.</li>}
+          </ul>
+        </div>
+      )}
+
+      {/* Generate */}
       <div className="pt-2">
-        <StoryGenerationButton onGenerate={handleGenerateImages} disabled={!story.trim() || !validation.canProceed} isGenerating={isGenerating} language="indonesian" />
+        <StoryGenerationButton onGenerate={handleGenerateImages} disabled={!canGenerate} isGenerating={isGenerating} language="indonesian" />
       </div>
     </section>
   );
