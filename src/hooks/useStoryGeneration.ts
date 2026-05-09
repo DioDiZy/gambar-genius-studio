@@ -61,6 +61,23 @@ export const useStoryGeneration = ({
       return;
     }
 
+    // Require at least 1 character
+    if (!characters || characters.length === 0) {
+      toast.error("Karakter wajib diisi", {
+        description: "Tambahkan minimal 1 karakter di Pengaturan lanjutan sebelum membuat gambar.",
+      });
+      return;
+    }
+
+    // Require at least 3 paragraphs
+    const currentParagraphs = handleParagraphSplit(story, paragraphSeparator);
+    if (currentParagraphs.length < 3) {
+      toast.error("Cerita minimal 3 paragraf", {
+        description: `Saat ini hanya ${currentParagraphs.length} paragraf. Pisahkan paragraf dengan baris kosong.`,
+      });
+      return;
+    }
+
     try {
       // First check if user has enough credits
       const { data: profile, error: profileError } = await supabase
