@@ -317,13 +317,9 @@ export class EnhancedStoryboardService {
     return prompt;
   }
 
-  /**
-   * Prompt Engine v2.0 — Structured prompt for Storyboard Sketch style (Flux.1-dev)
-   */
   private async buildStoryboardSketchPrompt(resolvedText: string, characterReferences: any[], sceneMetadata: SceneMetadata, characterDescriptions: string, language: "english" | "indonesian", sceneIndex: number): Promise<string> {
     const translatedScene = await translateForImageGeneration(resolvedText);
 
-    // PREFIX: style preset
     const prefix = "Storyboard Sketch style, professional storyboard panel.";
 
     let characterAnchor = "";
@@ -345,10 +341,8 @@ export class EnhancedStoryboardService {
       }
     }
 
-    // SCENE ACTION: the paragraph content
     const sceneAction = `Current Scene: ${translatedScene}.`;
 
-    // ENVIRONMENT: additional instructions + lighting + atmosphere
     const envParts: string[] = [];
     envParts.push(`${sceneMetadata.cameraAngle}`);
     if (sceneMetadata.timeOfDay) {
@@ -361,7 +355,6 @@ export class EnhancedStoryboardService {
     }
     const environment = `Environment & Lighting: ${envParts.join(", ")}.`;
 
-    // Scene continuity from previous panels
     let sceneContinuity = "";
     if (sceneIndex > 0 && this.sceneHistory.length > 0) {
       const prevScene = this.sceneHistory[sceneIndex - 1];
@@ -373,27 +366,23 @@ export class EnhancedStoryboardService {
       }
     }
 
-    // SUFFIX: character consistency enforcement + anti-artifact
     let suffix = "High quality sketch. No text, no watermarks, no letters, no writing on the image.";
     if (characterReferences.length > 0) {
       const primary = characterReferences.find((c) => c.roleInScene === "primary") || characterReferences[0];
       suffix = `Ensuring ${primary.name} looks exactly the same as previous panels. High quality sketch. No text, no watermarks, no letters, no writing on the image.`;
     }
 
-    // Panel-specific weighting (re-enforce on panel 3+ to prevent drift)
     let panelWeighting = "";
     if (sceneIndex === 0) {
       panelWeighting = "Focus on character introduction and setting.";
     } else if (sceneIndex === 1) {
       panelWeighting = "Focus on interaction with environment.";
     } else {
-      // Every 3rd panel or later: critical re-enforcement
       const primary = characterReferences.find((c) => c.roleInScene === "primary") || characterReferences[0];
       const charName = primary?.name || "the character";
       panelWeighting = `CRITICAL: Re-enforce character features to prevent drift. Focus on ${charName}'s reaction.`;
     }
 
-    // Secondary characters
     let secondaryChars = "";
     const secondaries = characterReferences.filter((c) => c.roleInScene === "secondary");
     if (secondaries.length > 0) {
@@ -405,16 +394,10 @@ export class EnhancedStoryboardService {
     return fullPrompt;
   }
 
-  /**
-   * Get the complete storyboard data as JSON
-   */
   public getStoryboardJSON(): StoryboardPrompt[] {
     return this.sceneHistory;
   }
 
-  /**
-   * Export prompts in simplified format for image generation
-   */
   public getSimplifiedPrompts(): string[] {
     return this.sceneHistory.map((scene) => scene.enhancedPrompt);
   }
