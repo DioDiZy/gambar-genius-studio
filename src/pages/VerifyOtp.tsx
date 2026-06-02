@@ -34,7 +34,9 @@ const VerifyOtp = () => {
     setIsResending(true);
     try {
       if (type === "recovery") {
-        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
         if (error) throw error;
       } else {
         const { error } = await supabase.auth.resend({ type: "signup", email });
