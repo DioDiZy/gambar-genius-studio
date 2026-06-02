@@ -10,6 +10,8 @@ const OTP_LENGTH = 6;
 const VerifyOtp = () => {
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(60);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -20,6 +22,32 @@ const VerifyOtp = () => {
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setInterval(() => setResendCooldown((c) => (c > 0 ? c - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, [resendCooldown]);
+
+  const handleResend = async () => {
+    if (resendCooldown > 0 || isResending || !email) return;
+    setIsResending(true);
+    try {
+      if (type === "recovery") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.resend({ type: "signup", email });
+        if (error) throw error;
+      }
+      toast({ title: "Kode OTP baru terkirim", description: "Cek emailmu untuk kode terbaru." });
+      setResendCooldown(60);
+    } catch (err: any) {
+      toast({ title: "Gagal mengirim ulang", description: err?.message ?? "Terjadi kesalahan.", variant: "destructive" });
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const handleChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -66,8 +94,9 @@ const VerifyOtp = () => {
         toast({ title: "Kode valid!", description: "Silakan buat password baru." });
         navigate("/reset-password");
       } else {
-        toast({ title: "Verifikasi berhasil!", description: "Akun kamu sudah terverifikasi." });
-        navigate("/dashboard");
+        toast({ title: "Verifikasi berhasil!", description: "Silakan masuk dengan akunmu." });
+        await supabase.auth.signOut();
+        navigate("/signin");
       }
     } catch {
       toast({ title: "Error", description: "Terjadi kesalahan.", variant: "destructive" });
@@ -126,7 +155,22 @@ const VerifyOtp = () => {
                 {isSubmitting ? "Memverifikasi..." : "Verifikasi Kode"}
               </CustomButton>
 
-              <div className="mt-6 text-center">
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resendCooldown > 0 || isResending}
+                  className="text-sm font-semibold text-orange-500 transition hover:text-orange-600 hover:underline disabled:cursor-not-allowed disabled:text-slate-400 disabled:no-underline"
+                >
+                  {isResending
+                    ? "Mengirim ulang..."
+                    : resendCooldown > 0
+                      ? `Kirim ulang kode dalam ${resendCooldown}s`
+                      : "Kirim ulang kode OTP"}
+                </button>
+              </div>
+
+              <div className="mt-4 text-center">
                 <Link to="/signin" className="text-sm font-semibold text-orange-500 transition hover:text-orange-600 hover:underline">
                   Kembali ke halaman login
                 </Link>
