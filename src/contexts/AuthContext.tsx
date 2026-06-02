@@ -67,15 +67,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       console.log('Sign up successful:', data);
-      
-      // If email confirmation is required, user won't have a session yet
-      if (data.user && !data.session) {
-        toast({ title: "Pendaftaran berhasil!", description: "Silakan cek email kamu untuk verifikasi akun sebelum login." });
-        return;
+
+      // Email verification (OTP) required. Caller will navigate to /verify-otp.
+      toast({
+        title: "Pendaftaran berhasil!",
+        description: "Kami sudah mengirim kode OTP 6 digit ke emailmu. Silakan verifikasi terlebih dahulu.",
+      });
+      // Make sure no half-session is kept around
+      if (data.session) {
+        await supabase.auth.signOut();
       }
-      
-      toast({ title: "Pendaftaran berhasil", description: "Selamat datang di PembuatGambar!" });
-      navigate("/dashboard");
+      return;
     } catch (error) {
       console.error("Error signing up:", error);
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
