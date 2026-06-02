@@ -29,8 +29,11 @@ const ForgotPassword = () => {
   const onSubmit = async (data: ForgotValues) => {
     setIsSubmitting(true);
     try {
-      // OTP-based flow: do not pass redirectTo so the user uses the 6-digit code.
-      const { error } = await supabase.auth.resetPasswordForEmail(data.email);
+      // Email berisi kode OTP + link. Link mengarah ke /reset-password
+      // sehingga user tetap wajib memasukkan password baru (tidak auto-login).
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
       if (error) {
         toast({ title: "Gagal", description: error.message, variant: "destructive" });
         return;
