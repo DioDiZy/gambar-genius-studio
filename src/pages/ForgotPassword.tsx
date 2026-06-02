@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { CustomButton } from "@/components/ui/custom-button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -18,9 +18,8 @@ type ForgotValues = z.infer<typeof forgotSchema>;
 
 const ForgotPassword = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [sentEmail, setSentEmail] = useState("");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const form = useForm<ForgotValues>({
     resolver: zodResolver(forgotSchema),
@@ -30,21 +29,17 @@ const ForgotPassword = () => {
   const onSubmit = async (data: ForgotValues) => {
     setIsSubmitting(true);
     try {
-      // const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      //   redirectTo: `${window.location.origin}/verify-otp?email=${encodeURIComponent(data.email)}&type=recovery`,
-      // });
-      const siteUrl = import.meta.env.VITE_SITE_URL;
-
-      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${siteUrl}/reset-password`,
-      });
+      // OTP-based flow: do not pass redirectTo so the user uses the 6-digit code.
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email);
       if (error) {
         toast({ title: "Gagal", description: error.message, variant: "destructive" });
         return;
       }
-      setSentEmail(data.email);
-      setEmailSent(true);
-      toast({ title: "Email terkirim!", description: "Cek email kamu untuk link reset password." });
+      toast({
+        title: "Kode OTP terkirim!",
+        description: "Cek emailmu untuk kode 6 digit. Kode berlaku selama 1 jam.",
+      });
+      navigate(`/verify-otp?email=${encodeURIComponent(data.email)}&type=recovery`);
     } catch {
       toast({ title: "Error", description: "Terjadi kesalahan.", variant: "destructive" });
     } finally {
@@ -72,21 +67,7 @@ const ForgotPassword = () => {
                 <p className="mt-2 text-sm leading-6 text-slate-500">Masukkan email akunmu, kami akan mengirimkan link untuk reset password.</p>
               </div>
 
-              {emailSent ? (
-                <div className="text-center space-y-4 py-4">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">✉️</div>
-                  <h3 className="text-lg font-bold text-slate-800">Email Terkirim!</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    Link reset password telah dikirim ke <span className="font-semibold">{sentEmail}</span>. Cek inbox atau folder spam kamu.
-                  </p>
-                  <Link to="/signin">
-                    <CustomButton variant="gradient" className="h-12 w-full rounded-2xl text-sm font-bold shadow-lg mt-2">
-                      Kembali ke Login
-                    </CustomButton>
-                  </Link>
-                </div>
-              ) : (
-                <Form {...form}>
+              <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                     <FormField
                       control={form.control}
@@ -108,11 +89,10 @@ const ForgotPassword = () => {
                       )}
                     />
                     <CustomButton type="submit" variant="gradient" className="h-12 w-full rounded-2xl text-sm font-bold shadow-lg" disabled={isSubmitting}>
-                      {isSubmitting ? "Mengirim..." : "Kirim Link Reset"}
+                      {isSubmitting ? "Mengirim..." : "Kirim Kode OTP"}
                     </CustomButton>
                   </form>
                 </Form>
-              )}
             </div>
           </div>
         </div>
