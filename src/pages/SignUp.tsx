@@ -36,9 +36,10 @@ const SignUp = () => {
   const onSubmit = async (data: SignUpValues) => {
     setIsSubmitting(true);
     try {
-      await signUp(data.email, data.password, data.name);
-      // Redirect to OTP page for email verification
-      navigate(`/verify-otp?email=${encodeURIComponent(data.email)}&type=signup`);
+      const result = await signUp(data.email, data.password, data.name);
+      if (result?.success) {
+        navigate(`/verify-otp?email=${encodeURIComponent(data.email)}&type=signup`);
+      }
     } finally {
       setIsSubmitting(false);
     }
