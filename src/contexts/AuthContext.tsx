@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ success: boolean }>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -63,21 +63,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           errorMessage = 'Akun dengan email ini sudah ada. Silakan masuk.';
         }
         toast({ title: "Pendaftaran gagal", description: errorMessage, variant: "destructive" });
-        throw error;
+        return { success: false };
       }
 
       console.log('Sign up successful:', data);
+
+      // Supabase mengembalikan user "fake" dengan identities kosong jika email
+      // sudah terdaftar & terkonfirmasi (anti email enumeration). Tolak agar
+      // 1 email hanya bisa dipakai untuk 1 akun.
+      const identities = (data.user as any)?.identities;
+      if (data.user && Array.isArray(identities) && identities.length === 0) {
+        toast({
+          title: "Email sudah terdaftar",
+          description: "Email ini sudah memiliki akun. Silakan masuk atau gunakan email lain.",
+          variant: "destructive",
+        });
+        if (data.session) await supabase.auth.signOut();
+        return { success: false };
+      }
 
       // Email verification (OTP) required. Caller will navigate to /verify-otp.
       toast({
         title: "Pendaftaran berhasil!",
         description: "Kami sudah mengirim kode OTP 6 digit ke emailmu. Silakan verifikasi terlebih dahulu.",
       });
-      // Make sure no half-session is kept around
       if (data.session) {
         await supabase.auth.signOut();
       }
-      return;
+      return { success: true };
     } catch (error) {
       console.error("Error signing up:", error);
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
@@ -87,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           variant: "destructive",
         });
       }
+      return { success: false };
     } finally {
       setIsLoading(false);
     }
