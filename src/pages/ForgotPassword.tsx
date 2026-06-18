@@ -35,12 +35,20 @@ const ForgotPassword = () => {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) {
-        toast({ title: "Gagal", description: error.message, variant: "destructive" });
+        let msg = error.message;
+        if (/rate limit|too many|email rate/i.test(error.message)) {
+          msg = 'Terlalu banyak permintaan reset password. Mohon tunggu beberapa menit lalu coba lagi.';
+        } else if (/invalid.*email/i.test(error.message)) {
+          msg = 'Format email tidak valid.';
+        } else if (/Failed to fetch/i.test(error.message)) {
+          msg = 'Tidak dapat terhubung ke layanan autentikasi. Periksa koneksi internetmu.';
+        }
+        toast({ title: "Gagal mengirim", description: msg, variant: "destructive" });
         return;
       }
       toast({
         title: "Kode OTP terkirim!",
-        description: "Cek emailmu untuk kode 6 digit. Kode berlaku selama 1 jam.",
+        description: "Cek inbox & folder Spam/Promosi untuk kode 6 digit. Kode berlaku 1 jam.",
       });
       navigate(`/verify-otp?email=${encodeURIComponent(data.email)}&type=recovery`);
     } catch {
