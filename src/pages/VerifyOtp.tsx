@@ -42,10 +42,16 @@ const VerifyOtp = () => {
         const { error } = await supabase.auth.resend({ type: "signup", email });
         if (error) throw error;
       }
-      toast({ title: "Kode OTP baru terkirim", description: "Cek emailmu untuk kode terbaru." });
+      toast({ title: "Kode OTP baru terkirim", description: "Cek inbox & folder Spam/Promosi untuk kode terbaru." });
       setResendCooldown(60);
     } catch (err: any) {
-      toast({ title: "Gagal mengirim ulang", description: err?.message ?? "Terjadi kesalahan.", variant: "destructive" });
+      const raw = err?.message ?? "";
+      let msg = raw || "Terjadi kesalahan.";
+      if (/rate limit|too many|email rate|after \d+ seconds/i.test(raw)) {
+        msg = "Terlalu banyak permintaan. Mohon tunggu beberapa menit sebelum meminta kode baru.";
+        setResendCooldown(60);
+      }
+      toast({ title: "Gagal mengirim ulang", description: msg, variant: "destructive" });
     } finally {
       setIsResending(false);
     }
@@ -89,7 +95,13 @@ const VerifyOtp = () => {
     try {
       const { error } = await supabase.auth.verifyOtp({ email, token, type });
       if (error) {
-        toast({ title: "Verifikasi gagal", description: error.message, variant: "destructive" });
+        let msg = error.message;
+        if (/expired/i.test(error.message)) {
+          msg = "Kode sudah kedaluwarsa. Klik 'Kirim ulang kode OTP' untuk mendapatkan yang baru.";
+        } else if (/invalid|not found|incorrect/i.test(error.message)) {
+          msg = "Kode OTP salah. Periksa kembali 6 digit dari emailmu.";
+        }
+        toast({ title: "Verifikasi gagal", description: msg, variant: "destructive" });
         return;
       }
       if (type === "recovery") {
@@ -128,6 +140,9 @@ const VerifyOtp = () => {
                 <p className="mt-2 text-sm leading-6 text-slate-500">
                   Kami telah mengirim kode 6 digit ke{" "}
                   <span className="font-semibold text-slate-700">{email || "email kamu"}</span>.
+                </p>
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  Belum menerima email? Tunggu 1–2 menit lalu cek folder <span className="font-semibold">Spam</span> atau <span className="font-semibold">Promosi</span>.
                 </p>
               </div>
 
