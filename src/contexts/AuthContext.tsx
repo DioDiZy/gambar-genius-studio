@@ -61,6 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           errorMessage = 'Tidak dapat terhubung ke layanan autentikasi. Periksa koneksi internet Anda dan coba lagi.';
         } else if (error.message.includes('User already registered')) {
           errorMessage = 'Akun dengan email ini sudah ada. Silakan masuk.';
+        } else if (/rate limit|too many|email rate/i.test(error.message)) {
+          errorMessage = 'Terlalu banyak permintaan email dalam waktu singkat. Mohon tunggu beberapa menit lalu coba lagi.';
+        } else if (/invalid.*email/i.test(error.message)) {
+          errorMessage = 'Format email tidak valid. Periksa kembali alamat emailmu.';
+        } else if (/password/i.test(error.message) && /weak|short|character/i.test(error.message)) {
+          errorMessage = 'Kata sandi terlalu lemah. Gunakan minimal 8 karakter.';
         }
         toast({ title: "Pendaftaran gagal", description: errorMessage, variant: "destructive" });
         return { success: false };
@@ -85,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Email verification (OTP) required. Caller will navigate to /verify-otp.
       toast({
         title: "Pendaftaran berhasil!",
-        description: "Kami sudah mengirim kode OTP 6 digit ke emailmu. Silakan verifikasi terlebih dahulu.",
+        description: "Kode OTP 6 digit dikirim ke emailmu. Cek juga folder Spam/Promosi jika belum terlihat.",
       });
       if (data.session) {
         await supabase.auth.signOut();
