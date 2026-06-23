@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ArrowLeft } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const signUpSchema = z.object({
   name: z.string().min(2, { message: "Nama minimal 2 karakter" }),
@@ -22,6 +23,8 @@ type SignUpValues = z.infer<typeof signUpSchema>;
 const SignUp = () => {
   const { signUp, user, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const navigate = useNavigate();
 
   const form = useForm<SignUpValues>({
@@ -38,7 +41,8 @@ const SignUp = () => {
     try {
       const result = await signUp(data.email, data.password, data.name);
       if (result?.success) {
-        navigate(`/verify-otp?email=${encodeURIComponent(data.email)}&type=signup`);
+        setRegisteredEmail(data.email);
+        setShowSuccess(true);
       }
     } finally {
       setIsSubmitting(false);
