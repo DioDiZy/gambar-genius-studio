@@ -155,6 +155,7 @@ export type Database = {
     Functions: {
       add_credits: { Args: { amount: number }; Returns: number }
       decrement_credits: { Args: { amount: number }; Returns: number }
+      email_exists: { Args: { check_email: string }; Returns: boolean }
       increment_count: { Args: { amount: number }; Returns: number }
     }
     Enums: {
