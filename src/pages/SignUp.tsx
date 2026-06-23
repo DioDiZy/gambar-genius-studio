@@ -186,6 +186,10 @@ const SignUp = () => {
                     </form>
                   </Form>
 
+                  <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50/80 p-3 text-center text-xs leading-5 text-amber-800">
+                    💡 Belum punya email? Tidak apa-apa! Tanya orang tua atau gurumu untuk membantu membuat email, lalu lanjutkan daftar di sini ya.
+                  </div>
+
                   <div className="mt-6 text-center">
                     <p className="text-sm text-slate-500">
                       Sudah punya akun?{" "}
@@ -200,6 +204,45 @@ const SignUp = () => {
           </div>
         </div>
       </main>
+
+      <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <DialogContent className="max-w-md rounded-3xl border-0 bg-white p-0 shadow-2xl">
+          <div className="rounded-t-3xl bg-gradient-to-br from-violet-400 via-pink-400 to-orange-400 p-6 text-center">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white text-4xl shadow-lg">
+              🎉
+            </div>
+          </div>
+          <div className="px-6 pb-6 pt-4 text-center">
+            <DialogHeader>
+              <DialogTitle className="text-center text-2xl font-extrabold text-slate-800">
+                Yeay, Pendaftaran Berhasil!
+              </DialogTitle>
+              <DialogDescription className="mt-2 text-center text-sm leading-6 text-slate-600">
+                Selamat datang, petualang baru! Kami sudah mengirim kode rahasia 6 angka ke email{" "}
+                <span className="font-semibold text-slate-800">{registeredEmail}</span>.
+                <br />
+                <br />
+                Buka emailmu, lalu masukkan kode itu di halaman berikutnya untuk mulai berpetualang. Kalau kode tidak ada di kotak masuk, coba cek folder <b>Spam</b> atau <b>Promosi</b> ya!
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-left text-xs leading-5 text-amber-800">
+              💡 Butuh bantuan buka email? Yuk minta tolong orang tua atau gurumu untuk membantumu.
+            </div>
+            <DialogFooter className="mt-5">
+              <CustomButton
+                variant="gradient"
+                className="h-12 w-full rounded-2xl text-sm font-bold shadow-lg"
+                onClick={() => {
+                  setShowSuccess(false);
+                  navigate(`/verify-otp?email=${encodeURIComponent(registeredEmail)}&type=signup`);
+                }}
+              >
+                Lanjut Masukkan Kode ➜
+              </CustomButton>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
