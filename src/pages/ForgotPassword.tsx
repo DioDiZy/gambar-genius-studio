@@ -29,6 +29,28 @@ const ForgotPassword = () => {
   const onSubmit = async (data: ForgotValues) => {
     setIsSubmitting(true);
     try {
+      // Cek dulu apakah email terdaftar sebelum mengirim OTP
+      const { data: exists, error: checkError } = await supabase.rpc('email_exists', {
+        check_email: data.email,
+      });
+      if (checkError) {
+        toast({
+          title: "Waduh, ada masalah",
+          description: "Kami tidak bisa mengecek emailmu sekarang. Coba lagi sebentar lagi ya.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!exists) {
+        toast({
+          title: "Email belum terdaftar",
+          description:
+            "Email ini belum punya akun. Coba cek lagi tulisannya, atau daftar dulu yuk. Kalau bingung, tanya orang tua atau gurumu ya!",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Email berisi kode OTP + link. Link mengarah ke /reset-password
       // sehingga user tetap wajib memasukkan password baru (tidak auto-login).
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
@@ -104,6 +126,10 @@ const ForgotPassword = () => {
                     </CustomButton>
                   </form>
                 </Form>
+
+              <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50/80 p-3 text-center text-xs leading-5 text-amber-800">
+                💡 Belum punya email atau lupa emailmu? Tanya orang tua atau gurumu ya, mereka pasti bisa bantu!
+              </div>
             </div>
           </div>
         </div>
