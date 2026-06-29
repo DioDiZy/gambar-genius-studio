@@ -31,7 +31,9 @@ export const StoryImagesPreview = ({
   const {
     currentIndex,
     saving,
+    savingBook,
     handleSave,
+    handleSaveBook,
     handleDownload,
     handleDownloadAll,
     handleSelectImage,
@@ -90,7 +92,9 @@ export const StoryImagesPreview = ({
           currentImage={currentImage}
           currentPrompt={currentPrompt}
           saving={saving}
+          savingBook={savingBook}
           onSave={handleSave}
+          onSaveBook={() => handleSaveBook(title, imageUrls, prompts)}
           onDownload={handleDownload}
           onDownloadAll={() => handleDownloadAll(imageUrls)}
           onOpenReader={() => setReaderOpen(true)}

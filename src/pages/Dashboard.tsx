@@ -52,12 +52,10 @@ const Dashboard = () => {
   };
 
   const handleImageSaved = () => {
+    // Only refresh the gallery list. We intentionally keep the current
+    // story state (images, prompts, title) so the preview does NOT
+    // disappear after saving — that felt like a page refresh.
     refetchImages();
-    setStoryImageUrls([]);
-    setStoryPrompts([]);
-    setStructuredData(null);
-    setShowAnalyzer(false);
-    setStoryTitle("");
   };
 
   const handleDeleteImage = async (imageId: string) => {
@@ -119,7 +117,7 @@ const Dashboard = () => {
         </div>
 
         {/* Gallery Section */}
-        <section className="relative mt-20">
+        <section id="galeri" className="relative mt-20 scroll-mt-24">
           <div className="mb-8 flex items-end justify-between px-4">
             <div>
               <h2 className="text-2xl font-extrabold text-slate-800">Galeri Karyamu</h2>

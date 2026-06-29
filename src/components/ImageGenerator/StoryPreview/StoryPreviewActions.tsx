@@ -1,4 +1,4 @@
-import { Download, Save, BookOpen, FileDown } from "lucide-react";
+import { Download, Save, BookOpen, FileDown, BookMarked } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface StoryPreviewActionsProps {
@@ -6,7 +6,9 @@ interface StoryPreviewActionsProps {
   currentImage: string;
   currentPrompt: string;
   saving: boolean;
+  savingBook?: boolean;
   onSave: (imageUrl: string, prompt: string) => Promise<void>;
+  onSaveBook?: () => void;
   onDownload: (imageUrl: string) => void;
   onDownloadAll: () => void;
   onOpenReader: () => void;
@@ -20,7 +22,9 @@ export const StoryPreviewActions = ({
   currentImage,
   currentPrompt,
   saving,
+  savingBook,
   onSave,
+  onSaveBook,
   onDownload,
   onDownloadAll,
   onOpenReader,
@@ -69,16 +73,31 @@ export const StoryPreviewActions = ({
           </Button>
         )}
       </div>
-      <Button
-        size="sm"
-        variant="secondary"
-        onClick={() => onSave(currentImage, currentPrompt)}
-        disabled={saving}
-        className="rounded-lg"
-      >
-        <Save className="mr-1.5 h-4 w-4" />
-        {saving ? "Menyimpan…" : "Simpan ke galeri"}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => onSave(currentImage, currentPrompt)}
+          disabled={saving || savingBook}
+          className="rounded-lg"
+          title="Simpan hanya halaman yang sedang ditampilkan"
+        >
+          <Save className="mr-1.5 h-4 w-4" />
+          {saving ? "Menyimpan…" : "Simpan halaman ini"}
+        </Button>
+        {imageUrls.length > 1 && onSaveBook && (
+          <Button
+            size="sm"
+            onClick={onSaveBook}
+            disabled={savingBook || saving}
+            className="rounded-lg"
+            title="Simpan seluruh buku sebagai satu kesatuan"
+          >
+            <BookMarked className="mr-1.5 h-4 w-4" />
+            {savingBook ? "Menyimpan buku…" : "Simpan buku"}
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
