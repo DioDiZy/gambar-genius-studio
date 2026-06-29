@@ -86,25 +86,74 @@ export const useStoryImages = ({ onSaved }: UseStoryImagesProps) => {
     }
   };
 
-  const handleDownload = (imageUrl: string) => {
-    const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = `story-image-${currentIndex + 1}.webp`;
-    document.body.appendChild(link);
+  // Run download work inside a blank popup so the current page never refreshes.
+  // The popup auto-closes after the download(s) are triggered.
+  const runInBlankTab = async (
+    label: string,
+    work: (popup: Window) => Promise<void> | void
+  ) => {
+    const popup = window.open("", "_blank");
+    if (!popup) {
+      toast.error("Popup diblokir", {
+        description: "Izinkan popup di browser untuk mengunduh di tab baru.",
+      });
+      return;
+    }
+    try {
+      popup.document.write(`
+        <!doctype html><html><head><meta charset="utf-8"><title>${label}</title>
+        <style>
+          body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;
+               height:100vh;margin:0;background:#faf6ee;color:#2a2520;text-align:center;padding:24px}
+          .box{max-width:360px}
+          .spinner{width:36px;height:36px;border:3px solid #e5dccb;border-top-color:#8b5cf6;
+                   border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+          @keyframes spin{to{transform:rotate(360deg)}}
+        </style></head>
+        <body><div class="box"><div class="spinner"></div>
+        <h3 style="margin:0 0 6px">${label}</h3>
+        <p style="margin:0;color:#7a6f60;font-size:14px">Tab ini akan tertutup otomatis…</p>
+        </div></body></html>
+      `);
+      popup.document.close();
+      await work(popup);
+    } catch (e) {
+      console.error("Download tab error:", e);
+    } finally {
+      // small delay so the browser registers the download(s) before close
+      setTimeout(() => {
+        try { popup.close(); } catch { /* ignore */ }
+      }, 1200);
+    }
+  };
+
+  const triggerDownload = (doc: Document, url: string, filename: string) => {
+    const link = doc.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.rel = "noopener";
+    doc.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    doc.body.removeChild(link);
+  };
+
+  const handleDownload = (imageUrl: string) => {
+    const filename = `story-image-${currentIndex + 1}.webp`;
+    runInBlankTab("Mengunduh halaman…", (popup) => {
+      triggerDownload(popup.document, imageUrl, filename);
+      toast.success("Halaman diunduh");
+    });
   };
 
   const handleDownloadAll = (imageUrls: string[]) => {
-    imageUrls.forEach((url, index) => {
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `story-image-${index + 1}.webp`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    runInBlankTab("Mengunduh semua halaman…", async (popup) => {
+      for (let i = 0; i < imageUrls.length; i++) {
+        triggerDownload(popup.document, imageUrls[i], `story-image-${i + 1}.webp`);
+        // stagger so browsers don't drop concurrent downloads
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      toast.success(`${imageUrls.length} halaman diunduh`);
     });
-    toast.success(`Downloaded ${imageUrls.length} images`);
   };
 
   const handleNext = (length: number) => {
