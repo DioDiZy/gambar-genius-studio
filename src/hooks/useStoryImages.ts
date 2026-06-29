@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { saveGeneratedImage } from "@/services/ImageService";
+import { saveGeneratedImage, saveStorybook } from "@/services/ImageService";
 
 interface UseStoryImagesProps {
   onSaved: () => void;
@@ -11,40 +11,78 @@ interface UseStoryImagesProps {
 export const useStoryImages = ({ onSaved }: UseStoryImagesProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [savingBook, setSavingBook] = useState(false);
   const [viewMode, setViewMode] = useState<'single' | 'storyboard'>('storyboard');
   const { user } = useAuth();
 
+  // Open the gallery in a NEW TAB so the current story state stays intact
+  const openGalleryInNewTab = () => {
+    try {
+      window.open(`${window.location.origin}/dashboard#galeri`, "_blank", "noopener,noreferrer");
+    } catch {
+      /* popup blocked - ignore */
+    }
+  };
+
   const handleSave = async (imageUrl: string, prompt: string) => {
     if (!imageUrl || !prompt) {
-      toast.error("Missing data", { 
-        description: "Both image and prompt are required to save" 
-      });
+      toast.error("Data tidak lengkap", { description: "Gambar dan prompt diperlukan" });
       return;
     }
 
     if (!user) {
-      toast.error("Authentication required", {
-        description: "You must be logged in to save images"
-      });
+      toast.error("Login dulu ya", { description: "Kamu harus masuk untuk menyimpan gambar" });
       return;
     }
     
     try {
       setSaving(true);
-      toast.info("Saving your image...");
-      
+      toast.info("Menyimpan halaman ke galeri…");
       await saveGeneratedImage(imageUrl, prompt, user.id);
-      
       onSaved();
-      
-      toast.success("Image saved to your gallery!");
+      toast.success("Halaman tersimpan di galeri!", {
+        action: { label: "Buka galeri", onClick: openGalleryInNewTab },
+      });
+      openGalleryInNewTab();
     } catch (error) {
       console.error("Error saving image:", error);
-      toast.error("Error saving image", {
-        description: error instanceof Error ? error.message : "Please try again"
+      toast.error("Gagal menyimpan gambar", {
+        description: error instanceof Error ? error.message : "Coba lagi ya",
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveBook = async (
+    title: string,
+    imageUrls: string[],
+    prompts: string[]
+  ) => {
+    if (!user) {
+      toast.error("Login dulu ya", { description: "Kamu harus masuk untuk menyimpan buku" });
+      return;
+    }
+    if (!imageUrls.length) {
+      toast.error("Belum ada halaman", { description: "Buat ceritamu dulu sebelum menyimpan" });
+      return;
+    }
+    try {
+      setSavingBook(true);
+      toast.info(`Menyimpan buku "${title}" (${imageUrls.length} halaman)…`);
+      await saveStorybook({ title, imageUrls, prompts, userId: user.id });
+      onSaved();
+      toast.success("Buku tersimpan di galeri!", {
+        action: { label: "Buka galeri", onClick: openGalleryInNewTab },
+      });
+      openGalleryInNewTab();
+    } catch (error) {
+      console.error("Error saving storybook:", error);
+      toast.error("Gagal menyimpan buku", {
+        description: error instanceof Error ? error.message : "Coba lagi ya",
+      });
+    } finally {
+      setSavingBook(false);
     }
   };
 
@@ -85,9 +123,11 @@ export const useStoryImages = ({ onSaved }: UseStoryImagesProps) => {
     currentIndex,
     setCurrentIndex,
     saving,
+    savingBook,
     viewMode,
     setViewMode,
     handleSave,
+    handleSaveBook,
     handleDownload,
     handleDownloadAll,
     handleNext,
