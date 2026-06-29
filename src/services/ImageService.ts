@@ -257,3 +257,77 @@ export async function saveGeneratedImage(imageUrl: string, prompt: string, userI
     throw error;
   }
 }
+
+export interface SaveStorybookParams {
+  title: string;
+  imageUrls: string[];
+  prompts: string[];
+  userId: string;
+}
+
+export interface SavedStorybook {
+  id: string;
+  title: string;
+  cover_image_url: string | null;
+  page_count: number;
+}
+
+/**
+ * Save an entire storybook (multiple pages) as ONE entry in the storybooks table.
+ * Each page image is uploaded to permanent storage first, then the whole book
+ * is inserted with its pages array.
+ */
+export async function saveStorybook({
+  title,
+  imageUrls,
+  prompts,
+  userId,
+}: SaveStorybookParams): Promise<SavedStorybook> {
+  if (!userId) throw new Error("User not authenticated");
+  if (!imageUrls.length) throw new Error("Tidak ada halaman untuk disimpan");
+
+  // Upload every page image to permanent storage in parallel
+  const permanentUrls = await Promise.all(
+    imageUrls.map(async (url, index) => {
+      const { data, error } = await supabase.functions.invoke("save-image-to-storage", {
+        body: { imageUrl: url, fileName: `book-${Date.now()}-page-${index + 1}` },
+      });
+      if (error) throw error;
+      if (!data?.imageUrl) throw new Error(`Gagal menyimpan halaman ${index + 1}`);
+      return data.imageUrl as string;
+    })
+  );
+
+  const pages = permanentUrls.map((image_url, i) => ({
+    page: i + 1,
+    image_url,
+    prompt: prompts[i] ?? "",
+  }));
+
+  const { data, error } = await supabase
+    .from("storybooks")
+    .insert([
+      {
+        user_id: userId,
+        title: title?.trim() || "Buku Ceritaku",
+        cover_image_url: permanentUrls[0] ?? null,
+        pages,
+        page_count: permanentUrls.length,
+      },
+    ])
+    .select("id, title, cover_image_url, page_count")
+    .single();
+
+  if (error) throw error;
+
+  // Also mirror each page into the images gallery so it appears there too
+  await supabase.from("images").insert(
+    permanentUrls.map((image_url, i) => ({
+      user_id: userId,
+      prompt: prompts[i] ?? title ?? "Halaman buku",
+      image_url,
+    }))
+  );
+
+  return data as SavedStorybook;
+}
