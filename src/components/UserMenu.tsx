@@ -9,8 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function UserMenu() {
@@ -43,19 +42,6 @@ export function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end">
         <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/profile" className="flex items-center cursor-pointer">
-            <User className="mr-2 h-4 w-4" />
-            <span>Profil</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/settings" className="flex items-center cursor-pointer">
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Pengaturan</span>
-          </Link>
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 
           className="flex items-center text-destructive cursor-pointer"
